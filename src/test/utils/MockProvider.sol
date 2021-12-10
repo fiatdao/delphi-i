@@ -51,6 +51,16 @@ contract MockProvider {
     fallback(bytes calldata query_) external payable returns (bytes memory){
         // Check if any set query matches the current query
         if (givenQuerySet[keccak256(query_)]) {
+            // Log call
+            CallData memory newCallData = CallData({
+                caller: msg.sender,
+                functionSelector: msg.sig,
+                data: msg.data,
+                value: msg.value
+            });
+            callData.push(newCallData);            
+
+            // Return data as specified by the query
             ReturnData memory returnData = givenQueryReturn[keccak256(query_)];
             if (returnData.success) {
                 return returnData.data;
