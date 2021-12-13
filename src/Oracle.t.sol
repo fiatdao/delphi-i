@@ -13,17 +13,29 @@ import {Oracle} from "./Oracle.sol";
 contract OracleTest is DSTest {
     Hevm hevm = Hevm(DSTest.HEVM_ADDRESS);
 
-    MockProvider mp;
+    MockProvider mockValueProvider;
     Oracle oracle;
-    uint256 windowLength = 10;
+    uint256 windowLength = 10; // Might remove this later
     uint256 minTimeBetweenWindows = 100; // seconds
 
-    function setUp() public {
-        mp = new MockProvider();
-        oracle = new Oracle(address(mp), windowLength, minTimeBetweenWindows);
+    uint256 startTimestamp = 1000;
+    uint256 startBlockNumber = 1000;
 
-        hevm.warp(1000);
-        hevm.roll(1000);
+    function setUp() public {
+        hevm.warp(startTimestamp);
+        hevm.roll(startBlockNumber);
+
+        mockValueProvider = new MockProvider();
+        oracle = new Oracle(address(mockValueProvider), windowLength, minTimeBetweenWindows);
+
+        // Set the value returned by Value Provider to 0
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IValueProvider.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint256(0))
+            })
+        );        
     }
 
     function test_deploy() public {
@@ -32,8 +44,8 @@ contract OracleTest is DSTest {
 
     function test_getValue_CallsIntoValueGetter() public {
         // ValueProvider should return a value of 1
-        mp.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.getValue.selector),
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IValueProvider.value.selector),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(uint256(1))
@@ -41,14 +53,14 @@ contract OracleTest is DSTest {
         );
 
         // Requesting a value from oracle will also trigger a value request
-        oracle.getValue();
+        oracle.value();
 
         // Check if the ValueProvider was called by the Oracle
-        MockProvider.CallData memory cd = mp.getCallData(0);
+        MockProvider.CallData memory cd = mockValueProvider.getCallData(0);
         assertEq(cd.caller, address(oracle), "Oracle should be the caller");
         assertEq(
             cd.functionSelector,
-            IValueProvider.getValue.selector,
+            IValueProvider.value.selector,
             "Oracle should ask ValueProvider for current value"
         );
     }
@@ -112,5 +124,36 @@ contract OracleTest is DSTest {
             blockNumber + minTimeBetweenWindows + 1
         );
         assertEq(oracle.lastBlock(), blockTimestamp + 1);
+    }
+
+    function test_update_Recalculates_AccumulatedValue() public {
+        uint256 value = 1;
+
+        // Set the value to 1
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IValueProvider.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint256(value))
+            })
+        );
+        // Update the oracle
+        oracle.update();
+
+        // Check accumulated value (no time has passed yet)
+        uint accValue1 = oracle.accumulatedValue();
+        // First update does not actually change the accumulated value
+        assertEq(accValue1, 1000); // = value * startTimestamp
+
+        // Advance time
+        uint dt = 100;
+        hevm.warp(1000 + dt);
+
+        // Update the oracle
+        oracle.update();
+
+        // Check second accumulated value
+        uint accValue2 = oracle.accumulatedValue();
+        assertEq(accValue2, 1000 + 100 * 1); // = accumulatedValue + (value * dt)
     }
 }

@@ -12,6 +12,8 @@ contract Oracle {
     uint256 public lastTimestamp;
     uint256 public lastBlock;
 
+    uint256 public accumulatedValue;
+
     constructor(
         address valueProvider_,
         uint256 windowLength_,
@@ -22,14 +24,20 @@ contract Oracle {
         minTimeBetweenUpdates = minTimeBetweenUpdates_;
     }
 
-    function getValue() public returns (uint256) {
-        return valueProvider.getValue();
+    function value() public returns (uint256) {
+        return valueProvider.value();
     }
 
     function update() public {
+        // Not enough time has passed since the last update
         if (lastTimestamp + minTimeBetweenUpdates > block.timestamp) {
             return;
         }
+
+        // Update the price
+        accumulatedValue += valueProvider.value() * (block.timestamp - lastTimestamp);
+
+        // Save when the price was last updated
         lastBlock = block.number;
         lastTimestamp = block.timestamp;
     }
