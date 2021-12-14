@@ -28,8 +28,12 @@ contract Oracle {
         alpha = alpha_;
     }
 
-    function value() public view returns (int256) {
-        return ema;
+    /// @notice Get the current value of the oracle
+    /// @return the current value of the oracle
+    /// @return whether the value is stale (true) or fresh (false)
+    function value() public view returns (int256, bool) {
+        bool isStale = block.timestamp >= lastTimestamp + minTimeBetweenUpdates;
+        return (ema, isStale);
     }
 
     function update() public {
