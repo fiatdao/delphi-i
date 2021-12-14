@@ -14,55 +14,33 @@ contract OracleTest is DSTest {
     Hevm hevm = Hevm(DSTest.HEVM_ADDRESS);
 
     MockProvider mockValueProvider;
-    Oracle oracle;
-    uint256 windowLength = 10; // Might remove this later
-    uint256 minTimeBetweenWindows = 100; // seconds
 
-    uint256 startTimestamp = 1000;
-    uint256 startBlockNumber = 1000;
+    Oracle oracle;
+    uint256 minTimeBetweenWindows = 100; // seconds
+    uint256 alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
-        hevm.warp(startTimestamp);
-        hevm.roll(startBlockNumber);
-
         mockValueProvider = new MockProvider();
-        oracle = new Oracle(address(mockValueProvider), windowLength, minTimeBetweenWindows);
+        oracle = new Oracle(
+            address(mockValueProvider),
+            minTimeBetweenWindows,
+            alpha
+        );
 
         // Set the value returned by Value Provider to 0
         mockValueProvider.givenQueryReturnResponse(
             abi.encodePacked(IValueProvider.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint256(0))
+                data: abi.encode(uint256(100 * 10**18))
             })
-        );        
+        );
+
+        hevm.warp(minTimeBetweenWindows + 1);
     }
 
     function test_deploy() public {
         assertTrue(address(oracle) != address(0));
-    }
-
-    function test_getValue_CallsIntoValueGetter() public {
-        // ValueProvider should return a value of 1
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(uint256(1))
-            })
-        );
-
-        // Requesting a value from oracle will also trigger a value request
-        oracle.value();
-
-        // Check if the ValueProvider was called by the Oracle
-        MockProvider.CallData memory cd = mockValueProvider.getCallData(0);
-        assertEq(cd.caller, address(oracle), "Oracle should be the caller");
-        assertEq(
-            cd.functionSelector,
-            IValueProvider.value.selector,
-            "Oracle should ask ValueProvider for current value"
-        );
     }
 
     function test_update_Updates_timestamp() public {
@@ -70,49 +48,45 @@ contract OracleTest is DSTest {
 
         // Check if the timestamp was updated
         assertEq(oracle.lastTimestamp(), block.timestamp);
-        assertEq(oracle.lastBlock(), block.number);
     }
 
     function test_update_ShouldNotUpdatePreviousValues_IfNotEnoughTimePassed()
         public
     {
-        oracle.update();
-
-        uint256 blockNumber = block.number;
+        // Get current timestamp
         uint256 blockTimestamp = block.timestamp;
 
+        // Update the oracle
+        oracle.update();
+
         // Check if the timestamp was updated
-        assertEq(oracle.lastTimestamp(), blockNumber);
-        assertEq(oracle.lastBlock(), blockTimestamp);
+        assertEq(oracle.lastTimestamp(), blockTimestamp);
 
         // Advance time
         hevm.warp(blockTimestamp + minTimeBetweenWindows - 1);
-        hevm.roll(blockNumber + 1);
 
         // Calling update should not update the values
         // because not enough time has passed
         oracle.update();
 
         // Check if the values are still the same
-        assertEq(oracle.lastTimestamp(), blockNumber);
-        assertEq(oracle.lastBlock(), blockTimestamp);
+        assertEq(oracle.lastTimestamp(), blockTimestamp);
     }
 
     function test_update_ShouldUpdatePreviousValues_IfEnoughTimePassed()
         public
     {
-        oracle.update();
-
-        uint256 blockNumber = block.number;
+        // Get current timestamp
         uint256 blockTimestamp = block.timestamp;
 
+        // Update the oracle
+        oracle.update();
+
         // Check if the timestamp was updated
-        assertEq(oracle.lastTimestamp(), blockNumber);
-        assertEq(oracle.lastBlock(), blockTimestamp);
+        assertEq(oracle.lastTimestamp(), blockTimestamp);
 
         // Advance time
-        hevm.warp(blockNumber + minTimeBetweenWindows + 1);
-        hevm.roll(blockTimestamp + 1);
+        hevm.warp(blockTimestamp + minTimeBetweenWindows + 1);
 
         // Calling update should not update the values
         // because not enough time has passed
@@ -121,39 +95,70 @@ contract OracleTest is DSTest {
         // Check if the values are still the same
         assertEq(
             oracle.lastTimestamp(),
-            blockNumber + minTimeBetweenWindows + 1
+            blockTimestamp + minTimeBetweenWindows + 1
         );
-        assertEq(oracle.lastBlock(), blockTimestamp + 1);
     }
 
-    function test_update_Recalculates_AccumulatedValue() public {
-        uint256 value = 1;
-
-        // Set the value to 1
+    function test_update_Recalculates_MovingAverage() public {
+        // Set the value to 100
         mockValueProvider.givenQueryReturnResponse(
             abi.encodePacked(IValueProvider.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint256(value))
+                data: abi.encode(uint256(100 * 10**18))
             })
         );
         // Update the oracle
         oracle.update();
 
-        // Check accumulated value (no time has passed yet)
-        uint accValue1 = oracle.accumulatedValue();
-        // First update does not actually change the accumulated value
-        assertEq(accValue1, 1000); // = value * startTimestamp
+        // Check accumulated value
+        uint256 value1 = oracle.value();
+        // First update returns initial value
+        assertEq(value1, 100 * 10**18);
+
+        // Set reported value to 150
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IValueProvider.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint256(150 * 10**18))
+            })
+        );
 
         // Advance time
-        uint dt = 100;
-        hevm.warp(1000 + dt);
+        hevm.warp(block.timestamp + minTimeBetweenWindows);
 
         // Update the oracle
         oracle.update();
 
-        // Check second accumulated value
-        uint accValue2 = oracle.accumulatedValue();
-        assertEq(accValue2, 1000 + 100 * 1); // = accumulatedValue + (value * dt)
+        // Check value after the second update
+        uint256 value2 = oracle.value();
+        assertEq(value2, 110000000000000000000);
     }
+
+    // We need to decide if we want to
+    // update the price when the oracle is queried
+
+    // function test_getValue_CallsIntoValueGetter() public {
+    //     // ValueProvider should return a value of 1
+    //     mockValueProvider.givenQueryReturnResponse(
+    //         abi.encodePacked(IValueProvider.value.selector),
+    //         MockProvider.ReturnData({
+    //             success: true,
+    //             data: abi.encode(uint256(1))
+    //         })
+    //     );
+
+    //     // Requesting a value from oracle will also trigger a value request
+    //     oracle.value();
+
+    //     // Check if the ValueProvider was called by the Oracle
+    //     MockProvider.CallData memory cd = mockValueProvider.getCallData(0);
+    //     assertEq(cd.caller, address(oracle), "Oracle should be the caller");
+    //     assertEq(
+    //         cd.functionSelector,
+    //         IValueProvider.value.selector,
+    //         "Oracle should ask ValueProvider for current value"
+    //     );
+    // }
 }
