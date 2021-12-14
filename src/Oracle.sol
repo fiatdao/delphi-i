@@ -32,7 +32,7 @@ contract Oracle {
     /// @return the current value of the oracle
     /// @return whether the value is stale (true) or fresh (false)
     function value() public view returns (int256, bool) {
-        bool isStale = block.timestamp >= lastTimestamp + minTimeBetweenUpdates;
+        bool isStale = block.timestamp >= lastTimestamp + minTimeBetweenUpdates * 2;
         return (ema, isStale);
     }
 

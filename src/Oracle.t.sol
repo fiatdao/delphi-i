@@ -36,7 +36,7 @@ contract OracleTest is DSTest {
             })
         );
 
-        hevm.warp(minTimeBetweenWindows + 1);
+        hevm.warp(minTimeBetweenWindows * 10);
     }
 
     function test_deploy() public {
@@ -174,7 +174,7 @@ contract OracleTest is DSTest {
         oracle.update();
 
         // Advance time
-        hevm.warp(block.timestamp + minTimeBetweenWindows + 1);
+        hevm.warp(block.timestamp + minTimeBetweenWindows * 2 + 1);
 
         // Check stale value
         (, bool isStale) = oracle.value();
