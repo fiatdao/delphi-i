@@ -17,7 +17,7 @@ contract OracleTest is DSTest {
 
     Oracle oracle;
     uint256 minTimeBetweenWindows = 100; // seconds
-    uint256 alpha = 2 * 10**17; // 0.2
+    int256 alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
         mockValueProvider = new MockProvider();
@@ -112,7 +112,7 @@ contract OracleTest is DSTest {
         oracle.update();
 
         // Check accumulated value
-        uint256 value1 = oracle.value();
+        int256 value1 = oracle.value();
         // First update returns initial value
         assertEq(value1, 100 * 10**18);
 
@@ -132,33 +132,26 @@ contract OracleTest is DSTest {
         oracle.update();
 
         // Check value after the second update
-        uint256 value2 = oracle.value();
+        int256 value2 = oracle.value();
         assertEq(value2, 110000000000000000000);
+
+        // Set reported value to 100
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IValueProvider.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint256(100 * 10**18))
+            })
+        );
+
+        // Advance time
+        hevm.warp(block.timestamp + minTimeBetweenWindows);
+
+        // Update the oracle
+        oracle.update();
+
+        // Check value after the third update
+        int256 value3 = oracle.value();
+        assertEq(value3, 108000000000000000000);
     }
-
-    // We need to decide if we want to
-    // update the price when the oracle is queried
-
-    // function test_getValue_CallsIntoValueGetter() public {
-    //     // ValueProvider should return a value of 1
-    //     mockValueProvider.givenQueryReturnResponse(
-    //         abi.encodePacked(IValueProvider.value.selector),
-    //         MockProvider.ReturnData({
-    //             success: true,
-    //             data: abi.encode(uint256(1))
-    //         })
-    //     );
-
-    //     // Requesting a value from oracle will also trigger a value request
-    //     oracle.value();
-
-    //     // Check if the ValueProvider was called by the Oracle
-    //     MockProvider.CallData memory cd = mockValueProvider.getCallData(0);
-    //     assertEq(cd.caller, address(oracle), "Oracle should be the caller");
-    //     assertEq(
-    //         cd.functionSelector,
-    //         IValueProvider.value.selector,
-    //         "Oracle should ask ValueProvider for current value"
-    //     );
-    // }
 }
