@@ -62,8 +62,7 @@ contract MockProviderTest is DSTest {
             MockProvider.ReturnData({success: false, data: hex""})
         );
 
-        (bool okReceived, bytes memory responseReceived) = address(mockProvider)
-            .call(query);
+        (bool okReceived, ) = address(mockProvider).call(query);
 
         assertTrue(okReceived == false, "Should fail doing a call");
     }

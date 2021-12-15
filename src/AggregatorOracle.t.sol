@@ -19,55 +19,90 @@ contract OracleTest is DSTest {
     function setUp() public {
         aggregatorOracle = new AggregatorOracle();
 
+        // Add a mock oracle
         oracle = new MockProvider();
-        aggregatorOracle.addOracle(address(oracle));
+        aggregatorOracle.oracleAdd(address(oracle));
     }
 
-    function test_deploy() public {
+    function test_Deploy() public {
         assertTrue(address(aggregatorOracle) != address(0));
     }
 
     function test_ReturnsNumberOfOracles() public {
         assertEq(aggregatorOracle.oracleCount(), 1);
-    } 
+    }
 
-    function test_AddOracle_ReturnsIndex() public {
+    function test_AddOracle() public {
         // Create a new oracle
         MockProvider localOracle = new MockProvider();
-        
+
         // Add the oracle
-        aggregatorOracle.addOracle(address(localOracle));
+        aggregatorOracle.oracleAdd(address(localOracle));
     }
 
     function testFail_AddOracle_ShouldNotAllowDuplicates() public {
         // Create a couple of oracles
         MockProvider oracle1 = new MockProvider();
-        
+
         // Add the oracle
-        aggregatorOracle.addOracle(address(oracle1));
-        aggregatorOracle.addOracle(address(oracle1));
+        aggregatorOracle.oracleAdd(address(oracle1));
+        aggregatorOracle.oracleAdd(address(oracle1));
     }
 
-    function testFail_AddOracle_OnlyPermissionedUserShouldBeAbleToAdd() public {
+    function test_AddOracle_OnlyRootShouldBeAbleToAdd() public {
         Caller user = new Caller();
 
         // Create a couple of oracles
         MockProvider oracle1 = new MockProvider();
-        
+
         // Add the oracle
-        user.externalCall(
-            address(aggregatorOracle), 
-            abi.encodeWithSelector(aggregatorOracle.addOracle.selector, address(oracle1))
+        (bool ok, ) = user.externalCall(
+            address(aggregatorOracle),
+            abi.encodeWithSelector(
+                aggregatorOracle.oracleAdd.selector,
+                address(oracle1)
+            )
         );
-        // aggregatorOracle.addOracle(address(oracle1));
+        assertTrue(ok == false);
     }
 
-    // function test_RemoveOracle_DeletesOracle() public {
-    //     // Remove the oracle
-    //     aggregatorOracle.removeOracle(address(oracle));
+    function test_CheckExistenceOfOracle() public {
+        // Oracle exists
+        assertTrue(aggregatorOracle.oracleExists(address(oracle)));
 
-    //     // Make sure the oracle is not in the list
-    //     // aggregatorOracle.
-    // }
+        // Create an oracle that does not exist
+        MockProvider oracle1 = new MockProvider();
 
+        // Check the existence of the oracle
+        assertTrue(aggregatorOracle.oracleExists(address(oracle1)) == false);
+    }
+
+    function test_RemoveOracle_DeletesOracle() public {
+        // Remove the oracle
+        aggregatorOracle.oracleRemove(address(oracle));
+
+        assertTrue(aggregatorOracle.oracleExists(address(oracle)) == false);
+    }
+
+    function testFail_RemoveOracle_ShouldFailIfOracleDoesNotExist() public {
+        // Create a couple of oracles
+        MockProvider oracle1 = new MockProvider();
+
+        // Remove the oracle
+        aggregatorOracle.oracleRemove(address(oracle1));
+    }
+
+    function test_RemoveOracle_OnlyRootShouldBeAbleToRemove() public {
+        Caller user = new Caller();
+
+        // Remove the oracle
+        (bool ok, ) = user.externalCall(
+            address(aggregatorOracle),
+            abi.encodeWithSelector(
+                aggregatorOracle.oracleRemove.selector,
+                address(oracle)
+            )
+        );
+        assertTrue(ok == false);
+    }
 }
