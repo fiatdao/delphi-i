@@ -36,7 +36,7 @@ contract OracleTest is DSTest {
             })
         );
 
-        hevm.warp(minTimeBetweenWindows + 1);
+        hevm.warp(minTimeBetweenWindows * 10);
     }
 
     function test_deploy() public {
@@ -112,7 +112,7 @@ contract OracleTest is DSTest {
         oracle.update();
 
         // Check accumulated value
-        int256 value1 = oracle.value();
+        (int256 value1, ) = oracle.value();
         // First update returns initial value
         assertEq(value1, 100 * 10**18);
 
@@ -132,7 +132,7 @@ contract OracleTest is DSTest {
         oracle.update();
 
         // Check value after the second update
-        int256 value2 = oracle.value();
+        (int256 value2, ) = oracle.value();
         assertEq(value2, 110000000000000000000);
 
         // Set reported value to 100
@@ -151,7 +151,50 @@ contract OracleTest is DSTest {
         oracle.update();
 
         // Check value after the third update
-        int256 value3 = oracle.value();
+        (int256 value3, ) = oracle.value();
         assertEq(value3, 108000000000000000000);
+    }
+
+    function test_ValueReturned_ShouldBeStale_IfNeverUpdated() public {
+        // Initially the value should be considered stale
+        (, bool isStale) = oracle.value();
+        assertTrue(isStale);
+    }
+
+    function test_ValueReturned_ShouldBeStale_IfNotUpdatedForTooLong() public {
+        // Set the value to 100
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IValueProvider.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint256(100 * 10**18))
+            })
+        );
+        // Update the oracle
+        oracle.update();
+
+        // Advance time
+        hevm.warp(block.timestamp + minTimeBetweenWindows * 2 + 1);
+
+        // Check stale value
+        (, bool isStale) = oracle.value();
+        assertTrue(isStale);
+    }
+
+    function test_ValueReturned_ShouldNotBeStale_IfJustUpdated() public {
+        // Set the value to 100
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IValueProvider.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint256(100 * 10**18))
+            })
+        );
+        // Update the oracle
+        oracle.update();
+
+        // Check stale value
+        (, bool isStale) = oracle.value();
+        assertTrue(isStale == false);
     }
 }
