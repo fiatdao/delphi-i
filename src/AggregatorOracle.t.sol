@@ -176,10 +176,10 @@ contract OracleTest is DSTest {
 
         // Check aggregated value
         (int256 valueBefore, ) = aggregatorOracle.value();
-        assertEq(valueBefore, int256(200 * 10**18));   
+        assertEq(valueBefore, int256(200 * 10**18));
 
         // Remove the oracle
-        aggregatorOracle.oracleRemove(address(localOracle));     
+        aggregatorOracle.oracleRemove(address(localOracle));
 
         // Check aggregated value
         (int256 valueAfter, ) = aggregatorOracle.value();

@@ -41,9 +41,7 @@ contract AggregatorOracle is Guarded {
         (int256 newValue, ) = Oracle(oracle).update();
 
         // Update the aggregated value
-        _aggregatedValue = _aggregateOracleAdded(
-            newValue
-        );
+        _aggregatedValue = _aggregateOracleAdded(newValue);
     }
 
     /// @notice Returns `true` if the oracle is registered
@@ -58,7 +56,7 @@ contract AggregatorOracle is Guarded {
             revert AggregatorOracle__removeOracle_oracleNotRegistered(oracle);
         }
 
-        // TODO: consider finding an optimized way 
+        // TODO: consider finding an optimized way
         // to update the value without iterating over all oracles
         updateAll();
     }
@@ -104,9 +102,11 @@ contract AggregatorOracle is Guarded {
         return sum / int256(values.length);
     }
 
-    function _aggregateOracleAdded(
-        int256 newValue
-    ) internal view returns (int256) {
+    function _aggregateOracleAdded(int256 newValue)
+        internal
+        view
+        returns (int256)
+    {
         // Get oracle count
         uint256 oracleLength = _oracles.length();
 
