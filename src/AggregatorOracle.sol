@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {Guarded} from "lib/fiat-lux/src/Guarded.sol";
+import {Guarded} from "./Guarded.sol";
 
 import {Oracle} from "./Oracle.sol";
 
