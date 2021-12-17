@@ -21,6 +21,14 @@ contract OracleTest is DSTest {
 
         // Add a mock oracle
         oracle = new MockProvider();
+        oracle.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.update.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(100 * 10**18), true)
+            }),
+            true
+        );
         aggregatorOracle.oracleAdd(address(oracle));
     }
 
@@ -54,6 +62,15 @@ contract OracleTest is DSTest {
 
         // Create a couple of oracles
         MockProvider oracle1 = new MockProvider();
+
+        oracle1.givenQueryReturnResponse(
+            abi.encode(),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(100 * 10**18))
+            }),
+            false
+        );
 
         // Add the oracle
         (bool ok, ) = user.externalCall(
@@ -104,5 +121,63 @@ contract OracleTest is DSTest {
             )
         );
         assertTrue(ok == false);
+    }
+
+    function test_TriggerUpdate_ShouldCallOracle() public {
+        // Trigger the update
+        aggregatorOracle.updateAll();
+
+        // Check the oracle was called
+        MockProvider.CallData memory cd = oracle.getCallData(0);
+        assertEq(cd.caller, address(aggregatorOracle));
+        assertEq(cd.functionSelector, Oracle.update.selector);
+    }
+
+    function test_TriggerUpdate_ReturnsValue() public {
+        // Trigger the update
+        (int256 value, bool valid) = aggregatorOracle.updateAll();
+
+        // Check the return value
+        assertEq(value, int256(100 * 10**18));
+        assertTrue(valid);
+    }
+
+    function test_GetAggregatedValue_WillReturnAverage() public {
+        // Remove existing oracle
+        aggregatorOracle.oracleRemove(address(oracle));
+
+        // Add oracle1
+        MockProvider oracle1 = new MockProvider();
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.update.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(100 * 10**18), true)
+            }),
+            true
+        );
+        aggregatorOracle.oracleAdd(address(oracle1));
+
+        // Add oracle2
+        MockProvider oracle2 = new MockProvider();
+        oracle2.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.update.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(300 * 10**18), true)
+            }),
+            true
+        );
+        aggregatorOracle.oracleAdd(address(oracle2));
+
+        // Trigger the update
+        aggregatorOracle.updateAll();
+
+        // Get the aggregated value
+        (int256 value, bool valid) = aggregatorOracle.value();
+
+        // Check the return value
+        assertEq(value, int256(200 * 10**18));
+        assertTrue(valid);
     }
 }

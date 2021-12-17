@@ -34,6 +34,7 @@ contract MockProvider {
 
     mapping(bytes32 => ReturnData) public givenQueryReturn;
     mapping(bytes32 => bool) public givenQuerySet;
+    mapping(bytes32 => bool) public givenQueryLog;
 
     function setDefaultResponse(ReturnData memory returnData_) external {
         defaultReturnData = returnData_;
@@ -41,10 +42,12 @@ contract MockProvider {
 
     function givenQueryReturnResponse(
         bytes memory query_,
-        ReturnData memory returnData_
+        ReturnData memory returnData_,
+        bool log
     ) external {
         givenQueryReturn[keccak256(query_)] = returnData_;
         givenQuerySet[keccak256(query_)] = true;
+        givenQueryLog[keccak256(query_)] = log;
     }
 
     // prettier-ignore
@@ -58,7 +61,10 @@ contract MockProvider {
                 data: msg.data,
                 value: msg.value
             });
-            callData.push(newCallData);            
+
+            if (givenQueryLog[keccak256(query_)]) {
+                callData.push(newCallData);
+            }
 
             // Return data as specified by the query
             ReturnData memory returnData = givenQueryReturn[keccak256(query_)];

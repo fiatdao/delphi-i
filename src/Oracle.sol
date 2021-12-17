@@ -30,16 +30,18 @@ contract Oracle {
 
     /// @notice Get the current value of the oracle
     /// @return the current value of the oracle
-    /// @return whether the value is stale (true) or fresh (false)
+    /// @return whether the value is valid
     function value() public view returns (int256, bool) {
-        bool isStale = block.timestamp >= lastTimestamp + minTimeBetweenUpdates * 2;
-        return (ema, isStale);
+        // Value is considered valid if it was updated before 2 * minTimeBetweenUpdates ago
+        bool valid = block.timestamp <
+            lastTimestamp + minTimeBetweenUpdates * 2;
+        return (ema, valid);
     }
 
-    function update() public {
+    function update() public returns (int256, bool) {
         // Not enough time has passed since the last update
         if (lastTimestamp + minTimeBetweenUpdates > block.timestamp) {
-            return;
+            return value();
         }
 
         // Update the value using an exponential moving average
@@ -56,5 +58,8 @@ contract Oracle {
 
         // Save when the value was last updated
         lastTimestamp = block.timestamp;
+
+        // Return value and whether it is valid
+        return value();
     }
 }

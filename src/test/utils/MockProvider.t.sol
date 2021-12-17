@@ -38,7 +38,8 @@ contract MockProviderTest is DSTest {
         bytes memory response = hex"5678";
         mockProvider.givenQueryReturnResponse(
             query,
-            MockProvider.ReturnData({success: true, data: response})
+            MockProvider.ReturnData({success: true, data: response}),
+            false
         );
 
         (bool okReceived, bytes memory responseReceived) = address(mockProvider)
@@ -59,7 +60,8 @@ contract MockProviderTest is DSTest {
         bytes memory query = hex"1234";
         mockProvider.givenQueryReturnResponse(
             query,
-            MockProvider.ReturnData({success: false, data: hex""})
+            MockProvider.ReturnData({success: false, data: hex""}),
+            false
         );
 
         (bool okReceived, ) = address(mockProvider).call(query);
