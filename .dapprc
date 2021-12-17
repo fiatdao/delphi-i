@@ -17,6 +17,6 @@ then
   export DAPP_TEST_FUZZ_RUNS=100 # Only fuzz briefly if DEEP_FUZZ is not set to true.
   export DAPP_TEST_SMTTIMEOUT=50000 # SMT solve for a long time if DEEP_FUZZ is set to true.
 else
-  export DAPP_TEST_FUZZ_RUNS=100 # Only fuzz briefly if DEEP_FUZZ is not set to true.
-  export DAPP_TEST_SMTTIMEOUT=60000 # Only SMT solve briefly if DEEP_FUZZ is not set to true.
+  export DAPP_TEST_FUZZ_RUNS=1000 # Only fuzz briefly if DEEP_FUZZ is not set to true.
+  export DAPP_TEST_SMTTIMEOUT=100000 # Only SMT solve briefly if DEEP_FUZZ is not set to true.
 fi
