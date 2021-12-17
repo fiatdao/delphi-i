@@ -36,6 +36,14 @@ contract AggregatorOracle is Guarded {
         if (added == false) {
             revert AggregatorOracle__addOracle_oracleAlreadyRegistered(oracle);
         }
+
+        // Get the oracle value
+        (int256 newValue, ) = Oracle(oracle).update();
+
+        // Update the aggregated value
+        _aggregatedValue = _aggregateOracleAdded(
+            newValue
+        );
     }
 
     /// @notice Returns `true` if the oracle is registered
@@ -49,6 +57,10 @@ contract AggregatorOracle is Guarded {
         if (removed == false) {
             revert AggregatorOracle__removeOracle_oracleNotRegistered(oracle);
         }
+
+        // TODO: consider finding an optimized way 
+        // to update the value without iterating over all oracles
+        updateAll();
     }
 
     /// @notice Update values from oracles and return aggregated value
@@ -79,11 +91,33 @@ contract AggregatorOracle is Guarded {
         pure
         returns (int256)
     {
+        // Avoid division by zero
+        if (values.length == 0) {
+            return 0;
+        }
+
         int256 sum;
         for (uint256 i = 0; i < values.length; i++) {
             sum += values[i];
         }
 
         return sum / int256(values.length);
+    }
+
+    function _aggregateOracleAdded(
+        int256 newValue
+    ) internal view returns (int256) {
+        // Get oracle count
+        uint256 oracleLength = _oracles.length();
+
+        // If this is the first oracle, return this value
+        if (oracleLength == 1) {
+            return newValue;
+        }
+
+        // Otherwise, return the average of the previous aggregated value and this value
+        return
+            (_aggregatedValue * (int256(oracleLength) - 1) + newValue) /
+            int256(oracleLength);
     }
 }

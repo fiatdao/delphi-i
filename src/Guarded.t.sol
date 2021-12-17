@@ -30,12 +30,21 @@ contract GuardedTest is DSTest {
         bool hasRole;
 
         // Should not be able to call method
-        (ok, ) = user.externalCall(address(guarded), abi.encodeWithSelector(guarded.guardedMethodTestRole.selector));
-        assertTrue(ok == false, "Cannot call guarded method before adding permissions");
+        (ok, ) = user.externalCall(
+            address(guarded),
+            abi.encodeWithSelector(guarded.guardedMethodTestRole.selector)
+        );
+        assertTrue(
+            ok == false,
+            "Cannot call guarded method before adding permissions"
+        );
 
         // Adding role should allow user to call method
         guarded.grantRole(guarded.TEST_ROLE(), address(user));
-        (ok, ) = user.externalCall(address(guarded), abi.encodeWithSelector(guarded.guardedMethodTestRole.selector));
+        (ok, ) = user.externalCall(
+            address(guarded),
+            abi.encodeWithSelector(guarded.guardedMethodTestRole.selector)
+        );
         assertTrue(ok, "Can call method after adding permissions");
 
         // User has custom role
@@ -44,8 +53,14 @@ contract GuardedTest is DSTest {
 
         // Removing role disables permission
         guarded.revokeRole(guarded.TEST_ROLE(), address(user));
-        (ok, ) = user.externalCall(address(guarded), abi.encodeWithSelector(guarded.guardedMethodTestRole.selector));
-        assertTrue(ok == false, "Cannot call method after removing permissions");
+        (ok, ) = user.externalCall(
+            address(guarded),
+            abi.encodeWithSelector(guarded.guardedMethodTestRole.selector)
+        );
+        assertTrue(
+            ok == false,
+            "Cannot call method after removing permissions"
+        );
 
         // User does not have custom role
         hasRole = guarded.hasRole(guarded.TEST_ROLE(), address(user));
@@ -57,12 +72,18 @@ contract GuardedTest is DSTest {
         bool ok;
 
         // Should not be able to call method
-        (ok, ) = user.externalCall(address(guarded), abi.encodeWithSelector(guarded.guardedRootRole.selector));
+        (ok, ) = user.externalCall(
+            address(guarded),
+            abi.encodeWithSelector(guarded.guardedRootRole.selector)
+        );
         assertTrue(ok == false, "Senatus can call method");
 
         // Adding senatus role should allow user to call method
         guarded.grantRole(guarded.ROOT_ROLE(), address(user));
-        (ok, ) = user.externalCall(address(guarded), abi.encodeWithSelector(guarded.guardedRootRole.selector));
+        (ok, ) = user.externalCall(
+            address(guarded),
+            abi.encodeWithSelector(guarded.guardedRootRole.selector)
+        );
         assertTrue(ok, "Senatus can call method after adding permissions");
 
         // User has senatus role
@@ -71,8 +92,14 @@ contract GuardedTest is DSTest {
 
         // Removing senatus role disables permission
         guarded.revokeRole(guarded.ROOT_ROLE(), address(user));
-        (ok, ) = user.externalCall(address(guarded), abi.encodeWithSelector(guarded.guardedRootRole.selector));
-        assertTrue(ok == false, "Senatus cannot call method after removing permissions");
+        (ok, ) = user.externalCall(
+            address(guarded),
+            abi.encodeWithSelector(guarded.guardedRootRole.selector)
+        );
+        assertTrue(
+            ok == false,
+            "Senatus cannot call method after removing permissions"
+        );
 
         // User does not have senatus role
         hasRole = guarded.hasRole(guarded.ROOT_ROLE(), address(user));
@@ -84,12 +111,21 @@ contract GuardedTest is DSTest {
         bool ok;
 
         // Should not be able to call method
-        (ok, ) = user.externalCall(address(guarded), abi.encodeWithSelector(guarded.guardedMethodTestRole.selector));
-        assertTrue(ok == false, "Cannot call guarded method before adding permissions");
+        (ok, ) = user.externalCall(
+            address(guarded),
+            abi.encodeWithSelector(guarded.guardedMethodTestRole.selector)
+        );
+        assertTrue(
+            ok == false,
+            "Cannot call guarded method before adding permissions"
+        );
 
         // Adding senatus role should allow user to call method
         guarded.grantRole(guarded.ROOT_ROLE(), address(user));
-        (ok, ) = user.externalCall(address(guarded), abi.encodeWithSelector(guarded.guardedMethodTestRole.selector));
+        (ok, ) = user.externalCall(
+            address(guarded),
+            abi.encodeWithSelector(guarded.guardedMethodTestRole.selector)
+        );
         assertTrue(ok, "Can call method after adding senatus role");
     }
 }

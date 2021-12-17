@@ -43,6 +43,14 @@ contract OracleTest is DSTest {
     function test_AddOracle() public {
         // Create a new oracle
         MockProvider localOracle = new MockProvider();
+        localOracle.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.update.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(100 * 10**18), true)
+            }),
+            true
+        );
 
         // Add the oracle
         aggregatorOracle.oracleAdd(address(localOracle));
@@ -64,7 +72,7 @@ contract OracleTest is DSTest {
         MockProvider oracle1 = new MockProvider();
 
         oracle1.givenQueryReturnResponse(
-            abi.encode(),
+            abi.encodePacked(Oracle.update.selector),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(int256(100 * 10**18))
@@ -83,6 +91,29 @@ contract OracleTest is DSTest {
         assertTrue(ok == false);
     }
 
+    function test_AddOracle_TriggersAggregation() public {
+        // Trigger update
+        aggregatorOracle.updateAll();
+
+        // Create a new oracle
+        MockProvider localOracle = new MockProvider();
+        localOracle.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.update.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(300 * 10**18), true)
+            }),
+            true
+        );
+
+        // Add the oracle
+        aggregatorOracle.oracleAdd(address(localOracle));
+
+        // Check aggregated value
+        (int256 value, ) = aggregatorOracle.value();
+        assertEq(value, int256(200 * 10**18));
+    }
+
     function test_CheckExistenceOfOracle() public {
         // Oracle exists
         assertTrue(aggregatorOracle.oracleExists(address(oracle)));
@@ -98,6 +129,7 @@ contract OracleTest is DSTest {
         // Remove the oracle
         aggregatorOracle.oracleRemove(address(oracle));
 
+        // Make sure the oracle is not part of the list anymore
         assertTrue(aggregatorOracle.oracleExists(address(oracle)) == false);
     }
 
@@ -110,6 +142,7 @@ contract OracleTest is DSTest {
     }
 
     function test_RemoveOracle_OnlyRootShouldBeAbleToRemove() public {
+        // Create a user without permissions
         Caller user = new Caller();
 
         // Remove the oracle
@@ -121,6 +154,36 @@ contract OracleTest is DSTest {
             )
         );
         assertTrue(ok == false);
+    }
+
+    function test_RemoveOracle_TriggersAggregation() public {
+        // Trigger update
+        aggregatorOracle.updateAll();
+
+        // Create a new oracle
+        MockProvider localOracle = new MockProvider();
+        localOracle.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.update.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(300 * 10**18), true)
+            }),
+            true
+        );
+
+        // Add the oracle
+        aggregatorOracle.oracleAdd(address(localOracle));
+
+        // Check aggregated value
+        (int256 valueBefore, ) = aggregatorOracle.value();
+        assertEq(valueBefore, int256(200 * 10**18));   
+
+        // Remove the oracle
+        aggregatorOracle.oracleRemove(address(localOracle));     
+
+        // Check aggregated value
+        (int256 valueAfter, ) = aggregatorOracle.value();
+        assertEq(valueAfter, int256(100 * 10**18));
     }
 
     function test_TriggerUpdate_ShouldCallOracle() public {
