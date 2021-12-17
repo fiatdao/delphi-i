@@ -14,6 +14,3 @@
 [submodule "lib/ds-auth"]
 	path = lib/ds-auth
 	url = https://github.com/dapphub/ds-auth
-[submodule "lib/fiat-lux"]
-	path = lib/fiat-lux
-	url = https://github.com/fiatdao/fiat-lux
