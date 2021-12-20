@@ -11,13 +11,13 @@ import {IValueProvider} from "./valueprovider/IValueProvider.sol";
 import {Oracle} from "./Oracle.sol";
 
 contract OracleTest is DSTest {
-    Hevm hevm = Hevm(DSTest.HEVM_ADDRESS);
+    Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
 
-    MockProvider mockValueProvider;
+    MockProvider internal mockValueProvider;
 
-    Oracle oracle;
-    uint256 minTimeBetweenWindows = 100; // seconds
-    int256 alpha = 2 * 10**17; // 0.2
+    Oracle internal oracle;
+    uint256 internal minTimeBetweenWindows = 100; // seconds
+    int256 internal alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
         mockValueProvider = new MockProvider();
@@ -32,8 +32,9 @@ contract OracleTest is DSTest {
             abi.encodePacked(IValueProvider.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint256(100 * 10**18))
-            })
+                data: abi.encode(int256(100 * 10**18))
+            }),
+            false
         );
 
         hevm.warp(minTimeBetweenWindows * 10);
@@ -105,8 +106,9 @@ contract OracleTest is DSTest {
             abi.encodePacked(IValueProvider.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint256(100 * 10**18))
-            })
+                data: abi.encode(int256(100 * 10**18))
+            }),
+            false
         );
         // Update the oracle
         oracle.update();
@@ -121,8 +123,9 @@ contract OracleTest is DSTest {
             abi.encodePacked(IValueProvider.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint256(150 * 10**18))
-            })
+                data: abi.encode(int256(150 * 10**18))
+            }),
+            false
         );
 
         // Advance time
@@ -140,8 +143,9 @@ contract OracleTest is DSTest {
             abi.encodePacked(IValueProvider.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint256(100 * 10**18))
-            })
+                data: abi.encode(int256(100 * 10**18))
+            }),
+            false
         );
 
         // Advance time
@@ -155,20 +159,39 @@ contract OracleTest is DSTest {
         assertEq(value3, 108000000000000000000);
     }
 
-    function test_ValueReturned_ShouldBeStale_IfNeverUpdated() public {
-        // Initially the value should be considered stale
-        (, bool isStale) = oracle.value();
-        assertTrue(isStale);
-    }
-
-    function test_ValueReturned_ShouldBeStale_IfNotUpdatedForTooLong() public {
+    function test_update_Returns_Value() public {
         // Set the value to 100
         mockValueProvider.givenQueryReturnResponse(
             abi.encodePacked(IValueProvider.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint256(100 * 10**18))
-            })
+                data: abi.encode(int256(100 * 10**18))
+            }),
+            false
+        );
+        // Update the oracle
+        (int256 value, bool valid) = oracle.update();
+        assertEq(value, int256(100 * 10**18));
+        assertTrue(valid);
+    }
+
+    function test_ValueReturned_ShouldNotBeValid_IfNeverUpdated() public {
+        // Initially the value should be considered stale
+        (, bool valid) = oracle.value();
+        assertTrue(valid == false);
+    }
+
+    function test_ValueReturned_ShouldNotBeValid_IfNotUpdatedForTooLong()
+        public
+    {
+        // Set the value to 100
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IValueProvider.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(100 * 10**18))
+            }),
+            false
         );
         // Update the oracle
         oracle.update();
@@ -177,24 +200,25 @@ contract OracleTest is DSTest {
         hevm.warp(block.timestamp + minTimeBetweenWindows * 2 + 1);
 
         // Check stale value
-        (, bool isStale) = oracle.value();
-        assertTrue(isStale);
+        (, bool valid) = oracle.value();
+        assertTrue(valid == false);
     }
 
-    function test_ValueReturned_ShouldNotBeStale_IfJustUpdated() public {
+    function test_ValueReturned_ShouldBeValid_IfJustUpdated() public {
         // Set the value to 100
         mockValueProvider.givenQueryReturnResponse(
             abi.encodePacked(IValueProvider.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint256(100 * 10**18))
-            })
+                data: abi.encode(int256(100 * 10**18))
+            }),
+            false
         );
         // Update the oracle
         oracle.update();
 
         // Check stale value
-        (, bool isStale) = oracle.value();
-        assertTrue(isStale == false);
+        (, bool valid) = oracle.value();
+        assertTrue(valid);
     }
 }
