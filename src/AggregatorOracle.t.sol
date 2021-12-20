@@ -11,10 +11,10 @@ import {Oracle} from "./Oracle.sol";
 import {AggregatorOracle} from "./AggregatorOracle.sol";
 
 contract OracleTest is DSTest {
-    Hevm hevm = Hevm(DSTest.HEVM_ADDRESS);
+    Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
 
-    AggregatorOracle aggregatorOracle;
-    MockProvider oracle;
+    AggregatorOracle internal aggregatorOracle;
+    MockProvider internal oracle;
 
     function setUp() public {
         aggregatorOracle = new AggregatorOracle();

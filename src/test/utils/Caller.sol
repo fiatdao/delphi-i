@@ -11,6 +11,7 @@ contract Caller {
         external
         returns (bool, bytes memory)
     {
+        // solhint-disable-next-line
         (bool ok, bytes memory data) = _contractAddress.call(_callData);
         return (ok, data);
     }

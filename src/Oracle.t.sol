@@ -11,13 +11,13 @@ import {IValueProvider} from "./valueprovider/IValueProvider.sol";
 import {Oracle} from "./Oracle.sol";
 
 contract OracleTest is DSTest {
-    Hevm hevm = Hevm(DSTest.HEVM_ADDRESS);
+    Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
 
-    MockProvider mockValueProvider;
+    MockProvider internal mockValueProvider;
 
-    Oracle oracle;
-    uint256 minTimeBetweenWindows = 100; // seconds
-    int256 alpha = 2 * 10**17; // 0.2
+    Oracle internal oracle;
+    uint256 internal minTimeBetweenWindows = 100; // seconds
+    int256 internal alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
         mockValueProvider = new MockProvider();

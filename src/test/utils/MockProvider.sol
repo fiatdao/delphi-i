@@ -71,7 +71,7 @@ contract MockProvider {
             if (returnData.success) {
                 return returnData.data;
             } else {
-                require(false);
+                require(false, string(returnData.data));
             }
         } else {
             // Default to sending the default response

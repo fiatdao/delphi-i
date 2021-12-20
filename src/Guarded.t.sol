@@ -10,15 +10,24 @@ import {Guarded} from "./Guarded.sol";
 contract GuardedInstance is Guarded {
     bytes32 public constant TEST_ROLE = keccak256("TEST_ROLE");
 
-    constructor() Guarded() {}
+    constructor() Guarded() {
+        // Disables linter warning for empty blocks
+        this;
+    }
 
-    function guardedMethodTestRole() external onlyRole(TEST_ROLE) {}
+    function guardedMethodTestRole() external onlyRole(TEST_ROLE) {
+        // Disables linter warning for empty blocks
+        this;
+    }
 
-    function guardedRootRole() external onlyRoot {}
+    function guardedRootRole() external onlyRoot {
+        // Disables linter warning for empty blocks
+        this;
+    }
 }
 
 contract GuardedTest is DSTest {
-    GuardedInstance guarded;
+    GuardedInstance internal guarded;
 
     function setUp() public {
         guarded = new GuardedInstance();
