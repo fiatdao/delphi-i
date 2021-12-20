@@ -45,15 +45,17 @@ contract MockProvider {
         ReturnData memory returnData_,
         bool log
     ) external {
-        givenQueryReturn[keccak256(query_)] = returnData_;
-        givenQuerySet[keccak256(query_)] = true;
-        givenQueryLog[keccak256(query_)] = log;
+        bytes32 queryKey = keccak256(query_);
+        givenQueryReturn[queryKey] = returnData_;
+        givenQuerySet[queryKey] = true;
+        givenQueryLog[queryKey] = log;
     }
 
     // prettier-ignore
     fallback(bytes calldata query_) external payable returns (bytes memory){
+        bytes32 queryKey = keccak256(query_);
         // Check if any set query matches the current query
-        if (givenQuerySet[keccak256(query_)]) {
+        if (givenQuerySet[queryKey]) {
             // Log call
             CallData memory newCallData = CallData({
                 caller: msg.sender,
@@ -62,12 +64,12 @@ contract MockProvider {
                 value: msg.value
             });
 
-            if (givenQueryLog[keccak256(query_)]) {
+            if (givenQueryLog[queryKey]) {
                 callData.push(newCallData);
             }
 
             // Return data as specified by the query
-            ReturnData memory returnData = givenQueryReturn[keccak256(query_)];
+            ReturnData memory returnData = givenQueryReturn[queryKey];
             if (returnData.success) {
                 return returnData.data;
             } else {
