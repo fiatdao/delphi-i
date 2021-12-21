@@ -248,12 +248,14 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(success, "update() should not fail when paused");
     }
 
-    function test_AggregatorOracle_CanUseAnother_AggregatorOracle_AsAnOracle() public {
+    function test_AggregatorOracle_CanUseAnother_AggregatorOracle_AsAnOracle()
+        public
+    {
         assertTrue(false);
 
         // Create a new aggregator
         AggregatorOracle localAggregatorOracle = new AggregatorOracle();
-        
+
         // Create a new oracle
         MockProvider localOracle = new MockProvider();
         localOracle.givenQueryReturnResponse(
@@ -268,8 +270,8 @@ contract AggregatorOracleTest is DSTest {
             abi.encodePacked(Oracle.update.selector),
             MockProvider.ReturnData({success: true, data: ""}),
             true
-        );        
-        
+        );
+
         // Add the new oracle to the new aggregator
         localAggregatorOracle.oracleAdd(address(localOracle));
         localAggregatorOracle.update();

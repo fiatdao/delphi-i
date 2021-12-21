@@ -54,7 +54,7 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
     }
 
     /// @notice Update values from oracles and return aggregated value
-    function update() override(IOracle) public {
+    function update() public override(IOracle) {
         // Call all oracles to update and get values
         uint256 oracleLength = _oracles.length();
         int256[] memory values = new int256[](oracleLength);
@@ -69,7 +69,13 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
     }
 
     /// @notice Returns the aggregated value
-    function value() override(IOracle) public view whenNotPaused returns (int256, bool) {
+    function value()
+        public
+        view
+        override(IOracle)
+        whenNotPaused
+        returns (int256, bool)
+    {
         return (_aggregatedValue, oracleCount() > 0);
     }
 

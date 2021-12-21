@@ -35,14 +35,20 @@ contract Oracle is Pausable, IOracle {
     /// @notice Get the current value of the oracle
     /// @return the current value of the oracle
     /// @return whether the value is valid
-    function value() override(IOracle) public view whenNotPaused returns (int256, bool) {
+    function value()
+        public
+        view
+        override(IOracle)
+        whenNotPaused
+        returns (int256, bool)
+    {
         // Value is considered valid if it was updated before 2 * minTimeBetweenUpdates ago
         bool valid = block.timestamp <
             lastTimestamp + minTimeBetweenUpdates * 2;
         return (ema, valid);
     }
 
-    function update() override(IOracle) public {
+    function update() public override(IOracle) {
         // Not enough time has passed since the last update
         if (lastTimestamp + minTimeBetweenUpdates > block.timestamp) {
             // Exit early if no update is needed
