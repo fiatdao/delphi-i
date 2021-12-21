@@ -31,12 +31,9 @@ contract AggregatorOracleTest is DSTest {
         );
         oracle.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: ""
-            }),
+            MockProvider.ReturnData({success: true, data: ""}),
             true
-        );        
+        );
         aggregatorOracle.oracleAdd(address(oracle));
     }
 
@@ -58,13 +55,10 @@ contract AggregatorOracleTest is DSTest {
                 data: abi.encode(int256(100 * 10**18), true)
             }),
             false
-        );        
+        );
         localOracle.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: ""
-            }),
+            MockProvider.ReturnData({success: true, data: ""}),
             true
         );
 
@@ -89,10 +83,7 @@ contract AggregatorOracleTest is DSTest {
 
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: ""
-            }),
+            MockProvider.ReturnData({success: true, data: ""}),
             false
         );
 
@@ -159,16 +150,6 @@ contract AggregatorOracleTest is DSTest {
         assertEq(cd.functionSelector, Oracle.update.selector);
     }
 
-    function test_TriggerUpdate_ReturnsValue() public {
-        // Trigger the update
-        aggregatorOracle.update();
-        (int256 value, bool valid) = aggregatorOracle.value();
-
-        // Check the return value
-        assertEq(value, int256(100 * 10**18));
-        assertTrue(valid);
-    }
-
     function test_GetAggregatedValue_WillReturnAverage() public {
         // Remove existing oracle
         aggregatorOracle.oracleRemove(address(oracle));
@@ -185,10 +166,7 @@ contract AggregatorOracleTest is DSTest {
         );
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: ""
-            }),
+            MockProvider.ReturnData({success: true, data: ""}),
             true
         );
         aggregatorOracle.oracleAdd(address(oracle1));
@@ -205,10 +183,7 @@ contract AggregatorOracleTest is DSTest {
         );
         oracle2.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: ""
-            }),
+            MockProvider.ReturnData({success: true, data: ""}),
             true
         );
         aggregatorOracle.oracleAdd(address(oracle2));
@@ -224,7 +199,22 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(valid);
     }
 
-    function test_paused_stops_returnValue() public {
+    function test_Update_WithoutOracles_ReturnsZero() public {
+        // Remove existing oracle
+        aggregatorOracle.oracleRemove(address(oracle));
+
+        // Trigger the update
+        aggregatorOracle.update();
+
+        // Get the aggregated value
+        (int256 value, bool valid) = aggregatorOracle.value();
+
+        // Check the return value
+        assertEq(value, int256(0));
+        assertTrue(valid == false);
+    }
+
+    function test_Paused_Stops_ReturnValue() public {
         // Pause aggregator
         aggregatorOracle.pause();
 
@@ -241,7 +231,7 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(success == false, "value() should fail when paused");
     }
 
-    function test_paused_doesNotStop_update() public {
+    function test_Paused_DoesNotStop_Update() public {
         // Pause aggregator
         aggregatorOracle.pause();
 
@@ -256,20 +246,5 @@ contract AggregatorOracleTest is DSTest {
         );
 
         assertTrue(success, "update() should not fail when paused");
-    }    
-
-    function test_update_withoutOracles_returnsZero() public {
-        // Remove existing oracle
-        aggregatorOracle.oracleRemove(address(oracle));
-
-        // Trigger the update
-        aggregatorOracle.update();
-
-        // Get the aggregated value
-        (int256 value, bool valid) = aggregatorOracle.value();
-
-        // Check the return value
-        assertEq(value, int256(0));
-        assertTrue(valid == false);
     }
 }

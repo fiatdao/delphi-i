@@ -68,7 +68,7 @@ contract AggregatorOracle is Guarded, Pausable {
     }
 
     /// @notice Returns the aggregated value
-    function value() public view whenNotPaused() returns (int256, bool) {
+    function value() public view whenNotPaused returns (int256, bool) {
         return (_aggregatedValue, oracleCount() > 0);
     }
 

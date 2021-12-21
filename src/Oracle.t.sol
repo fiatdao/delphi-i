@@ -206,7 +206,7 @@ contract OracleTest is DSTest {
         assertTrue(valid);
     }
 
-    function test_paused_stops_returnValue() public {
+    function test_Paused_Stops_ReturnValue() public {
         // Pause oracle
         oracle.pause();
 
@@ -223,7 +223,7 @@ contract OracleTest is DSTest {
         assertTrue(success == false, "value() should fail when paused");
     }
 
-    function test_paused_doesNotStop_update() public {
+    function test_Paused_DoesNotStop_Update() public {
         // Pause oracle
         oracle.pause();
 
@@ -238,5 +238,5 @@ contract OracleTest is DSTest {
         );
 
         assertTrue(success, "update() should not fail when paused");
-    }    
+    }
 }

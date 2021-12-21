@@ -28,7 +28,7 @@ contract PausableTest is DSTest {
         pausable = new PausableInstance();
     }
 
-    function test_pause_unpause() public {
+    function test_Pause_Unpause() public {
         pausable.pause();
         assertTrue(pausable.paused() == true, "paused() should be true");
 
@@ -36,29 +36,29 @@ contract PausableTest is DSTest {
         assertTrue(pausable.paused() == false, "paused() should be false");
     }
 
-    function test_whenPaused_success_when_paused() public {
+    function test_WhenPaused_Success_When_Paused() public {
         pausable.pause();
         pausable.check_whenPaused();
         assertTrue(pausable.executedSuccessfully() == true);
     }
 
-    function testFail_whenPaused_fails_when_not_paused() public {
+    function testFail_WhenPaused_Fails_When_NotPaused() public {
         // Starts as unpaused
         pausable.check_whenPaused();
     }
 
-    function test_whenNotPaused_success_when_not_paused() public {
+    function test_WhenNotPaused_Success_When_NotPaused() public {
         // Starts as unpaused
         pausable.check_whenNotPaused();
         assertTrue(pausable.executedSuccessfully() == true);
     }
 
-    function testFail_whenNotPaused_fails_when_paused() public {
+    function testFail_WhenNotPaused_Fails_When_Paused() public {
         pausable.pause();
         pausable.check_whenNotPaused();
     }
 
-    function test_PAUSER_ROLE_can_pause_unpause() public {
+    function test_PAUSER_ROLE_CanPauseUnpause() public {
         // Create a user
         Caller user = new Caller();
 
@@ -84,7 +84,7 @@ contract PausableTest is DSTest {
         assertTrue(pausable.paused() == false, "paused() should be false");
     }
 
-    function test_nonPAUSER_ROLE_not_able_to_pause() public {
+    function test_NonPAUSER_ROLE_NotAbleToPause() public {
         // Create a user
         Caller user = new Caller();
 
@@ -100,7 +100,7 @@ contract PausableTest is DSTest {
         assertTrue(pausable.paused() == false, "paused() should be false");
     }
 
-    function test_nonPAUSER_ROLE_not_able_to_unpause() public {
+    function test_NonPAUSER_ROLE_NotAbleToUnpause() public {
         // Create a user
         Caller user = new Caller();
 
