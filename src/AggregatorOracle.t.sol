@@ -257,4 +257,19 @@ contract AggregatorOracleTest is DSTest {
 
         assertTrue(success, "update() should not fail when paused");
     }    
+
+    function test_update_withoutOracles_returnsZero() public {
+        // Remove existing oracle
+        aggregatorOracle.oracleRemove(address(oracle));
+
+        // Trigger the update
+        aggregatorOracle.update();
+
+        // Get the aggregated value
+        (int256 value, bool valid) = aggregatorOracle.value();
+
+        // Check the return value
+        assertEq(value, int256(0));
+        assertTrue(valid == false);
+    }
 }

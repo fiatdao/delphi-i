@@ -69,7 +69,7 @@ contract AggregatorOracle is Guarded, Pausable {
 
     /// @notice Returns the aggregated value
     function value() public view whenNotPaused() returns (int256, bool) {
-        return (_aggregatedValue, true);
+        return (_aggregatedValue, oracleCount() > 0);
     }
 
     /// @notice Aggregates the values
@@ -89,24 +89,5 @@ contract AggregatorOracle is Guarded, Pausable {
         }
 
         return sum / int256(values.length);
-    }
-
-    function _aggregateOracleAdded(int256 newValue)
-        internal
-        view
-        returns (int256)
-    {
-        // Get oracle count
-        uint256 oracleLength = _oracles.length();
-
-        // If this is the first oracle, return this value
-        if (oracleLength == 1) {
-            return newValue;
-        }
-
-        // Otherwise, return the average of the previous aggregated value and this value
-        return
-            (_aggregatedValue * (int256(oracleLength) - 1) + newValue) /
-            int256(oracleLength);
     }
 }
