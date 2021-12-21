@@ -17,6 +17,7 @@ contract OracleTest is DSTest {
 
     Oracle internal oracle;
     uint256 internal minTimeBetweenWindows = 100; // seconds
+    uint256 internal staleTimeBetweenWindows = minTimeBetweenWindows * 3; // seconds
     int256 internal alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
@@ -24,6 +25,7 @@ contract OracleTest is DSTest {
         oracle = new Oracle(
             address(mockValueProvider),
             minTimeBetweenWindows,
+            staleTimeBetweenWindows,
             alpha
         );
 
@@ -101,6 +103,13 @@ contract OracleTest is DSTest {
     }
 
     function test_update_Recalculates_MovingAverage() public {
+        //Track the internal values so we can follow the formula better
+        // EMA -> _nextValue = currentAverage + (alpha * (newValue - currentAverage))
+
+        //current value = 0
+        //next value = 0
+        //current time window = 0
+
         // Set the value to 100
         mockValueProvider.givenQueryReturnResponse(
             abi.encodePacked(IValueProvider.value.selector),
@@ -112,6 +121,7 @@ contract OracleTest is DSTest {
         );
         // Update the oracle
         oracle.update();
+        //next value = current value = 100;
 
         // Check accumulated value
         (int256 value1, ) = oracle.value();
@@ -130,13 +140,18 @@ contract OracleTest is DSTest {
 
         // Advance time
         hevm.warp(block.timestamp + minTimeBetweenWindows);
+        //current time window = 1
 
         // Update the oracle
         oracle.update();
+        //next value = 150
+        //current value = 100
+        //current time window = 1
 
         // Check value after the second update
+        // The current Value should stil be only the first Value
         (int256 value2, ) = oracle.value();
-        assertEq(value2, 110000000000000000000);
+        assertEq(value2, 100 * 10**18);
 
         // Set reported value to 100
         mockValueProvider.givenQueryReturnResponse(
@@ -150,13 +165,51 @@ contract OracleTest is DSTest {
 
         // Advance time
         hevm.warp(block.timestamp + minTimeBetweenWindows);
+        //current time window = 2
 
         // Update the oracle
         oracle.update();
+        //next value = 100
+        //current value = 110 (100 + (0.2 * 50))
+        //current time window = 2
 
-        // Check value after the third update
         (int256 value3, ) = oracle.value();
-        assertEq(value3, 108000000000000000000);
+        assertEq(value3, 110 * 10**18);
+
+        // Set reported value to 150
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IValueProvider.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(150 * 10**18))
+            }),
+            false
+        );
+
+        // Advance time exactily before we move to the next window
+        hevm.warp(block.timestamp + minTimeBetweenWindows - 1);
+        //current time window = 2
+        //current value = 110
+
+        oracle.update();
+
+        //value remains unchanged
+        (int256 value4, ) = oracle.value();
+        assertEq(value4, 110 * 10**18);
+
+        // Advance time so we step in the next window
+        hevm.warp(block.timestamp + 1);
+
+        // Update the oracle
+        oracle.update();
+        //next value = 150
+        //current value = 108 (110 + (0.2 * -10))
+        //current time window = 3
+
+        // Check value after the second update
+        // The current Value should stil be only the first Value
+        (int256 value5, ) = oracle.value();
+        assertEq(value5, 108 * 10**18);
     }
 
     function test_update_Returns_Value() public {
@@ -197,7 +250,7 @@ contract OracleTest is DSTest {
         oracle.update();
 
         // Advance time
-        hevm.warp(block.timestamp + minTimeBetweenWindows * 2 + 1);
+        hevm.warp(block.timestamp + staleTimeBetweenWindows + 1);
 
         // Check stale value
         (, bool valid) = oracle.value();

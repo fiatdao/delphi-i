@@ -63,7 +63,10 @@ contract Oracle {
             int256 newValue = valueProvider.value();
             // EMA = EMA(prev) + alpha * (Value - EMA(prev))
             // Scales down because of fixed number of decimals
-            _nextValue = currentAverage + (alpha * (newValue - currentAverage)) / 10**18;
+            _nextValue =
+                currentAverage +
+                (alpha * (newValue - currentAverage)) /
+                10**18;
         }
 
         // Save when the value was last updated
