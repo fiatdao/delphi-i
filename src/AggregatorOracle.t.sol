@@ -247,4 +247,40 @@ contract AggregatorOracleTest is DSTest {
 
         assertTrue(success, "update() should not fail when paused");
     }
+
+    function test_AggregatorOracle_CanUseAnother_AggregatorOracle_AsAnOracle() public {
+        assertTrue(false);
+
+        // Create a new aggregator
+        AggregatorOracle localAggregatorOracle = new AggregatorOracle();
+        
+        // Create a new oracle
+        MockProvider localOracle = new MockProvider();
+        localOracle.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(300 * 10**18), true)
+            }),
+            false
+        );
+        localOracle.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.update.selector),
+            MockProvider.ReturnData({success: true, data: ""}),
+            true
+        );        
+        
+        // Add the new oracle to the new aggregator
+        localAggregatorOracle.oracleAdd(address(localOracle));
+        localAggregatorOracle.update();
+
+        // Add the local aggregator to the aggregator (as an oracle)
+        aggregatorOracle.oracleAdd(address(localAggregatorOracle));
+
+        aggregatorOracle.update();
+
+        (int256 value, bool valid) = aggregatorOracle.value();
+        assertEq(value, int256(200 * 10**18));
+        assertTrue(valid);
+    }
 }
