@@ -159,22 +159,6 @@ contract OracleTest is DSTest {
         assertEq(value3, 108000000000000000000);
     }
 
-    function test_update_Returns_Value() public {
-        // Set the value to 100
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(int256(100 * 10**18))
-            }),
-            false
-        );
-        // Update the oracle
-        (int256 value, bool valid) = oracle.update();
-        assertEq(value, int256(100 * 10**18));
-        assertTrue(valid);
-    }
-
     function test_ValueReturned_ShouldNotBeValid_IfNeverUpdated() public {
         // Initially the value should be considered stale
         (, bool valid) = oracle.value();
@@ -221,4 +205,38 @@ contract OracleTest is DSTest {
         (, bool valid) = oracle.value();
         assertTrue(valid);
     }
+
+    function test_paused_stops_returnValue() public {
+        // Pause oracle
+        oracle.pause();
+
+        // Create user
+        Caller user = new Caller();
+
+        // Should fail trying to get value
+        bool success;
+        (success, ) = user.externalCall(
+            address(oracle),
+            abi.encodeWithSelector(oracle.value.selector)
+        );
+
+        assertTrue(success == false, "value() should fail when paused");
+    }
+
+    function test_paused_doesNotStop_update() public {
+        // Pause oracle
+        oracle.pause();
+
+        // Create user
+        Caller user = new Caller();
+
+        // Should not fail trying to get update
+        bool success;
+        (success, ) = user.externalCall(
+            address(oracle),
+            abi.encodeWithSelector(oracle.update.selector)
+        );
+
+        assertTrue(success, "update() should not fail when paused");
+    }    
 }
