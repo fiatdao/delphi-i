@@ -251,8 +251,6 @@ contract AggregatorOracleTest is DSTest {
     function test_AggregatorOracle_CanUseAnother_AggregatorOracle_AsAnOracle()
         public
     {
-        assertTrue(false);
-
         // Create a new aggregator
         AggregatorOracle localAggregatorOracle = new AggregatorOracle();
 
