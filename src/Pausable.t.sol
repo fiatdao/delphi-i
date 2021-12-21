@@ -12,13 +12,13 @@ contract PausableInstance is Pausable {
     // Use to check modifier execution.
     bool public executedSuccessfully;
 
-    function check_whenNotPaused() public whenNotPaused() {
+    function check_whenNotPaused() public whenNotPaused {
         executedSuccessfully = true;
     }
 
-    function check_whenPaused() public whenPaused() {
+    function check_whenPaused() public whenPaused {
         executedSuccessfully = true;
-    }    
+    }
 }
 
 contract PausableTest is DSTest {
@@ -59,7 +59,7 @@ contract PausableTest is DSTest {
     }
 
     function test_PAUSER_ROLE_can_pause_unpause() public {
-        // Create a user        
+        // Create a user
         Caller user = new Caller();
 
         // Grant PAUSER_ROLE to user
@@ -75,7 +75,10 @@ contract PausableTest is DSTest {
         assertTrue(pausable.paused() == true, "paused() should be true");
 
         // Should be able to unpause
-        user.externalCall(address(pausable), abi.encodeWithSelector(pausable.unpause.selector));
+        user.externalCall(
+            address(pausable),
+            abi.encodeWithSelector(pausable.unpause.selector)
+        );
 
         // Contract is unpaused
         assertTrue(pausable.paused() == false, "paused() should be false");
@@ -87,7 +90,8 @@ contract PausableTest is DSTest {
 
         // Should not be able to pause
         bool success;
-        (success, )= user.externalCall(address(pausable), 
+        (success, ) = user.externalCall(
+            address(pausable),
             abi.encodeWithSelector(pausable.pause.selector)
         );
         assertTrue(success == false, "Should not be able to pause");
@@ -105,13 +109,13 @@ contract PausableTest is DSTest {
 
         // Should not be able to unpause
         bool success;
-        (success, )= user.externalCall(address(pausable), 
+        (success, ) = user.externalCall(
+            address(pausable),
             abi.encodeWithSelector(pausable.unpause.selector)
         );
         assertTrue(success == false, "Should not be able to unpause");
 
         // Contract is still paused
         assertTrue(pausable.paused(), "paused() should be false");
-    }    
-
+    }
 }
