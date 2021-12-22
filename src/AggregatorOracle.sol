@@ -66,10 +66,10 @@ contract AggregatorOracle is Guarded, Pausable {
             Oracle oracle = Oracle(_oracles.at(i));
 
             try oracle.update() {
-                try oracle.value() returns (int256 value, bool isValid) {
+                try oracle.value() returns (int256 returnedValue, bool isValid) {
                     if (isValid) {
                         // Add the value to the list of valid values
-                        values[validValues] = value;
+                        values[validValues] = returnedValue;
 
                         // Increase count of valid values
                         validValues++;
