@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {Guarded} from "./Guarded.sol";
+import {Pausable} from "./Pausable.sol";
 
 import {Oracle} from "./Oracle.sol";
 
@@ -16,7 +17,7 @@ error AggregatorOracle__removeOracle_oracleNotRegistered(address oracle);
 // @notice Emitted when one does not have the right permissions to manage _oracles
 error AggregatorOracle__notAuthorized();
 
-contract AggregatorOracle is Guarded {
+contract AggregatorOracle is Guarded, Pausable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     // List of registered oracles
@@ -36,12 +37,6 @@ contract AggregatorOracle is Guarded {
         if (added == false) {
             revert AggregatorOracle__addOracle_oracleAlreadyRegistered(oracle);
         }
-
-        // Get the oracle value
-        (int256 newValue, ) = Oracle(oracle).update();
-
-        // Update the aggregated value
-        _aggregatedValue = _aggregateOracleAdded(newValue);
     }
 
     /// @notice Returns `true` if the oracle is registered
@@ -55,32 +50,27 @@ contract AggregatorOracle is Guarded {
         if (removed == false) {
             revert AggregatorOracle__removeOracle_oracleNotRegistered(oracle);
         }
-
-        // TODO: consider finding an optimized way
-        // to update the value without iterating over all oracles
-        updateAll();
     }
 
     /// @notice Update values from oracles and return aggregated value
-    function updateAll() public returns (int256, bool) {
+    function update() public {
         // Call all oracles to update and get values
         uint256 oracleLength = _oracles.length();
         int256[] memory values = new int256[](oracleLength);
         bool[] memory valid = new bool[](oracleLength);
         for (uint256 i = 0; i < oracleLength; i++) {
-            (values[i], valid[i]) = Oracle(_oracles.at(i)).update();
+            Oracle oracle = Oracle(_oracles.at(i));
+            oracle.update();
+            (values[i], valid[i]) = oracle.value();
         }
 
         // Aggregate the returned values
         _aggregatedValue = _aggregateValues(values);
-
-        // Return aggregated value
-        return value();
     }
 
     /// @notice Returns the aggregated value
-    function value() public view returns (int256, bool) {
-        return (_aggregatedValue, true);
+    function value() public view whenNotPaused returns (int256, bool) {
+        return (_aggregatedValue, oracleCount() > 0);
     }
 
     /// @notice Aggregates the values
@@ -100,24 +90,5 @@ contract AggregatorOracle is Guarded {
         }
 
         return sum / int256(values.length);
-    }
-
-    function _aggregateOracleAdded(int256 newValue)
-        internal
-        view
-        returns (int256)
-    {
-        // Get oracle count
-        uint256 oracleLength = _oracles.length();
-
-        // If this is the first oracle, return this value
-        if (oracleLength == 1) {
-            return newValue;
-        }
-
-        // Otherwise, return the average of the previous aggregated value and this value
-        return
-            (_aggregatedValue * (int256(oracleLength) - 1) + newValue) /
-            int256(oracleLength);
     }
 }
