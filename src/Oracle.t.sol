@@ -16,18 +16,18 @@ contract OracleTest is DSTest {
     MockProvider internal mockValueProvider;
 
     Oracle internal oracle;
-    uint256 internal minTimeBetweenWindows = 100; // seconds
+    uint256 internal minTimeBetweenUpdates = 100; // seconds
     int256 internal alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
         mockValueProvider = new MockProvider();
         oracle = new Oracle(
             address(mockValueProvider),
-            minTimeBetweenWindows,
+            minTimeBetweenUpdates,
             alpha
         );
 
-        // Set the value returned by Value Provider to 0
+        // Set the value returned by Value Provider to 100
         mockValueProvider.givenQueryReturnResponse(
             abi.encodePacked(IValueProvider.value.selector),
             MockProvider.ReturnData({
@@ -37,7 +37,7 @@ contract OracleTest is DSTest {
             false
         );
 
-        hevm.warp(minTimeBetweenWindows * 10);
+        hevm.warp(minTimeBetweenUpdates * 10);
     }
 
     function test_deploy() public {
@@ -64,7 +64,7 @@ contract OracleTest is DSTest {
         assertEq(oracle.lastTimestamp(), blockTimestamp);
 
         // Advance time
-        hevm.warp(blockTimestamp + minTimeBetweenWindows - 1);
+        hevm.warp(blockTimestamp + minTimeBetweenUpdates - 1);
 
         // Calling update should not update the values
         // because not enough time has passed
@@ -87,7 +87,7 @@ contract OracleTest is DSTest {
         assertEq(oracle.lastTimestamp(), blockTimestamp);
 
         // Advance time
-        hevm.warp(blockTimestamp + minTimeBetweenWindows + 1);
+        hevm.warp(blockTimestamp + minTimeBetweenUpdates + 1);
 
         // Calling update should not update the values
         // because not enough time has passed
@@ -96,7 +96,7 @@ contract OracleTest is DSTest {
         // Check if the values are still the same
         assertEq(
             oracle.lastTimestamp(),
-            blockTimestamp + minTimeBetweenWindows + 1
+            blockTimestamp + minTimeBetweenUpdates + 1
         );
     }
 
@@ -129,7 +129,7 @@ contract OracleTest is DSTest {
         );
 
         // Advance time
-        hevm.warp(block.timestamp + minTimeBetweenWindows);
+        hevm.warp(block.timestamp + minTimeBetweenUpdates);
 
         // Update the oracle
         oracle.update();
@@ -149,7 +149,7 @@ contract OracleTest is DSTest {
         );
 
         // Advance time
-        hevm.warp(block.timestamp + minTimeBetweenWindows);
+        hevm.warp(block.timestamp + minTimeBetweenUpdates);
 
         // Update the oracle
         oracle.update();
@@ -181,7 +181,7 @@ contract OracleTest is DSTest {
         oracle.update();
 
         // Advance time
-        hevm.warp(block.timestamp + minTimeBetweenWindows * 2 + 1);
+        hevm.warp(block.timestamp + minTimeBetweenUpdates * 2 + 1);
 
         // Check stale value
         (, bool valid) = oracle.value();
@@ -238,5 +238,91 @@ contract OracleTest is DSTest {
         );
 
         assertTrue(success, "update() should not fail when paused");
+    }
+
+    function test_Reset_ResetsContract() public {
+        // Make sure there are some values in there
+        oracle.update();
+
+        // Last updated timestamp is this block
+        assertEq(oracle.lastTimestamp(), block.timestamp);
+
+        // Value should be 100 and valid
+        int256 value;
+        bool valid;
+        (value, valid) = oracle.value();
+        assertEq(value, 100 * 10**18);
+        assertTrue(valid == true);
+
+        // Oracle should be paused when resetting
+        oracle.pause();
+
+        // Reset contract
+        oracle.reset();
+
+        // Unpause contract
+        oracle.unpause();
+
+        // Last updated timestamp should be 0
+        assertEq(oracle.lastTimestamp(), 0);
+
+        // Value should be 0 and not valid
+        (value, valid) = oracle.value();
+        assertEq(value, 0);
+        assertTrue(valid == false);
+    }    
+
+    function test_Reset_ShouldBePossible_IfPaused() public {
+        // Pause oracle
+        oracle.pause();
+
+        // Reset contract
+        oracle.reset();
+    }
+
+    function testFail_Reset_ShouldNotBePossible_IfNotPaused() public {
+        // Oracle is not paused
+        assertTrue(oracle.paused() == false);
+
+        // Reset contract should fail
+        oracle.reset();
+    }
+
+    function test_RESET_ROLE_ShouldBeAble_ToReset() public {
+        // Create user
+        Caller user = new Caller();
+
+        // Grant RESET_ROLE to user
+        oracle.grantRole(oracle.RESET_ROLE(), address(user));
+
+        // Oracle should be paused when calling reset
+        oracle.pause();
+
+        // Should not fail trying to reset
+        bool success;
+        (success, ) = user.externalCall(
+            address(oracle),
+            abi.encodeWithSelector(oracle.reset.selector)
+        );
+
+        assertTrue(success, "RESET_ROLE should be able to call reset()");
+    }
+
+    function test_NonRESET_ROLE_ShouldNotBeAble_ToReset() public {
+        // Create user
+        // Do not grant RESET_ROLE to user
+        Caller user = new Caller();
+
+        // Oracle should be paused when calling reset
+        oracle.pause();
+
+        // Should fail trying to reset
+        bool success;
+        (success, ) = user.externalCall(
+            address(oracle),
+            abi.encodeWithSelector(oracle.reset.selector)
+        );
+
+        assertTrue(success == false, "Non-RESET_ROLE should not be able to call reset()");
     }
 }

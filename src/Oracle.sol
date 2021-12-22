@@ -20,6 +20,9 @@ contract Oracle is Pausable {
     // Exponential moving average
     int256 public ema;
 
+    // RESET_ROLE is able to reset the oracle
+    bytes32 constant public RESET_ROLE = keccak256("RESET_ROLE");
+
     constructor(
         address valueProvider_,
         uint256 minTimeBetweenUpdates_,
@@ -61,5 +64,10 @@ contract Oracle is Pausable {
 
         // Save when the value was last updated
         lastTimestamp = block.timestamp;
+    }
+
+    function reset() whenPaused onlyRole(RESET_ROLE) public {
+        ema = 0;
+        lastTimestamp = 0;
     }
 }
