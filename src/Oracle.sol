@@ -3,7 +3,9 @@ pragma solidity ^0.8.0;
 
 import {IValueProvider} from "./valueprovider/IValueProvider.sol";
 
-contract Oracle {
+import {Pausable} from "./Pausable.sol";
+
+contract Oracle is Pausable {
     IValueProvider public immutable valueProvider;
 
     uint256 public immutable minTimeBetweenUpdates;
@@ -18,6 +20,9 @@ contract Oracle {
     // Exponential moving average
     int256 public ema;
 
+    // RESET_ROLE is able to reset the oracle
+    bytes32 public constant RESET_ROLE = keccak256("RESET_ROLE");
+
     constructor(
         address valueProvider_,
         uint256 minTimeBetweenUpdates_,
@@ -31,17 +36,18 @@ contract Oracle {
     /// @notice Get the current value of the oracle
     /// @return the current value of the oracle
     /// @return whether the value is valid
-    function value() public view returns (int256, bool) {
+    function value() public view whenNotPaused returns (int256, bool) {
         // Value is considered valid if it was updated before 2 * minTimeBetweenUpdates ago
         bool valid = block.timestamp <
             lastTimestamp + minTimeBetweenUpdates * 2;
         return (ema, valid);
     }
 
-    function update() public returns (int256, bool) {
+    function update() public {
         // Not enough time has passed since the last update
         if (lastTimestamp + minTimeBetweenUpdates > block.timestamp) {
-            return value();
+            // Exit early if no update is needed
+            return;
         }
 
         // Update the value using an exponential moving average
@@ -58,8 +64,10 @@ contract Oracle {
 
         // Save when the value was last updated
         lastTimestamp = block.timestamp;
+    }
 
-        // Return value and whether it is valid
-        return value();
+    function reset() public whenPaused onlyRole(RESET_ROLE) {
+        ema = 0;
+        lastTimestamp = 0;
     }
 }
