@@ -270,7 +270,7 @@ contract OracleTest is DSTest {
         (value, valid) = oracle.value();
         assertEq(value, 0);
         assertTrue(valid == false);
-    }    
+    }
 
     function test_Reset_ShouldBePossible_IfPaused() public {
         // Pause oracle
@@ -323,6 +323,9 @@ contract OracleTest is DSTest {
             abi.encodeWithSelector(oracle.reset.selector)
         );
 
-        assertTrue(success == false, "Non-RESET_ROLE should not be able to call reset()");
+        assertTrue(
+            success == false,
+            "Non-RESET_ROLE should not be able to call reset()"
+        );
     }
 }

@@ -21,7 +21,7 @@ contract Oracle is Pausable {
     int256 public ema;
 
     // RESET_ROLE is able to reset the oracle
-    bytes32 constant public RESET_ROLE = keccak256("RESET_ROLE");
+    bytes32 public constant RESET_ROLE = keccak256("RESET_ROLE");
 
     constructor(
         address valueProvider_,
@@ -66,7 +66,7 @@ contract Oracle is Pausable {
         lastTimestamp = block.timestamp;
     }
 
-    function reset() whenPaused onlyRole(RESET_ROLE) public {
+    function reset() public whenPaused onlyRole(RESET_ROLE) {
         ema = 0;
         lastTimestamp = 0;
     }
