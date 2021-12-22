@@ -40,8 +40,7 @@ contract Oracle {
     /// @return whether the value is valid
     function value() public view returns (int256, bool) {
         // Value is considered valid if it was updated before becomeStaleTimeBetweenUpdates ago
-        bool valid = block.timestamp <
-            lastTimestamp + maxValidTime;
+        bool valid = block.timestamp < lastTimestamp + maxValidTime;
         return (_currentValue, valid);
     }
 

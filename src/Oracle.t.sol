@@ -102,7 +102,6 @@ contract OracleTest is DSTest {
         );
     }
 
-
     function test_update_SameWindowUpdate_MovingAverage() public {
         mockValueProvider.givenQueryReturnResponse(
             abi.encodePacked(IValueProvider.value.selector),
@@ -131,7 +130,7 @@ contract OracleTest is DSTest {
         );
 
         // Advance time but stay in the same time update window
-        hevm.warp(block.timestamp + minTimeBetweenWindows/4);
+        hevm.warp(block.timestamp + minTimeBetweenWindows / 4);
 
         // Update the oracle
         oracle.update();
@@ -163,7 +162,7 @@ contract OracleTest is DSTest {
         // First update returns initial value
         assertEq(value1, 100 * 10**18);
 
-        //check next value 
+        //check next value
         int256 nextValue1 = oracle.nextValue();
         // First update returns initial value
         assertEq(nextValue1, 100 * 10**18);
@@ -184,7 +183,7 @@ contract OracleTest is DSTest {
 
         // Update the oracle
         oracle.update();
-        
+
         // Check value after the second update
         (int256 value2, ) = oracle.value();
         assertEq(value2, 100 * 10**18);
