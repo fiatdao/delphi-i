@@ -3,9 +3,11 @@ pragma solidity ^0.8.0;
 
 import {IValueProvider} from "./valueprovider/IValueProvider.sol";
 
+import {IOracle} from "./IOracle.sol";
+
 import {Pausable} from "./Pausable.sol";
 
-contract Oracle is Pausable {
+contract Oracle is Pausable, IOracle {
     IValueProvider public immutable valueProvider;
 
     uint256 public immutable minTimeBetweenUpdates;
@@ -36,14 +38,20 @@ contract Oracle is Pausable {
     /// @notice Get the current value of the oracle
     /// @return the current value of the oracle
     /// @return whether the value is valid
-    function value() public view whenNotPaused returns (int256, bool) {
+    function value()
+        public
+        view
+        override(IOracle)
+        whenNotPaused
+        returns (int256, bool)
+    {
         // Value is considered valid if it was updated before 2 * minTimeBetweenUpdates ago
         bool valid = block.timestamp <
             lastTimestamp + minTimeBetweenUpdates * 2;
         return (ema, valid);
     }
 
-    function update() public {
+    function update() public override(IOracle) {
         // Not enough time has passed since the last update
         if (lastTimestamp + minTimeBetweenUpdates > block.timestamp) {
             // Exit early if no update is needed
