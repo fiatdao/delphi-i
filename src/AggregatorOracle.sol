@@ -54,18 +54,32 @@ contract AggregatorOracle is Guarded, Pausable {
 
     /// @notice Update values from oracles and return aggregated value
     function update() public {
-        // Call all oracles to update and get values
+        // Create of possible valid values
         uint256 oracleLength = _oracles.length();
         int256[] memory values = new int256[](oracleLength);
-        bool[] memory valid = new bool[](oracleLength);
+
+        // Count how many oracles have a valid value
+        uint256 validValues = 0;
+
+        // Update each oracle and get its value
         for (uint256 i = 0; i < oracleLength; i++) {
             Oracle oracle = Oracle(_oracles.at(i));
-            oracle.update();
-            (values[i], valid[i]) = oracle.value();
+
+            try oracle.update() {
+                try oracle.value() returns (int256 value, bool isValid) {
+                    if (isValid) {
+                        // Add the value to the list of valid values
+                        values[validValues] = value;
+
+                        // Increase count of valid values
+                        validValues++;
+                    }
+                } catch {}
+            } catch {}
         }
 
         // Aggregate the returned values
-        _aggregatedValue = _aggregateValues(values);
+        _aggregatedValue = _aggregateValues(values, validValues);
     }
 
     /// @notice Returns the aggregated value
@@ -74,21 +88,21 @@ contract AggregatorOracle is Guarded, Pausable {
     }
 
     /// @notice Aggregates the values
-    function _aggregateValues(int256[] memory values)
+    function _aggregateValues(int256[] memory values, uint256 validValues)
         internal
         pure
         returns (int256)
     {
         // Avoid division by zero
-        if (values.length == 0) {
+        if (validValues == 0) {
             return 0;
         }
 
         int256 sum;
-        for (uint256 i = 0; i < values.length; i++) {
+        for (uint256 i = 0; i < validValues; i++) {
             sum += values[i];
         }
 
-        return sum / int256(values.length);
+        return sum / int256(validValues);
     }
 }

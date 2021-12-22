@@ -189,66 +189,6 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(valid);
     }
 
-    // function test_Update_DoesNotFail_IfOracleFails() public {
-    //     // Create a failing oracle
-    //     MockProvider oracle1 = new MockProvider();
-    //     oracle1.givenQueryReturnResponse(
-    //         abi.encodePacked(Oracle.update.selector),
-    //         MockProvider.ReturnData({
-    //             // Fails
-    //             success: false,
-    //             data: ""
-    //         }),
-    //         true
-    //     );
-    //     oracle1.givenQueryReturnResponse(
-    //         abi.encodePacked(Oracle.value.selector),
-    //         MockProvider.ReturnData({
-    //             // Fails
-    //             success: false,
-    //             data: abi.encode(int256(100 * 10**18), true)
-    //         }),
-    //         false
-    //     );
-
-    //     // Add the oracle
-    //     aggregatorOracle.oracleAdd(address(oracle1));
-
-    //     // Trigger the update
-    //     // The call should not fail
-    //     aggregatorOracle.update();
-    // }
-
-    // function test_Update_IgnoresInvalidValues() public {
-    //     // Create a couple of oracles
-    //     MockProvider oracle1 = new MockProvider();
-    //     oracle1.givenQueryReturnResponse(
-    //         abi.encodePacked(Oracle.update.selector),
-    //         MockProvider.ReturnData({
-    //             // Fails
-    //             success: true,
-    //             data: ""
-    //         }),
-    //         true
-    //     );
-    //     oracle1.givenQueryReturnResponse(
-    //         abi.encodePacked(Oracle.value.selector),
-    //         MockProvider.ReturnData({
-    //             // Fails
-    //             success: true,
-    //             data: abi.encode(int256(100 * 10**18), true)
-    //         }),
-    //         true
-    //     );
-
-    //     // Add the oracle
-    //     aggregatorOracle.oracleAdd(address(oracle1));
-
-    //     // Trigger the update
-    //     // The call should not fail
-    //     aggregatorOracle.update();
-    // }
-
     function test_Update_WithoutOracles_ReturnsZero() public {
         // Remove existing oracle
         aggregatorOracle.oracleRemove(address(oracle));
@@ -297,4 +237,71 @@ contract AggregatorOracleTest is DSTest {
 
         assertTrue(success, "update() should not fail when paused");
     }
+
+    function test_Update_DoesNotFail_IfOracleFails() public {
+        // Create a failing oracle
+        MockProvider oracle1 = new MockProvider();
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.update.selector),
+            MockProvider.ReturnData({
+                // Fails
+                success: false,
+                data: ""
+            }),
+            true
+        );
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.value.selector),
+            MockProvider.ReturnData({
+                // Fails
+                success: false,
+                data: abi.encode(int256(100 * 10**18), true)
+            }),
+            false
+        );
+
+        // Add the oracle
+        aggregatorOracle.oracleAdd(address(oracle1));
+
+        // Trigger the update
+        // The call should not fail
+        aggregatorOracle.update();
+    }
+
+    function test_Update_IgnoresInvalidValues() public {
+        // Create a couple of oracles
+        MockProvider oracle1 = new MockProvider();
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.update.selector),
+            MockProvider.ReturnData({
+                // Fails
+                success: true,
+                data: ""
+            }),
+            true
+        );
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.value.selector),
+            MockProvider.ReturnData({
+                // Fails
+                success: true,
+                data: abi.encode(int256(100 * 10**18), true)
+            }),
+            true
+        );
+
+        // Add the oracle
+        aggregatorOracle.oracleAdd(address(oracle1));
+
+        // Trigger the update
+        aggregatorOracle.update();
+
+        // Get the aggregated value
+        int256 value;
+        bool valid;
+        (value, valid) = aggregatorOracle.value();
+
+        // Make sure the value does not include the invalid value
+        // TODO: 
+    }    
 }
