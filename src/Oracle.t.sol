@@ -102,9 +102,7 @@ contract OracleTest is DSTest {
         );
     }
 
-    function test_update_UpdateDoesNotChangeTheValue_InTheSameWindow()
-        public
-    {
+    function test_update_UpdateDoesNotChangeTheValue_InTheSameWindow() public {
         mockValueProvider.givenQueryReturnResponse(
             abi.encodePacked(IValueProvider.value.selector),
             MockProvider.ReturnData({
