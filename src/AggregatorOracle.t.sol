@@ -46,24 +46,11 @@ contract AggregatorOracleTest is DSTest {
     }
 
     function test_AddOracle() public {
-        // Create a new oracle
-        MockProvider localOracle = new MockProvider();
-        localOracle.givenQueryReturnResponse(
-            abi.encodePacked(Oracle.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(int256(100 * 10**18), true)
-            }),
-            false
-        );
-        localOracle.givenQueryReturnResponse(
-            abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({success: true, data: ""}),
-            true
-        );
+        // Create a new address since the oracle is not checked for validity in anyway
+        address newOracle = address(0x1);
 
         // Add the oracle
-        aggregatorOracle.oracleAdd(address(localOracle));
+        aggregatorOracle.oracleAdd(newOracle);
     }
 
     function testFail_AddOracle_ShouldNotAllowDuplicates() public {
