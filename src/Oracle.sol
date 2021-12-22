@@ -8,7 +8,7 @@ contract Oracle {
 
     uint256 public immutable minTimeBetweenUpdates;
 
-    uint256 public immutable becomeStaleTimeBetweenUpdates;
+    uint256 public immutable maxValidTime;
 
     uint256 public lastTimestamp;
 
@@ -17,19 +17,21 @@ contract Oracle {
     // A commonly used value is 2 / (N + 1)
     int256 public immutable alpha;
 
-    // current and next EMA computed values
+    // next EMA value
+    int256 public nextValue;
+
+    // current EMA value
     int256 private _currentValue;
-    int256 private _nextValue;
 
     constructor(
         address valueProvider_,
         uint256 minTimeBetweenUpdates_,
-        uint256 becomeStaleTimeBetweenUpdates_,
+        uint256 maxValidTime_,
         int256 alpha_
     ) {
         valueProvider = IValueProvider(valueProvider_);
         minTimeBetweenUpdates = minTimeBetweenUpdates_;
-        becomeStaleTimeBetweenUpdates = becomeStaleTimeBetweenUpdates_;
+        maxValidTime = maxValidTime_;
         alpha = alpha_;
     }
 
@@ -39,7 +41,7 @@ contract Oracle {
     function value() public view returns (int256, bool) {
         // Value is considered valid if it was updated before becomeStaleTimeBetweenUpdates ago
         bool valid = block.timestamp <
-            lastTimestamp + becomeStaleTimeBetweenUpdates;
+            lastTimestamp + maxValidTime;
         return (_currentValue, valid);
     }
 
@@ -52,20 +54,19 @@ contract Oracle {
         // Update the value using an exponential moving average
         if (_currentValue == 0) {
             // First update takes the current value
-            _nextValue = valueProvider.value();
-            _currentValue = _nextValue;
+            nextValue = valueProvider.value();
+            _currentValue = nextValue;
         } else {
-            //first update the current value with the current computed EMA
-            _currentValue = _nextValue;
+            // Update the current value with the next value
+            _currentValue = nextValue;
 
-            //start the next value window with the current oracle value
-            int256 currentAverage = _nextValue;
+            // Update the EMA and store it in the next value
             int256 newValue = valueProvider.value();
             // EMA = EMA(prev) + alpha * (Value - EMA(prev))
             // Scales down because of fixed number of decimals
-            _nextValue =
-                currentAverage +
-                (alpha * (newValue - currentAverage)) /
+            nextValue =
+                _currentValue +
+                (alpha * (newValue - _currentValue)) /
                 10**18;
         }
 
