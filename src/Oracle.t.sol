@@ -102,7 +102,9 @@ contract OracleTest is DSTest {
         );
     }
 
-    function test_update_SameWindowUpdate_MovingAverage() public {
+    function test_update_UpdateDoesNotChangeTheValue_InTheSameWindow_MovingAverage()
+        public
+    {
         mockValueProvider.givenQueryReturnResponse(
             abi.encodePacked(IValueProvider.value.selector),
             MockProvider.ReturnData({
@@ -135,6 +137,7 @@ contract OracleTest is DSTest {
         // Update the oracle
         oracle.update();
 
+        // Values are not modified
         (int256 value2, ) = oracle.value();
         assertEq(value2, 100 * 10**18);
 
@@ -143,8 +146,6 @@ contract OracleTest is DSTest {
     }
 
     function test_update_Recalculates_MovingAverage() public {
-        // Exponential Moving Average(EMA): Next Value = Current Value + (alpha * (oracle value - Current Value))
-
         // Set the value to 100
         mockValueProvider.givenQueryReturnResponse(
             abi.encodePacked(IValueProvider.value.selector),
@@ -162,9 +163,9 @@ contract OracleTest is DSTest {
         // First update returns initial value
         assertEq(value1, 100 * 10**18);
 
-        //check next value
+        // Check next value
         int256 nextValue1 = oracle.nextValue();
-        // First update returns initial value
+        // Next value is set as the initial value
         assertEq(nextValue1, 100 * 10**18);
 
         // Set reported value to 150
