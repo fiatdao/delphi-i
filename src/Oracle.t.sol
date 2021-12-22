@@ -102,7 +102,7 @@ contract OracleTest is DSTest {
         );
     }
 
-    function test_update_UpdateDoesNotChangeTheValue_InTheSameWindow_MovingAverage()
+    function test_update_UpdateDoesNotChangeTheValue_InTheSameWindow()
         public
     {
         mockValueProvider.givenQueryReturnResponse(
