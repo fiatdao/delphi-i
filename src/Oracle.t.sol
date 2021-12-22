@@ -17,6 +17,7 @@ contract OracleTest is DSTest {
 
     Oracle internal oracle;
     uint256 internal minTimeBetweenUpdates = 100; // seconds
+    uint256 internal maxValidTime = 300;
     int256 internal alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
@@ -24,6 +25,7 @@ contract OracleTest is DSTest {
         oracle = new Oracle(
             address(mockValueProvider),
             minTimeBetweenUpdates,
+            maxValidTime,
             alpha
         );
 
@@ -100,6 +102,47 @@ contract OracleTest is DSTest {
         );
     }
 
+    function test_update_UpdateDoesNotChangeTheValue_InTheSameWindow() public {
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IValueProvider.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(100 * 10**18))
+            }),
+            false
+        );
+        // Update the oracle
+        oracle.update();
+
+        (int256 value1, ) = oracle.value();
+        assertEq(value1, 100 * 10**18);
+
+        int256 nextValue1 = oracle.nextValue();
+        assertEq(nextValue1, 100 * 10**18);
+
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IValueProvider.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(150 * 10**18))
+            }),
+            false
+        );
+
+        // Advance time but stay in the same time update window
+        hevm.warp(block.timestamp + 1);
+
+        // Update the oracle
+        oracle.update();
+
+        // Values are not modified
+        (int256 value2, ) = oracle.value();
+        assertEq(value2, 100 * 10**18);
+
+        int256 nextValue2 = oracle.nextValue();
+        assertEq(nextValue2, 100 * 10**18);
+    }
+
     function test_update_Recalculates_MovingAverage() public {
         // Set the value to 100
         mockValueProvider.givenQueryReturnResponse(
@@ -117,6 +160,11 @@ contract OracleTest is DSTest {
         (int256 value1, ) = oracle.value();
         // First update returns initial value
         assertEq(value1, 100 * 10**18);
+
+        // Check next value
+        int256 nextValue1 = oracle.nextValue();
+        // Next value is set as the initial value
+        assertEq(nextValue1, 100 * 10**18);
 
         // Set reported value to 150
         mockValueProvider.givenQueryReturnResponse(
@@ -136,7 +184,11 @@ contract OracleTest is DSTest {
 
         // Check value after the second update
         (int256 value2, ) = oracle.value();
-        assertEq(value2, 110000000000000000000);
+        assertEq(value2, 100 * 10**18);
+
+        // Check the next value after the second update
+        int256 nextValue2 = oracle.nextValue();
+        assertEq(nextValue2, 110 * 10**18);
 
         // Set reported value to 100
         mockValueProvider.givenQueryReturnResponse(
@@ -154,9 +206,11 @@ contract OracleTest is DSTest {
         // Update the oracle
         oracle.update();
 
-        // Check value after the third update
         (int256 value3, ) = oracle.value();
-        assertEq(value3, 108000000000000000000);
+        assertEq(value3, 110 * 10**18);
+
+        int256 nextValue3 = oracle.nextValue();
+        assertEq(nextValue3, 108 * 10**18);
     }
 
     function test_ValueReturned_ShouldNotBeValid_IfNeverUpdated() public {
@@ -181,7 +235,7 @@ contract OracleTest is DSTest {
         oracle.update();
 
         // Advance time
-        hevm.warp(block.timestamp + minTimeBetweenUpdates * 2 + 1);
+        hevm.warp(block.timestamp + maxValidTime + 1);
 
         // Check stale value
         (, bool valid) = oracle.value();
