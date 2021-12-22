@@ -10,7 +10,7 @@ import {Pausable} from "./Pausable.sol";
 contract Oracle is Pausable, IOracle {
     IValueProvider public immutable valueProvider;
 
-    uint256 public immutable minTimeBetweenUpdates;
+    uint256 public immutable timeUpdateWindow;
 
     uint256 public immutable maxValidTime;
 
@@ -32,12 +32,12 @@ contract Oracle is Pausable, IOracle {
 
     constructor(
         address valueProvider_,
-        uint256 minTimeBetweenUpdates_,
+        uint256 timeUpdateWindow_,
         uint256 maxValidTime_,
         int256 alpha_
     ) {
         valueProvider = IValueProvider(valueProvider_);
-        minTimeBetweenUpdates = minTimeBetweenUpdates_;
+        timeUpdateWindow = timeUpdateWindow_;
         maxValidTime = maxValidTime_;
         alpha = alpha_;
     }
@@ -52,15 +52,14 @@ contract Oracle is Pausable, IOracle {
         whenNotPaused
         returns (int256, bool)
     {
-        // Value is considered valid if it was updated before 2 * minTimeBetweenUpdates ago
-        bool valid = block.timestamp <
-            lastTimestamp + minTimeBetweenUpdates * 2;
+        // Value is considered valid if it was updated before maxValidTime ago
+        bool valid = block.timestamp < lastTimestamp + maxValidTime;
         return (_currentValue, valid);
     }
 
     function update() public override(IOracle) {
         // Not enough time has passed since the last update
-        if (lastTimestamp + minTimeBetweenUpdates > block.timestamp) {
+        if (lastTimestamp + timeUpdateWindow > block.timestamp) {
             // Exit early if no update is needed
             return;
         }
