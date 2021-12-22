@@ -59,8 +59,9 @@ contract AggregatorOracle is Guarded, Pausable {
         int256[] memory values = new int256[](oracleLength);
         bool[] memory valid = new bool[](oracleLength);
         for (uint256 i = 0; i < oracleLength; i++) {
-            Oracle(_oracles.at(i)).update();
-            (values[i], valid[i]) = Oracle(_oracles.at(i)).value();
+            Oracle oracle = Oracle(_oracles.at(i));
+            oracle.update();
+            (values[i], valid[i]) = oracle.value();
         }
 
         // Aggregate the returned values

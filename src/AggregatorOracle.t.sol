@@ -131,10 +131,13 @@ contract AggregatorOracleTest is DSTest {
         // Trigger the update
         aggregatorOracle.update();
 
-        // Check the oracle was called
-        MockProvider.CallData memory cd = oracle.getCallData(0);
-        assertEq(cd.caller, address(aggregatorOracle));
-        assertEq(cd.functionSelector, Oracle.update.selector);
+        // Check if the oracle's `update()` was called
+        MockProvider.CallData memory cd1 = oracle.getCallData(0);
+        assertEq(cd1.caller, address(aggregatorOracle));
+        assertEq(cd1.functionSelector, Oracle.update.selector);
+
+        // Can't check if `value()` was called because it's a view function
+        // and view functions are called with STATICCALL that do not allow state change
     }
 
     function test_GetAggregatedValue_WillReturnAverage() public {
