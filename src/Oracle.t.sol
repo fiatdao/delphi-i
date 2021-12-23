@@ -16,7 +16,7 @@ contract OracleTest is DSTest {
     MockProvider internal mockValueProvider;
 
     Oracle internal oracle;
-    uint256 internal minTimeBetweenUpdates = 100; // seconds
+    uint256 internal timeUpdateWindow = 100; // seconds
     uint256 internal maxValidTime = 300;
     int256 internal alpha = 2 * 10**17; // 0.2
 
@@ -24,7 +24,7 @@ contract OracleTest is DSTest {
         mockValueProvider = new MockProvider();
         oracle = new Oracle(
             address(mockValueProvider),
-            minTimeBetweenUpdates,
+            timeUpdateWindow,
             maxValidTime,
             alpha
         );
@@ -39,7 +39,7 @@ contract OracleTest is DSTest {
             false
         );
 
-        hevm.warp(minTimeBetweenUpdates * 10);
+        hevm.warp(timeUpdateWindow * 10);
     }
 
     function test_deploy() public {
@@ -66,7 +66,7 @@ contract OracleTest is DSTest {
         assertEq(oracle.lastTimestamp(), blockTimestamp);
 
         // Advance time
-        hevm.warp(blockTimestamp + minTimeBetweenUpdates - 1);
+        hevm.warp(blockTimestamp + timeUpdateWindow - 1);
 
         // Calling update should not update the values
         // because not enough time has passed
@@ -82,24 +82,15 @@ contract OracleTest is DSTest {
         // Get current timestamp
         uint256 blockTimestamp = block.timestamp;
 
-        // Update the oracle
-        oracle.update();
-
-        // Check if the timestamp was updated
-        assertEq(oracle.lastTimestamp(), blockTimestamp);
-
         // Advance time
-        hevm.warp(blockTimestamp + minTimeBetweenUpdates + 1);
+        hevm.warp(blockTimestamp + timeUpdateWindow);
 
-        // Calling update should not update the values
-        // because not enough time has passed
+        // Calling update should update the values
+        // because enough time has passed
         oracle.update();
 
-        // Check if the values are still the same
-        assertEq(
-            oracle.lastTimestamp(),
-            blockTimestamp + minTimeBetweenUpdates + 1
-        );
+        // Last timestamp should be updated
+        assertEq(oracle.lastTimestamp(), blockTimestamp + timeUpdateWindow);
     }
 
     function test_update_UpdateDoesNotChangeTheValue_InTheSameWindow() public {
@@ -177,7 +168,7 @@ contract OracleTest is DSTest {
         );
 
         // Advance time
-        hevm.warp(block.timestamp + minTimeBetweenUpdates);
+        hevm.warp(block.timestamp + timeUpdateWindow);
 
         // Update the oracle
         oracle.update();
@@ -201,7 +192,7 @@ contract OracleTest is DSTest {
         );
 
         // Advance time
-        hevm.warp(block.timestamp + minTimeBetweenUpdates);
+        hevm.warp(block.timestamp + timeUpdateWindow);
 
         // Update the oracle
         oracle.update();
@@ -234,24 +225,23 @@ contract OracleTest is DSTest {
         // Update the oracle
         oracle.update();
 
-        // Advance time
-        hevm.warp(block.timestamp + maxValidTime + 1);
+        // Cache start time
+        uint256 startTime = block.timestamp;
 
-        // Check stale value
-        (, bool valid) = oracle.value();
-        assertTrue(valid == false);
+        // Advance time at the maximum valid time
+        hevm.warp(startTime + maxValidTime - 1);
+        // Check value , should be fresh
+        (, bool valid1) = oracle.value();
+        assertTrue(valid1 == true);
+
+        // Advance time exactly when it should become invalid(or stale)
+        hevm.warp(startTime + maxValidTime);
+        // Check value, should be stale
+        (, bool valid2) = oracle.value();
+        assertTrue(valid2 == false);
     }
 
     function test_ValueReturned_ShouldBeValid_IfJustUpdated() public {
-        // Set the value to 100
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(int256(100 * 10**18))
-            }),
-            false
-        );
         // Update the oracle
         oracle.update();
 
@@ -324,6 +314,9 @@ contract OracleTest is DSTest {
         (value, valid) = oracle.value();
         assertEq(value, 0);
         assertTrue(valid == false);
+
+        // Next value should be 0
+        assertEq(oracle.nextValue(), 0);
     }
 
     function test_Reset_ShouldBePossible_IfPaused() public {
