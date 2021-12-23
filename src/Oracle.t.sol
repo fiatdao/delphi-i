@@ -82,29 +82,14 @@ contract OracleTest is DSTest {
         // Get current timestamp
         uint256 blockTimestamp = block.timestamp;
 
-        // Update the oracle
-        oracle.update();
-
-        // Check if the timestamp was updated
-        assertEq(oracle.lastTimestamp(), blockTimestamp);
-
-        // Advance time
-        hevm.warp(blockTimestamp + timeUpdateWindow - 1);
-
-        // Calling update should not update the values
-        // because not enough time has passed
-        oracle.update();
-
-        // Check if the values are still the same
-        assertEq(oracle.lastTimestamp(), blockTimestamp);
-
         // Advance time
         hevm.warp(blockTimestamp + timeUpdateWindow);
 
-        // Calling update should not update the values
-        // because not enough time has passed
+        // Calling update should update the values
+        // because enough time has passed
         oracle.update();
 
+        // Last timestamp should be updated
         assertEq(oracle.lastTimestamp(), blockTimestamp + timeUpdateWindow);
     }
 
@@ -240,29 +225,23 @@ contract OracleTest is DSTest {
         // Update the oracle
         oracle.update();
 
+        // Cache start time
+        uint256 startTime = block.timestamp;
+
         // Advance time at the maximum valid time
-        hevm.warp(block.timestamp + maxValidTime - 1);
+        hevm.warp(startTime + maxValidTime - 1);
         // Check value , should be fresh
-        (, bool value1) = oracle.value();
-        assertTrue(value1 == true);
+        (, bool valid1) = oracle.value();
+        assertTrue(valid1 == true);
 
         // Advance time exactly when it should become invalid(or stale)
-        hevm.warp(block.timestamp + maxValidTime);
+        hevm.warp(startTime + maxValidTime);
         // Check value, should be stale
-        (, bool value2) = oracle.value();
-        assertTrue(value2 == false);
+        (, bool valid2) = oracle.value();
+        assertTrue(valid2 == false);
     }
 
     function test_ValueReturned_ShouldBeValid_IfJustUpdated() public {
-        // Set the value to 100
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(int256(100 * 10**18))
-            }),
-            false
-        );
         // Update the oracle
         oracle.update();
 
@@ -336,7 +315,7 @@ contract OracleTest is DSTest {
         assertEq(value, 0);
         assertTrue(valid == false);
 
-        //Next value should be 0
+        // Next value should be 0
         assertEq(oracle.nextValue(), 0);
     }
 
