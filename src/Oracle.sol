@@ -3,12 +3,16 @@ pragma solidity ^0.8.0;
 
 import {IValueProvider} from "./valueprovider/IValueProvider.sol";
 
+import {IOracle} from "./IOracle.sol";
+
 import {Pausable} from "./Pausable.sol";
 
-contract Oracle is Pausable {
+contract Oracle is Pausable, IOracle {
     IValueProvider public immutable valueProvider;
 
-    uint256 public immutable minTimeBetweenUpdates;
+    uint256 public immutable timeUpdateWindow;
+
+    uint256 public immutable maxValidTime;
 
     uint256 public lastTimestamp;
 
@@ -17,49 +21,66 @@ contract Oracle is Pausable {
     // A commonly used value is 2 / (N + 1)
     int256 public immutable alpha;
 
-    // Exponential moving average
-    int256 public ema;
+    // next EMA value
+    int256 public nextValue;
+
+    // current EMA value
+    int256 private _currentValue;
 
     // RESET_ROLE is able to reset the oracle
     bytes32 public constant RESET_ROLE = keccak256("RESET_ROLE");
 
     constructor(
         address valueProvider_,
-        uint256 minTimeBetweenUpdates_,
+        uint256 timeUpdateWindow_,
+        uint256 maxValidTime_,
         int256 alpha_
     ) {
         valueProvider = IValueProvider(valueProvider_);
-        minTimeBetweenUpdates = minTimeBetweenUpdates_;
+        timeUpdateWindow = timeUpdateWindow_;
+        maxValidTime = maxValidTime_;
         alpha = alpha_;
     }
 
     /// @notice Get the current value of the oracle
     /// @return the current value of the oracle
     /// @return whether the value is valid
-    function value() public view whenNotPaused returns (int256, bool) {
-        // Value is considered valid if it was updated before 2 * minTimeBetweenUpdates ago
-        bool valid = block.timestamp <
-            lastTimestamp + minTimeBetweenUpdates * 2;
-        return (ema, valid);
+    function value()
+        public
+        view
+        override(IOracle)
+        whenNotPaused
+        returns (int256, bool)
+    {
+        // Value is considered valid if it was updated before maxValidTime ago
+        bool valid = block.timestamp < lastTimestamp + maxValidTime;
+        return (_currentValue, valid);
     }
 
-    function update() public {
+    function update() public override(IOracle) {
         // Not enough time has passed since the last update
-        if (lastTimestamp + minTimeBetweenUpdates > block.timestamp) {
+        if (lastTimestamp + timeUpdateWindow > block.timestamp) {
             // Exit early if no update is needed
             return;
         }
 
         // Update the value using an exponential moving average
-        if (ema == 0) {
+        if (_currentValue == 0) {
             // First update takes the current value
-            ema = valueProvider.value();
+            nextValue = valueProvider.value();
+            _currentValue = nextValue;
         } else {
+            // Update the current value with the next value
+            _currentValue = nextValue;
+
+            // Update the EMA and store it in the next value
+            int256 newValue = valueProvider.value();
             // EMA = EMA(prev) + alpha * (Value - EMA(prev))
             // Scales down because of fixed number of decimals
-            int256 emaPrevious = ema;
-            int256 currentValue = valueProvider.value();
-            ema = emaPrevious + (alpha * (currentValue - emaPrevious)) / 10**18;
+            nextValue =
+                _currentValue +
+                (alpha * (newValue - _currentValue)) /
+                10**18;
         }
 
         // Save when the value was last updated
@@ -67,7 +88,8 @@ contract Oracle is Pausable {
     }
 
     function reset() public whenPaused onlyRole(RESET_ROLE) {
-        ema = 0;
+        _currentValue = 0;
+        nextValue = 0;
         lastTimestamp = 0;
     }
 }

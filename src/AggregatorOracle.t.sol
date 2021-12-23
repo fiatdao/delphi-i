@@ -238,6 +238,42 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(success, "update() should not fail when paused");
     }
 
+    function test_AggregatorOracle_CanUseAnother_AggregatorOracle_AsAnOracle()
+        public
+    {
+        // Create a new aggregator
+        AggregatorOracle localAggregatorOracle = new AggregatorOracle();
+
+        // Create a new oracle
+        MockProvider localOracle = new MockProvider();
+        localOracle.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(300 * 10**18), true)
+            }),
+            false
+        );
+        localOracle.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.update.selector),
+            MockProvider.ReturnData({success: true, data: ""}),
+            true
+        );
+
+        // Add the new oracle to the new aggregator
+        localAggregatorOracle.oracleAdd(address(localOracle));
+        localAggregatorOracle.update();
+
+        // Add the local aggregator to the aggregator (as an oracle)
+        aggregatorOracle.oracleAdd(address(localAggregatorOracle));
+
+        aggregatorOracle.update();
+
+        (int256 value, bool valid) = aggregatorOracle.value();
+        assertEq(value, int256(200 * 10**18));
+        assertTrue(valid);
+    }
+
     function test_Update_DoesNotFail_IfOracleFails() public {
         // Create a failing oracle
         MockProvider oracle1 = new MockProvider();
@@ -263,13 +299,13 @@ contract AggregatorOracleTest is DSTest {
         // Trigger the update
         // The call should not fail
         aggregatorOracle.update();
-    }
+    }    
 
     function test_Update_IgnoresInvalidValues() public {
         // Create a failing oracle
         MockProvider oracle1 = new MockProvider();
         // update() succeeds
-        oracle1.givenQueryReturnResponse(
+        oracle1.givenQueryReturnResponse(    
             abi.encodePacked(Oracle.update.selector),
             MockProvider.ReturnData({success: true, data: ""}),
             true
@@ -296,7 +332,7 @@ contract AggregatorOracleTest is DSTest {
 
         // Only the value from the non-failing Oracle is aggregated
         assertEq(value, 100 * 10**18);
-    }
+    }            
 
     function test_Can_SetMinimumRequiredValidValues() public {
         // Set the minimum required valid values

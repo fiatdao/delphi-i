@@ -7,6 +7,7 @@ import {Guarded} from "./Guarded.sol";
 import {Pausable} from "./Pausable.sol";
 
 import {Oracle} from "./Oracle.sol";
+import {IOracle} from "./IOracle.sol";
 
 // @notice Emitted when trying to add an oracle that already exists
 error AggregatorOracle__addOracle_oracleAlreadyRegistered(address oracle);
@@ -17,7 +18,7 @@ error AggregatorOracle__removeOracle_oracleNotRegistered(address oracle);
 // @notice Emitted when one does not have the right permissions to manage _oracles
 error AggregatorOracle__notAuthorized();
 
-contract AggregatorOracle is Guarded, Pausable {
+contract AggregatorOracle is Guarded, Pausable, IOracle {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     // List of registered oracles
@@ -60,8 +61,8 @@ contract AggregatorOracle is Guarded, Pausable {
     }
 
     /// @notice Update values from oracles and return aggregated value
-    function update() public {
-        // Create of possible valid values
+    function update() public override(IOracle) {
+        // Call all oracles to update and get values
         uint256 oracleLength = _oracles.length();
         int256[] memory values = new int256[](oracleLength);
 
@@ -96,14 +97,16 @@ contract AggregatorOracle is Guarded, Pausable {
     }
 
     /// @notice Returns the aggregated value
-    function value() public view whenNotPaused returns (int256, bool) {
+    function value()
+        public
+        view
+        override(IOracle)
+        whenNotPaused
+        returns (int256, bool)
+    {
         bool isValid = _aggregatedValidValues >= minimumRequiredValidValues &&
             _aggregatedValidValues > 0;
         return (_aggregatedValue, isValid);
-    }
-
-    function setMinimumRequiredValidValues(uint256 minimumRequiredValidValues_) public onlyRoot {
-        minimumRequiredValidValues = minimumRequiredValidValues_;
     }
 
     /// @notice Aggregates the values
