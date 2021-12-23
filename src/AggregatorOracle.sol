@@ -109,6 +109,13 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
         return (_aggregatedValue, isValid);
     }
 
+    function setMinimumRequiredValidValues(uint256 minimumRequiredValidValues_)
+        public
+        onlyRoot
+    {
+        minimumRequiredValidValues = minimumRequiredValidValues_;
+    }
+
     /// @notice Aggregates the values
     function _aggregateValues(int256[] memory values, uint256 validValues)
         internal
