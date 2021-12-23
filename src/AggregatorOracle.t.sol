@@ -189,7 +189,7 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(valid);
     }
 
-    function test_Update_WithoutOracles_ReturnsZero() public {
+    function test_Update_WithoutOracles_ReturnsZeroAndInvalid() public {
         // Remove existing oracle
         aggregatorOracle.oracleRemove(address(oracle));
 
@@ -241,19 +241,16 @@ contract AggregatorOracleTest is DSTest {
     function test_Update_DoesNotFail_IfOracleFails() public {
         // Create a failing oracle
         MockProvider oracle1 = new MockProvider();
+        // update() fails
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({
-                // Fails
-                success: false,
-                data: ""
-            }),
+            MockProvider.ReturnData({success: false, data: ""}),
             true
         );
+        // value() fails
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(Oracle.value.selector),
             MockProvider.ReturnData({
-                // Fails
                 success: false,
                 data: abi.encode(int256(100 * 10**18), true)
             }),
@@ -269,28 +266,25 @@ contract AggregatorOracleTest is DSTest {
     }
 
     function test_Update_IgnoresInvalidValues() public {
-        // Create a couple of oracles
+        // Create a failing oracle
         MockProvider oracle1 = new MockProvider();
+        // update() succeeds
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({
-                // Fails
-                success: true,
-                data: ""
-            }),
+            MockProvider.ReturnData({success: true, data: ""}),
             true
         );
+        // value() fails
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(Oracle.value.selector),
             MockProvider.ReturnData({
-                // Fails
-                success: true,
-                data: abi.encode(int256(100 * 10**18), true)
+                success: false,
+                data: abi.encode(int256(300 * 10**18), true)
             }),
-            true
+            false
         );
 
-        // Add the oracle
+        // Add the failing oracle
         aggregatorOracle.oracleAdd(address(oracle1));
 
         // Trigger the update
@@ -298,10 +292,34 @@ contract AggregatorOracleTest is DSTest {
 
         // Get the aggregated value
         int256 value;
-        bool valid;
-        (value, valid) = aggregatorOracle.value();
+        (value, ) = aggregatorOracle.value();
 
-        // Make sure the value does not include the invalid value
-        // TODO: 
-    }    
+        // Only the value from the non-failing Oracle is aggregated
+        assertEq(value, 100 * 10**18);
+    }
+
+    function test_Can_SetMinimumRequiredValidValues() public {
+        // Set the minimum required valid values
+        aggregatorOracle.setMinimumRequiredValidValues(2);
+
+        // Check the minimum required valid values
+        assertEq(aggregatorOracle.minimumRequiredValidValues(), 2);
+    }
+
+    function test_Aggregator_ReturnsInvalid_IfMinimumNumberOfValidValuesIsNotMet()
+        public
+    {
+        // Set the minimum number of valid values to 2
+        aggregatorOracle.setMinimumRequiredValidValues(2);
+
+        // Trigger the update
+        // There's only one oracle set in the aggregator
+        aggregatorOracle.update();
+
+        // Get the aggregated value
+        (, bool valid) = aggregatorOracle.value();
+
+        // Check the return value
+        assertTrue(valid == false, "Minimum number of valid values not met");
+    }
 }

@@ -26,6 +26,13 @@ contract AggregatorOracle is Guarded, Pausable {
     // Current aggregated value
     int256 private _aggregatedValue;
 
+    // Minimum number of valid values required
+    // from oracles to consider an aggregated value valid
+    uint256 public minimumRequiredValidValues;
+
+    // Number of valid values from oracles
+    uint256 private _aggregatedValidValues;
+
     /// @notice Returns the number of oracles
     function oracleCount() public view returns (uint256) {
         return _oracles.length();
@@ -66,7 +73,10 @@ contract AggregatorOracle is Guarded, Pausable {
             Oracle oracle = Oracle(_oracles.at(i));
 
             try oracle.update() {
-                try oracle.value() returns (int256 returnedValue, bool isValid) {
+                try oracle.value() returns (
+                    int256 returnedValue,
+                    bool isValid
+                ) {
                     if (isValid) {
                         // Add the value to the list of valid values
                         values[validValues] = returnedValue;
@@ -80,11 +90,20 @@ contract AggregatorOracle is Guarded, Pausable {
 
         // Aggregate the returned values
         _aggregatedValue = _aggregateValues(values, validValues);
+
+        // Update the number of valid values
+        _aggregatedValidValues = validValues;
     }
 
     /// @notice Returns the aggregated value
     function value() public view whenNotPaused returns (int256, bool) {
-        return (_aggregatedValue, oracleCount() > 0);
+        bool isValid = _aggregatedValidValues >= minimumRequiredValidValues &&
+            _aggregatedValidValues > 0;
+        return (_aggregatedValue, isValid);
+    }
+
+    function setMinimumRequiredValidValues(uint256 minimumRequiredValidValues_) public onlyRoot {
+        minimumRequiredValidValues = minimumRequiredValidValues_;
     }
 
     /// @notice Aggregates the values
