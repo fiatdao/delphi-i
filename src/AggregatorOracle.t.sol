@@ -354,6 +354,52 @@ contract AggregatorOracleTest is DSTest {
         assertEq(aggregatorOracle.minimumRequiredValidValues(), 1);
     }
 
+    function test_NonMINIMUM_REQUIRED_VALID_VALUES_ROLE_ShouldNotBeAbleTo_SetMinimumRequiredValidValues()
+        public
+    {
+        // Create user
+        // Do not grant MINIMUM_REQUIRED_VALID_VALUES_ROLE to user
+        Caller user = new Caller();
+
+        bool success;
+        (success, ) = user.externalCall(
+            address(aggregatorOracle),
+            abi.encodeWithSelector(
+                aggregatorOracle.setMinimumRequiredValidValues.selector,
+                1
+            )
+        );
+
+        assertTrue(
+            success == false,
+            "Non-MINIMUM_REQUIRED_VALID_VALUES_ROLE should not be able to call setMinimumRequiredValidValues()"
+        );
+    }
+
+    function test_MINIMUM_REQUIRED_VALID_VALUES_ROLE_ShouldBeAbleTo_SetMinimumRequiredValidValues()
+        public
+    {
+        // Create user
+        // Do not grant MINIMUM_REQUIRED_VALID_VALUES_ROLE to user
+        Caller user = new Caller();
+
+        aggregatorOracle.grantRole(aggregatorOracle.MINIMUM_REQUIRED_VALID_VALUES_ROLE(), address(user));
+
+        bool success;
+        (success, ) = user.externalCall(
+            address(aggregatorOracle),
+            abi.encodeWithSelector(
+                aggregatorOracle.setMinimumRequiredValidValues.selector,
+                1
+            )
+        );
+
+        assertTrue(
+            success,
+            "MINIMUM_REQUIRED_VALID_VALUES_ROLE should be able to call setMinimumRequiredValidValues()"
+        );
+    }    
+
     function testFail_CanNot_SetMinimumRequiredValidValues_HigherThanOracleCount()
         public
     {

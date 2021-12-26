@@ -46,6 +46,10 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
     // Number of valid values from oracles
     uint256 private _aggregatedValidValues;
 
+    // MINIMUM_REQUIRED_VALID_VALUES_ROLE is able to set the minimum number of required valid values
+    bytes32 public constant MINIMUM_REQUIRED_VALID_VALUES_ROLE =
+        keccak256("MINIMUM_REQUIRED_VALID_VALUES_ROLE");
+
     /// @notice Returns the number of oracles
     function oracleCount() public view returns (uint256) {
         return _oracles.length();
@@ -134,7 +138,7 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
 
     function setMinimumRequiredValidValues(uint256 minimumRequiredValidValues_)
         public
-        onlyRoot
+        onlyRole(MINIMUM_REQUIRED_VALID_VALUES_ROLE)
     {
         uint256 localOracleCount = oracleCount();
         if (minimumRequiredValidValues_ > localOracleCount) {
