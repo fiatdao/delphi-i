@@ -15,8 +15,20 @@ error AggregatorOracle__addOracle_oracleAlreadyRegistered(address oracle);
 // @notice Emitted when trying to remove an oracle that does not exist
 error AggregatorOracle__removeOracle_oracleNotRegistered(address oracle);
 
+// @notice Emitted when trying to remove an oracle makes a valid value impossible
+error AggregatorOracle__removeOracle_minimumRequiredValidValues_higherThan_oracleCount(
+    uint256 minimumRequiredValidValues,
+    uint256 oracleCount
+);
+
 // @notice Emitted when one does not have the right permissions to manage _oracles
 error AggregatorOracle__notAuthorized();
+
+// @notice Emitted when trying to set the minimum number of valid values higher than the oracle count
+error AggregatorOracle__setMinimumRequiredValidValues_higherThanOracleCount(
+    uint256 minimumRequiredValidValues,
+    uint256 oracleCount
+);
 
 contract AggregatorOracle is Guarded, Pausable, IOracle {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -54,6 +66,17 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
 
     /// @notice Removes an oracle from the list of oracles
     function oracleRemove(address oracle) public onlyRoot {
+        uint256 localOracleCount = oracleCount();
+
+        // Make sure the minimum number of required valid values is not higher than the oracle count
+        if (minimumRequiredValidValues >= localOracleCount) {
+            revert AggregatorOracle__removeOracle_minimumRequiredValidValues_higherThan_oracleCount(
+                minimumRequiredValidValues,
+                localOracleCount
+            );
+        }
+
+        // Try to remove
         bool removed = _oracles.remove(oracle);
         if (removed == false) {
             revert AggregatorOracle__removeOracle_oracleNotRegistered(oracle);
@@ -113,6 +136,13 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
         public
         onlyRoot
     {
+        uint256 localOracleCount = oracleCount();
+        if (minimumRequiredValidValues_ > localOracleCount) {
+            revert AggregatorOracle__setMinimumRequiredValidValues_higherThanOracleCount(
+                minimumRequiredValidValues_,
+                localOracleCount
+            );
+        }
         minimumRequiredValidValues = minimumRequiredValidValues_;
     }
 
