@@ -127,6 +127,18 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(ok == false);
     }
 
+    function testFail_RemoveOracle_PossibleIf_MinimumRequiredNumberOfValidValues_CanStillBeMet()
+        public
+    {
+        // Set minimum number of required values to match the number of oracles
+        aggregatorOracle.setMinimumRequiredValidValues(
+            aggregatorOracle.oracleCount()
+        );
+
+        // Removing 1 oracle should fail
+        aggregatorOracle.oracleRemove(address(oracle));
+    }
+
     function test_TriggerUpdate_ShouldCallOracle() public {
         // Trigger the update
         aggregatorOracle.update();
@@ -336,15 +348,45 @@ contract AggregatorOracleTest is DSTest {
 
     function test_Can_SetMinimumRequiredValidValues() public {
         // Set the minimum required valid values
-        aggregatorOracle.setMinimumRequiredValidValues(2);
+        aggregatorOracle.setMinimumRequiredValidValues(1);
 
         // Check the minimum required valid values
-        assertEq(aggregatorOracle.minimumRequiredValidValues(), 2);
+        assertEq(aggregatorOracle.minimumRequiredValidValues(), 1);
+    }
+
+    function testFail_CanNot_SetMinimumRequiredValidValues_HigherThanOracleCount()
+        public
+    {
+        // Get number of oracles
+        uint256 oracleCount = aggregatorOracle.oracleCount();
+
+        // Set the minimum required valid values
+        aggregatorOracle.setMinimumRequiredValidValues(oracleCount + 1);
     }
 
     function test_Aggregator_ReturnsInvalid_IfMinimumNumberOfValidValuesIsNotMet()
         public
     {
+        // Create an oracle that returns an invalid value
+        MockProvider oracle1 = new MockProvider();
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.update.selector),
+            MockProvider.ReturnData({success: true, data: ""}),
+            true
+        );
+        // value() returns invalid value
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(300 * 10**18), false)
+            }),
+            false
+        );
+
+        // Add the invalid value oracle
+        aggregatorOracle.oracleAdd(address(oracle1));
+
         // Set the minimum number of valid values to 2
         aggregatorOracle.setMinimumRequiredValidValues(2);
 
