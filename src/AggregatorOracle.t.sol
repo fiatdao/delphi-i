@@ -383,7 +383,10 @@ contract AggregatorOracleTest is DSTest {
         // Do not grant MINIMUM_REQUIRED_VALID_VALUES_ROLE to user
         Caller user = new Caller();
 
-        aggregatorOracle.grantRole(aggregatorOracle.MINIMUM_REQUIRED_VALID_VALUES_ROLE(), address(user));
+        aggregatorOracle.grantRole(
+            aggregatorOracle.MINIMUM_REQUIRED_VALID_VALUES_ROLE(),
+            address(user)
+        );
 
         bool success;
         (success, ) = user.externalCall(
@@ -398,7 +401,7 @@ contract AggregatorOracleTest is DSTest {
             success,
             "MINIMUM_REQUIRED_VALID_VALUES_ROLE should be able to call setMinimumRequiredValidValues()"
         );
-    }    
+    }
 
     function testFail_CanNot_SetMinimumRequiredValidValues_HigherThanOracleCount()
         public
