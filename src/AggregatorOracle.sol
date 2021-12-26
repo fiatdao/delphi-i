@@ -138,7 +138,7 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
     {
         uint256 localOracleCount = oracleCount();
         if (minimumRequiredValidValues_ > localOracleCount) {
-            revert AggregatorOracle__setMinimumRequiredValidValues_higherThanOracleCount(
+            revert AggregatorOracle__setMinimumRequiredValidValues_higherThan_oracleCount(
                 minimumRequiredValidValues_,
                 localOracleCount
             );
