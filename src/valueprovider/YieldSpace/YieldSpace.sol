@@ -26,7 +26,18 @@ contract YieldSpace is IValueProvider{
         // The TS returned by the Yield Space contract is in 64.64 format and we need to convert it to int256
         // we do that by computing the inverse of the scale which will give us the time window in seconds
         int256 inverseTS = int256(ABDKMath64x64.toInt(ABDKMath64x64.inv(yieldPool.ts())));
+        
+        // Check to make sure we won't divide by 0
+        if(inverseTS == 0){
+            return 0;
+        }
+
         (underlierReserves, fyTokenReserves, ) = yieldPool.getCache();
+
+        // Basic check for data validity
+        if ( fyTokenReserves == 0 || underlierReserves == 0){
+            return 0;
+        }
 
         // Using the time scale window , we compute the 1/ts and save it in 59.18 format to be used in the formula
         int256 ts59x18 = PRBMathSD59x18.div(PRBMathSD59x18.fromInt(1),

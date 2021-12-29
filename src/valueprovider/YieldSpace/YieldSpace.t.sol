@@ -23,7 +23,7 @@ contract YieldSpaceTest is DSTest {
         );
 
         // Set the value returned by the pool contract
-        // value taken from contract deployed at:
+        // values taken from a YieldSpace Pool contract deployed at:
         // 0x3771c99c087a81df4633b50d8b149afaa83e3c9e
         mockValueProvider.givenQueryReturnResponse(
             abi.encodePacked(IYieldSpacePool.ts.selector),
@@ -51,10 +51,35 @@ contract YieldSpaceTest is DSTest {
     }
 
     function test_GetValue() public{
-
+        // Computed value based on the parameters that are sent via the mock provider
         int256 computedValue = 2065701839;
         int256 value = yieldSpace.value();
 
         assertTrue(value == computedValue);
+    }
+
+    function test_FuzzYieldPoolValues(uint112 underlier, uint112 fyToken, int128 ts) public{
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IYieldSpacePool.ts.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(ts)
+            }),
+            false
+        );
+
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IYieldSpacePool.getCache.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(underlier,
+                                fyToken,
+                                uint32(1640609157))
+            }),
+            false
+        );
+
+        // Value calculation should not fail
+        yieldSpace.value();
     }
 }
