@@ -18,9 +18,7 @@ contract YieldSpaceTest is DSTest {
 
     function setUp() public {
         mockValueProvider = new MockProvider();
-        yieldSpace = new YieldSpace(
-            address(mockValueProvider)
-        );
+        yieldSpace = new YieldSpace(address(mockValueProvider));
 
         // Set the value returned by the pool contract
         // values taken from a YieldSpace Pool contract deployed at:
@@ -38,9 +36,11 @@ contract YieldSpaceTest is DSTest {
             abi.encodePacked(IYieldSpacePool.getCache.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint112(549300157691234827932610),
-                                uint112(1054193133195781860970253),
-                                uint32(1640609157))
+                data: abi.encode(
+                    uint112(549300157691234827932610),
+                    uint112(1054193133195781860970253),
+                    uint32(1640609157)
+                )
             }),
             false
         );
@@ -50,7 +50,7 @@ contract YieldSpaceTest is DSTest {
         assertTrue(address(yieldSpace) != address(0));
     }
 
-    function test_GetValue() public{
+    function test_GetValue() public {
         // Computed value based on the parameters that are sent via the mock provider
         int256 computedValue = 2065701839;
         int256 value = yieldSpace.value();
@@ -58,13 +58,14 @@ contract YieldSpaceTest is DSTest {
         assertTrue(value == computedValue);
     }
 
-    function test_FuzzYieldPoolValues(uint112 underlier, uint112 fyToken, int128 ts) public{
+    function test_FuzzYieldPoolValues(
+        uint112 underlier,
+        uint112 fyToken,
+        int128 ts
+    ) public {
         mockValueProvider.givenQueryReturnResponse(
             abi.encodePacked(IYieldSpacePool.ts.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(ts)
-            }),
+            MockProvider.ReturnData({success: true, data: abi.encode(ts)}),
             false
         );
 
@@ -72,9 +73,7 @@ contract YieldSpaceTest is DSTest {
             abi.encodePacked(IYieldSpacePool.getCache.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(underlier,
-                                fyToken,
-                                uint32(1640609157))
+                data: abi.encode(underlier, fyToken, uint32(1640609157))
             }),
             false
         );

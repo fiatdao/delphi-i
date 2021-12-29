@@ -7,8 +7,18 @@ pragma solidity ^0.8.0;
 /// https://github.com/yieldprotocol/yieldspace-interfaces/blob/main/IPool.sol
 /// deployed contract example : https://etherscan.io/address/0x3771c99c087a81df4633b50d8b149afaa83e3c9e
 interface IYieldSpacePool {
-    function ts() external view returns(int128);
-    function getCache() external view returns (uint112, uint112, uint32);
-    function getBaseBalance() external view returns(uint112);
-    function getFYTokenBalance() external view returns(uint112);
+    function ts() external view returns (int128);
+
+    function getCache()
+        external
+        view
+        returns (
+            uint112,
+            uint112,
+            uint32
+        );
+
+    function getBaseBalance() external view returns (uint112);
+
+    function getFYTokenBalance() external view returns (uint112);
 }
