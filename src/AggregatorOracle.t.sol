@@ -127,6 +127,18 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(ok == false);
     }
 
+    function testFail_RemoveOracle_PossibleIf_MinimumRequiredNumberOfValidValues_CanStillBeMet()
+        public
+    {
+        // Set minimum number of required values to match the number of oracles
+        aggregatorOracle.setMinimumRequiredValidValues(
+            aggregatorOracle.oracleCount()
+        );
+
+        // Removing 1 oracle should fail
+        aggregatorOracle.oracleRemove(address(oracle));
+    }
+
     function test_TriggerUpdate_ShouldCallOracle() public {
         // Trigger the update
         aggregatorOracle.update();
@@ -189,7 +201,7 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(valid);
     }
 
-    function test_Update_WithoutOracles_ReturnsZero() public {
+    function test_Update_WithoutOracles_ReturnsZeroAndInvalid() public {
         // Remove existing oracle
         aggregatorOracle.oracleRemove(address(oracle));
 
@@ -272,5 +284,169 @@ contract AggregatorOracleTest is DSTest {
         (int256 value, bool valid) = aggregatorOracle.value();
         assertEq(value, int256(200 * 10**18));
         assertTrue(valid);
+    }
+
+    function test_Update_DoesNotFail_IfOracleFails() public {
+        // Create a failing oracle
+        MockProvider oracle1 = new MockProvider();
+        // update() fails
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.update.selector),
+            MockProvider.ReturnData({success: false, data: ""}),
+            true
+        );
+        // value() fails
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.value.selector),
+            MockProvider.ReturnData({
+                success: false,
+                data: abi.encode(int256(100 * 10**18), true)
+            }),
+            false
+        );
+
+        // Add the oracle
+        aggregatorOracle.oracleAdd(address(oracle1));
+
+        // Trigger the update
+        // The call should not fail
+        aggregatorOracle.update();
+    }
+
+    function test_Update_IgnoresInvalidValues() public {
+        // Create a failing oracle
+        MockProvider oracle1 = new MockProvider();
+        // update() succeeds
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.update.selector),
+            MockProvider.ReturnData({success: true, data: ""}),
+            true
+        );
+        // value() fails
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.value.selector),
+            MockProvider.ReturnData({
+                success: false,
+                data: abi.encode(int256(300 * 10**18), true)
+            }),
+            false
+        );
+
+        // Add the failing oracle
+        aggregatorOracle.oracleAdd(address(oracle1));
+
+        // Trigger the update
+        aggregatorOracle.update();
+
+        // Get the aggregated value
+        int256 value;
+        (value, ) = aggregatorOracle.value();
+
+        // Only the value from the non-failing Oracle is aggregated
+        assertEq(value, 100 * 10**18);
+    }
+
+    function test_Can_SetMinimumRequiredValidValues() public {
+        // Set the minimum required valid values
+        aggregatorOracle.setMinimumRequiredValidValues(1);
+
+        // Check the minimum required valid values
+        assertEq(aggregatorOracle.minimumRequiredValidValues(), 1);
+    }
+
+    function test_NonMINIMUM_REQUIRED_VALID_VALUES_ROLE_ShouldNotBeAbleTo_SetMinimumRequiredValidValues()
+        public
+    {
+        // Create user
+        // Do not grant MINIMUM_REQUIRED_VALID_VALUES_ROLE to user
+        Caller user = new Caller();
+
+        bool success;
+        (success, ) = user.externalCall(
+            address(aggregatorOracle),
+            abi.encodeWithSelector(
+                aggregatorOracle.setMinimumRequiredValidValues.selector,
+                1
+            )
+        );
+
+        assertTrue(
+            success == false,
+            "Non-MINIMUM_REQUIRED_VALID_VALUES_ROLE should not be able to call setMinimumRequiredValidValues()"
+        );
+    }
+
+    function test_MINIMUM_REQUIRED_VALID_VALUES_ROLE_ShouldBeAbleTo_SetMinimumRequiredValidValues()
+        public
+    {
+        // Create user
+        // Do not grant MINIMUM_REQUIRED_VALID_VALUES_ROLE to user
+        Caller user = new Caller();
+
+        aggregatorOracle.grantRole(
+            aggregatorOracle.MINIMUM_REQUIRED_VALID_VALUES_ROLE(),
+            address(user)
+        );
+
+        bool success;
+        (success, ) = user.externalCall(
+            address(aggregatorOracle),
+            abi.encodeWithSelector(
+                aggregatorOracle.setMinimumRequiredValidValues.selector,
+                1
+            )
+        );
+
+        assertTrue(
+            success,
+            "MINIMUM_REQUIRED_VALID_VALUES_ROLE should be able to call setMinimumRequiredValidValues()"
+        );
+    }
+
+    function testFail_CanNot_SetMinimumRequiredValidValues_HigherThanOracleCount()
+        public
+    {
+        // Get number of oracles
+        uint256 oracleCount = aggregatorOracle.oracleCount();
+
+        // Set the minimum required valid values
+        aggregatorOracle.setMinimumRequiredValidValues(oracleCount + 1);
+    }
+
+    function test_Aggregator_ReturnsInvalid_IfMinimumNumberOfValidValuesIsNotMet()
+        public
+    {
+        // Create an oracle that returns an invalid value
+        MockProvider oracle1 = new MockProvider();
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.update.selector),
+            MockProvider.ReturnData({success: true, data: ""}),
+            true
+        );
+        // value() returns invalid value
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(300 * 10**18), false)
+            }),
+            false
+        );
+
+        // Add the invalid value oracle
+        aggregatorOracle.oracleAdd(address(oracle1));
+
+        // Set the minimum number of valid values to 2
+        aggregatorOracle.setMinimumRequiredValidValues(2);
+
+        // Trigger the update
+        // There's only one oracle set in the aggregator
+        aggregatorOracle.update();
+
+        // Get the aggregated value
+        (, bool valid) = aggregatorOracle.value();
+
+        // Check the return value
+        assertTrue(valid == false, "Minimum number of valid values not met");
     }
 }
