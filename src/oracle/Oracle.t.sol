@@ -3,10 +3,10 @@ pragma solidity ^0.8.0;
 
 import "ds-test/test.sol";
 
-import "./test/utils/Caller.sol";
-import {Hevm} from "./test/utils/Hevm.sol";
-import {MockProvider} from "./test/utils/MockProvider.sol";
-import {IValueProvider} from "./valueprovider/IValueProvider.sol";
+import "src/test/utils/Caller.sol";
+import {Hevm} from "src/test/utils/Hevm.sol";
+import {MockProvider} from "src/test/utils/MockProvider.sol";
+import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
 
 import {Oracle} from "./Oracle.sol";
 

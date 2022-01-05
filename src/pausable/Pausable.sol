@@ -7,7 +7,7 @@ error Pausable__whenNotPaused_paused();
 /// @notice Emitted when not paused
 error Pausable__whenPaused_notPaused();
 
-import {Guarded} from "./Guarded.sol";
+import {Guarded} from "src/guarded/Guarded.sol";
 
 contract Pausable is Guarded {
     event Paused(address who);

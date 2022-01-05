@@ -3,12 +3,12 @@ pragma solidity ^0.8.0;
 
 import "ds-test/test.sol";
 
-import {Hevm} from "./test/utils/Hevm.sol";
-import {MockProvider} from "./test/utils/MockProvider.sol";
-import {Caller} from "./test/utils/Caller.sol";
+import {Hevm} from "src/test/utils/Hevm.sol";
+import {MockProvider} from "src/test/utils/MockProvider.sol";
+import {Caller} from "src/test/utils/Caller.sol";
 
-import {Oracle} from "./Oracle.sol";
-import {AggregatorOracle} from "./AggregatorOracle.sol";
+import {Oracle} from "src/oracle/Oracle.sol";
+import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
 
 contract AggregatorOracleTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);

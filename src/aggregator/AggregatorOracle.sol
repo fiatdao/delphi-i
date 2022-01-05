@@ -3,11 +3,11 @@ pragma solidity ^0.8.0;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {Guarded} from "./Guarded.sol";
-import {Pausable} from "./Pausable.sol";
+import {Guarded} from "src/guarded/Guarded.sol";
+import {Pausable} from "src/pausable/Pausable.sol";
 
-import {Oracle} from "./Oracle.sol";
-import {IOracle} from "./IOracle.sol";
+import {Oracle} from "src/oracle/Oracle.sol";
+import {IOracle} from "src/oracle/IOracle.sol";
 
 // @notice Emitted when trying to add an oracle that already exists
 error AggregatorOracle__addOracle_oracleAlreadyRegistered(address oracle);
