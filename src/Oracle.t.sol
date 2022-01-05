@@ -134,6 +134,87 @@ contract OracleTest is DSTest {
         assertEq(nextValue2, 100 * 10**18);
     }
 
+    function test_update_ShouldNotFailWhenValueProviderFails() public {
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IValueProvider.value.selector),
+            MockProvider.ReturnData({
+                success: false,
+                data: abi.encode(int256(10**18))
+            }),
+            false
+        );
+
+        // Update the oracle
+        oracle.update();
+    }
+
+    function test_value_ShouldBeInvalidAfterValueProviderFails() public {
+        // We first succesfully update the value to make sure the lastTimestamp is updated
+        // After that, we wait for the required amount of time and try update the value again
+        // The second update will fail and the value should be invalid because of the flag only.
+        // (time check is still corect because maxValidTime >= timeUpdateWindow)
+
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IValueProvider.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(10**18))
+            }),
+            false
+        );
+
+        // Update the oracle
+        oracle.update();
+
+        // Advance time
+        hevm.warp(block.timestamp + timeUpdateWindow);
+
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IValueProvider.value.selector),
+            MockProvider.ReturnData({
+                success: false,
+                data: abi.encode(int256(10**18))
+            }),
+            false
+        );
+
+        // Update the oracle
+        oracle.update();
+
+        (, bool isValid) = oracle.value();
+        assertTrue(isValid == false);
+    }
+
+    function test_value_ShouldBecomeValidAfterSuccesfullUpdate() public {
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IValueProvider.value.selector),
+            MockProvider.ReturnData({
+                success: false,
+                data: abi.encode(int256(10**18))
+            }),
+            false
+        );
+
+        oracle.update();
+
+        (, bool isValid1) = oracle.value();
+        assertTrue(isValid1 == false);
+
+        mockValueProvider.givenQueryReturnResponse(
+            abi.encodePacked(IValueProvider.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(10**18))
+            }),
+            false
+        );
+
+        oracle.update();
+
+        (, bool isValid2) = oracle.value();
+        assertTrue(isValid2 == true);
+    }
+
     function test_update_Recalculates_MovingAverage() public {
         // Set the value to 100
         mockValueProvider.givenQueryReturnResponse(

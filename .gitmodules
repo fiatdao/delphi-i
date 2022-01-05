@@ -14,3 +14,9 @@
 [submodule "lib/ds-auth"]
 	path = lib/ds-auth
 	url = https://github.com/dapphub/ds-auth
+[submodule "lib/prb-math"]
+	path = lib/prb-math
+	url = https://github.com/hifi-finance/prb-math
+[submodule "lib/abdk-libraries-solidity"]
+	path = lib/abdk-libraries-solidity
+	url = https://github.com/abdk-consulting/abdk-libraries-solidity

@@ -27,6 +27,8 @@ contract Oracle is Pausable, IOracle {
     // current EMA value
     int256 private _currentValue;
 
+    bool private _validReturnedValue;
+
     // RESET_ROLE is able to reset the oracle
     bytes32 public constant RESET_ROLE = keccak256("RESET_ROLE");
 
@@ -40,6 +42,7 @@ contract Oracle is Pausable, IOracle {
         timeUpdateWindow = timeUpdateWindow_;
         maxValidTime = maxValidTime_;
         alpha = alpha_;
+        _validReturnedValue = false;
     }
 
     /// @notice Get the current value of the oracle
@@ -52,8 +55,10 @@ contract Oracle is Pausable, IOracle {
         whenNotPaused
         returns (int256, bool)
     {
-        // Value is considered valid if it was updated before maxValidTime ago
-        bool valid = block.timestamp < lastTimestamp + maxValidTime;
+        // Value is considered valid if the value provider succesfully returned a value
+        // and it was updated before maxValidTime ago
+        bool valid = _validReturnedValue &&
+            (block.timestamp < lastTimestamp + maxValidTime);
         return (_currentValue, valid);
     }
 
@@ -64,32 +69,41 @@ contract Oracle is Pausable, IOracle {
             return;
         }
 
-        // Update the value using an exponential moving average
-        if (_currentValue == 0) {
-            // First update takes the current value
-            nextValue = valueProvider.value();
-            _currentValue = nextValue;
-        } else {
-            // Update the current value with the next value
-            _currentValue = nextValue;
+        // Oracle update should not fail even if the value provider fails to return a value
+        try valueProvider.value() returns (int256 returnedValue) {
+            // Update the value using an exponential moving average
+            if (_currentValue == 0) {
+                // First update takes the current value
+                nextValue = returnedValue;
+                _currentValue = nextValue;
+            } else {
+                // Update the current value with the next value
+                _currentValue = nextValue;
 
-            // Update the EMA and store it in the next value
-            int256 newValue = valueProvider.value();
-            // EMA = EMA(prev) + alpha * (Value - EMA(prev))
-            // Scales down because of fixed number of decimals
-            nextValue =
-                _currentValue +
-                (alpha * (newValue - _currentValue)) /
-                10**18;
+                // Update the EMA and store it in the next value
+                int256 newValue = returnedValue;
+                // EMA = EMA(prev) + alpha * (Value - EMA(prev))
+                // Scales down because of fixed number of decimals
+                nextValue =
+                    _currentValue +
+                    (alpha * (newValue - _currentValue)) /
+                    10**18;
+            }
+
+            // Save when the value was last updated
+            lastTimestamp = block.timestamp;
+            _validReturnedValue = true;
+        } catch {
+            // When a value provider fails, we update the valid flag which will
+            // invalidate the value instantly
+            _validReturnedValue = false;
         }
-
-        // Save when the value was last updated
-        lastTimestamp = block.timestamp;
     }
 
     function reset() public whenPaused onlyRole(RESET_ROLE) {
         _currentValue = 0;
         nextValue = 0;
         lastTimestamp = 0;
+        _validReturnedValue = false;
     }
 }
