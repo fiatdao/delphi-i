@@ -6,7 +6,7 @@ import {IYieldSpacePool} from "./IYieldSpacePool.sol";
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 import "lib/abdk-libraries-solidity/ABDKMath64x64.sol";
 
-contract YieldSpace is IValueProvider {
+contract YieldSpaceValueProvider is IValueProvider {
     IYieldSpacePool public immutable yieldPool;
 
     constructor(address yieldPool_) {
@@ -45,7 +45,7 @@ contract YieldSpace is IValueProvider {
         int256 result = PRBMathSD59x18.pow(tokenToReserveRatio59x18, ts59x18) -
             PRBMathSD59x18.fromInt(1);
 
-        // Result will be a 59.18 fixed-point number.
+        // The result is a 59.18 fixed-point number.
         return result;
     }
 }

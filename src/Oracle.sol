@@ -42,7 +42,7 @@ contract Oracle is Pausable, IOracle {
         timeUpdateWindow = timeUpdateWindow_;
         maxValidTime = maxValidTime_;
         alpha = alpha_;
-        _validReturnedValue = true;
+        _validReturnedValue = false;
     }
 
     /// @notice Get the current value of the oracle
@@ -55,7 +55,8 @@ contract Oracle is Pausable, IOracle {
         whenNotPaused
         returns (int256, bool)
     {
-        // Value is considered valid if it was updated before maxValidTime ago
+        // Value is considered valid if the value provider succesfully returned a value
+        // and it was updated before maxValidTime ago
         bool valid = _validReturnedValue &&
             (block.timestamp < lastTimestamp + maxValidTime);
         return (_currentValue, valid);
@@ -103,6 +104,6 @@ contract Oracle is Pausable, IOracle {
         _currentValue = 0;
         nextValue = 0;
         lastTimestamp = 0;
-        _validReturnedValue = true;
+        _validReturnedValue = false;
     }
 }
