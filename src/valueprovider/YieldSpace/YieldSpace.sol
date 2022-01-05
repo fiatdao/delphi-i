@@ -27,23 +27,13 @@ contract YieldSpace is IValueProvider {
             ABDKMath64x64.toInt(ABDKMath64x64.inv(yieldPool.ts()))
         );
 
-        // Check to make sure we won't divide by 0
-        if (inverseTS == 0) {
-            return 0;
-        }
-
-        (underlierReserves, fyTokenReserves, ) = yieldPool.getCache();
-
-        // Basic check for data validity
-        if (fyTokenReserves == 0 || underlierReserves == 0) {
-            return 0;
-        }
-
         // Using the time scale window , we compute the 1/ts and save it in 59.18 format to be used in the formula
         int256 ts59x18 = PRBMathSD59x18.div(
             PRBMathSD59x18.fromInt(1),
             PRBMathSD59x18.fromInt(inverseTS)
         );
+
+        (underlierReserves, fyTokenReserves, ) = yieldPool.getCache();
 
         // We compute the token/underlier ratio and save it in signed 59.18 format
         int256 tokenToReserveRatio59x18 = PRBMathSD59x18.div(

@@ -57,28 +57,4 @@ contract YieldSpaceTest is DSTest {
 
         assertTrue(value == computedValue);
     }
-
-    function test_FuzzYieldPoolValues(
-        uint112 underlier,
-        uint112 fyToken,
-        int128 ts
-    ) public {
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IYieldSpacePool.ts.selector),
-            MockProvider.ReturnData({success: true, data: abi.encode(ts)}),
-            false
-        );
-
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IYieldSpacePool.getCache.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(underlier, fyToken, uint32(1640609157))
-            }),
-            false
-        );
-
-        // Value calculation should not fail
-        yieldSpace.value();
-    }
 }
