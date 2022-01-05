@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 import {DSTest} from "ds-test/test.sol";
 
-import {Caller} from "./test/utils/Caller.sol";
+import {Caller} from "src/test/utils/Caller.sol";
 
-import {Pausable} from "./Pausable.sol";
+import {Pausable} from "src/pausable/Pausable.sol";
 
 contract PausableInstance is Pausable {
     // This is set to true if execution was successful.

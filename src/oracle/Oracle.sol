@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {IValueProvider} from "./valueprovider/IValueProvider.sol";
+import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
 
-import {IOracle} from "./IOracle.sol";
+import {IOracle} from "src/oracle/IOracle.sol";
 
-import {Pausable} from "./Pausable.sol";
+import {Pausable} from "src/pausable/Pausable.sol";
 
 contract Oracle is Pausable, IOracle {
     IValueProvider public immutable valueProvider;
