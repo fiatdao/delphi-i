@@ -56,7 +56,8 @@ contract Oracle is Pausable, IOracle {
         returns (int256, bool)
     {
         // Value is considered valid if it was updated before maxValidTime ago
-        bool valid = _validReturnedValue && (block.timestamp < lastTimestamp + maxValidTime);
+        bool valid = _validReturnedValue &&
+            (block.timestamp < lastTimestamp + maxValidTime);
         return (_currentValue, valid);
     }
 
@@ -68,9 +69,7 @@ contract Oracle is Pausable, IOracle {
         }
 
         // Oracle update should not fail even if the value provider fails to return a value
-        try valueProvider.value() returns (
-            int256 returnedValue
-        ) {
+        try valueProvider.value() returns (int256 returnedValue) {
             // Update the value using an exponential moving average
             if (_currentValue == 0) {
                 // First update takes the current value
@@ -93,9 +92,8 @@ contract Oracle is Pausable, IOracle {
             // Save when the value was last updated
             lastTimestamp = block.timestamp;
             _validReturnedValue = true;
-
         } catch {
-            // When a value provider fails, we update the valid flag which will 
+            // When a value provider fails, we update the valid flag which will
             // invalidate the value instantly
             _validReturnedValue = false;
         }

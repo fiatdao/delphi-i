@@ -134,7 +134,7 @@ contract OracleTest is DSTest {
         assertEq(nextValue2, 100 * 10**18);
     }
 
-    function test_update_ShouldNotFailWhenValueProviderFails() public{
+    function test_update_ShouldNotFailWhenValueProviderFails() public {
         mockValueProvider.givenQueryReturnResponse(
             abi.encodePacked(IValueProvider.value.selector),
             MockProvider.ReturnData({
@@ -148,10 +148,9 @@ contract OracleTest is DSTest {
         oracle.update();
     }
 
-    function test_value_ShouldBeInvalidAfterValueProviderFails() public{
-
-        // We first succesfully update the value to make sure the lastTimestamp is updated 
-        // After that, we wait for the required amount of time and try update the value again 
+    function test_value_ShouldBeInvalidAfterValueProviderFails() public {
+        // We first succesfully update the value to make sure the lastTimestamp is updated
+        // After that, we wait for the required amount of time and try update the value again
         // The second update will fail and the value should be invalid because of the flag only.
         // (time check is still corect because maxValidTime >= timeUpdateWindow)
 
@@ -186,8 +185,7 @@ contract OracleTest is DSTest {
         assertTrue(isValid == false);
     }
 
-    function test_value_ShouldBecomeValidAfterSuccesfullUpdate() public{
-
+    function test_value_ShouldBecomeValidAfterSuccesfullUpdate() public {
         mockValueProvider.givenQueryReturnResponse(
             abi.encodePacked(IValueProvider.value.selector),
             MockProvider.ReturnData({
