@@ -13,7 +13,6 @@ import {IVault} from "src/valueprovider/ElementFinance/IVault.sol";
 contract ElementFinanceValueProviderTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
 
-    MockProvider internal mockValueProvider;
     MockProvider internal mockBalancerVault;
 
     ElementFinanceValueProvider internal efValueProvider;
