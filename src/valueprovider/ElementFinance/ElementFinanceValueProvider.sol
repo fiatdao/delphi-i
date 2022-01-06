@@ -45,25 +45,22 @@ contract ElementFinanceValueProvider is IValueProvider {
         );
     }
 
-    /// @notice Calculates the annual rate used by the FiatDao contracts
-    /// based on the token reservers, underlier reserves and time scale from the element finance curve pool contact
+    /// @notice Calculates the annual rate used by the FIAT DAO contracts
+    /// based on the token reserves, underlier reserves and time scale from the element finance curve pool contact
     /// @dev formula documentation:
     /// https://www.notion.so/fiatdao/FIAT-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function value() external view override(IValueProvider) returns (int256) {
-        (
-            uint256 underlierBalance, /* uint256 managed */ /* uint256 lastChangeBlock */ /* address assetManager */
-            ,
-            ,
+        // Retrieve the underlier and pricipal token reserves from the balancer vault.
+        (uint256 underlierBalance, , , ) = _balancerVault.getPoolTokenInfo(
+            _poolId,
+            IERC20(_underlier)
+        );
 
-        ) = _balancerVault.getPoolTokenInfo(_poolId, IERC20(_underlier));
-
-        (
-            uint256 ePTokenBalance, /* uint256 managed */ /* uint256 lastChangeBlock */ /* address assetManager */
-            ,
-            ,
-
-        ) = _balancerVault.getPoolTokenInfo(_poolId, IERC20(_ePTokenBond));
+        (uint256 ePTokenBalance, , , ) = _balancerVault.getPoolTokenInfo(
+            _poolId,
+            IERC20(_ePTokenBond)
+        );
 
         // We compute the token/underlier ratio and save it in signed 59.18 format
         int256 tokenToReserveRatio59x18 = PRBMathSD59x18.div(
