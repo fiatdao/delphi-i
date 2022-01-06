@@ -24,7 +24,7 @@ contract ElementFinanceValueProviderTest is DSTest {
         // https://etherscan.io/address/0x10a2F8bd81Ee2898D7eD18fb8f114034a549FA59
         // block: 13951463
         mockBalancerVault.givenQueryReturnResponse(
-            //pool id, underlier
+            // Used Parameters are: pool id, underlier address
             abi.encodeWithSelector(
                 IVault.getPoolTokenInfo.selector,
                 bytes32(
@@ -44,8 +44,9 @@ contract ElementFinanceValueProviderTest is DSTest {
             false
         );
 
+        // The used parameters are: uint256 cash, uint256 managed, int256 lastChangeBlock, address assetManager
+        // for more info check the IVault getPoolTokenInfo description
         mockBalancerVault.givenQueryReturnResponse(
-            //pool id, epToken
             abi.encodeWithSelector(
                 IVault.getPoolTokenInfo.selector,
                 bytes32(
