@@ -1,6 +1,8 @@
 ---
 name: 🐜 Bug report
 about: If something isn't working 🔧
+title: "[BUG NAME]"
+labels: bug, help wanted
 ---
 
 ### What is the expected behavior?
