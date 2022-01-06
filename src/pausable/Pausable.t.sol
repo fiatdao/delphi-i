@@ -58,12 +58,13 @@ contract PausableTest is DSTest {
         pausable.check_whenNotPaused();
     }
 
-    function test_PAUSER_ROLE_CanPauseUnpause() public {
+    function test_AuthorizedUser_CanPauseUnpause() public {
         // Create a user
         Caller user = new Caller();
 
-        // Grant PAUSER_ROLE to user
-        pausable.grantRole(pausable.PAUSER_ROLE(), address(user));
+        // Grant ability to pause/unpause to user
+        pausable.allowCaller(pausable.pause.selector, address(user));
+        pausable.allowCaller(pausable.unpause.selector, address(user));
 
         // Should be be able to pause
         user.externalCall(
@@ -84,7 +85,7 @@ contract PausableTest is DSTest {
         assertTrue(pausable.paused() == false, "paused() should be false");
     }
 
-    function test_NonPAUSER_ROLE_NotAbleToPause() public {
+    function test_NonAuthorizedUser_NotAbleToPause() public {
         // Create a user
         Caller user = new Caller();
 
@@ -100,7 +101,7 @@ contract PausableTest is DSTest {
         assertTrue(pausable.paused() == false, "paused() should be false");
     }
 
-    function test_NonPAUSER_ROLE_NotAbleToUnpause() public {
+    function test_NonAuthorizedUser_NotAbleToUnpause() public {
         // Create a user
         Caller user = new Caller();
 

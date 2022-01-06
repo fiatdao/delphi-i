@@ -5,7 +5,7 @@ import {DSTest} from "ds-test/test.sol";
 
 import {Caller} from "src/test/utils/Caller.sol";
 
-import {Guarded} from "./Guarded.sol";
+import {Guarded} from "src/guarded/Guarded.sol";
 
 contract GuardedInstance is Guarded {
     constructor() Guarded() {}
