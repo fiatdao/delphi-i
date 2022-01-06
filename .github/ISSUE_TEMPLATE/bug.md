@@ -15,7 +15,7 @@ labels: bug, help wanted
 
 ### Any possible solutions?
 
-### Can you identify the location in the driver source code where the problem exists?
+### Can you identify the location in the source code where the problem exists?
 
 ### If the bug is confirmed, would you be willing to submit a PR?
 
