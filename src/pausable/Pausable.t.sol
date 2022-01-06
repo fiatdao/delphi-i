@@ -12,6 +12,14 @@ contract PausableInstance is Pausable {
     // Use to check modifier execution.
     bool public executedSuccessfully;
 
+    function pause() public {
+        _pause();
+    }
+
+    function unpause() public {
+        _unpause();
+    }
+
     function check_whenNotPaused() public whenNotPaused {
         executedSuccessfully = true;
     }
@@ -83,40 +91,5 @@ contract PausableTest is DSTest {
 
         // Contract is unpaused
         assertTrue(pausable.paused() == false, "paused() should be false");
-    }
-
-    function test_NonAuthorizedUser_NotAbleToPause() public {
-        // Create a user
-        Caller user = new Caller();
-
-        // Should not be able to pause
-        bool success;
-        (success, ) = user.externalCall(
-            address(pausable),
-            abi.encodeWithSelector(pausable.pause.selector)
-        );
-        assertTrue(success == false, "Should not be able to pause");
-
-        // Contract is still unpaused
-        assertTrue(pausable.paused() == false, "paused() should be false");
-    }
-
-    function test_NonAuthorizedUser_NotAbleToUnpause() public {
-        // Create a user
-        Caller user = new Caller();
-
-        // Pause contract
-        pausable.pause();
-
-        // Should not be able to unpause
-        bool success;
-        (success, ) = user.externalCall(
-            address(pausable),
-            abi.encodeWithSelector(pausable.unpause.selector)
-        );
-        assertTrue(success == false, "Should not be able to unpause");
-
-        // Contract is still paused
-        assertTrue(pausable.paused(), "paused() should be false");
     }
 }

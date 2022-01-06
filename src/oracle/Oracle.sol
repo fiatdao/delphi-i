@@ -97,6 +97,14 @@ contract Oracle is Pausable, IOracle {
         }
     }
 
+    function pause() public checkCaller {
+        _pause();
+    }
+
+    function unpause() public checkCaller {
+        _unpause();
+    }
+
     function reset() public whenPaused checkCaller {
         _currentValue = 0;
         nextValue = 0;

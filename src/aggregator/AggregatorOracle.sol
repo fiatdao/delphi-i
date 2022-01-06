@@ -132,6 +132,16 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
         return (_aggregatedValue, isValid);
     }
 
+    /// @notice Pause contract
+    function pause() public checkCaller {
+        _pause();
+    }
+
+    /// @notice Unpause contract
+    function unpause() public checkCaller {
+        _unpause();
+    }    
+
     function setMinimumRequiredValidValues(uint256 minimumRequiredValidValues_)
         public
         checkCaller

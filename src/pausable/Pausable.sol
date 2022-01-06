@@ -35,12 +35,12 @@ contract Pausable is Guarded {
         _;
     }
 
-    function pause() public checkCaller whenNotPaused {
+    function _pause() internal whenNotPaused {
         _paused = true;
         emit Paused(msg.sender);
     }
 
-    function unpause() public checkCaller whenPaused {
+    function _unpause() internal whenPaused {
         _paused = false;
         emit Unpaused(msg.sender);
     }
