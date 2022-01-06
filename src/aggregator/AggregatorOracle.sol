@@ -3,11 +3,11 @@ pragma solidity ^0.8.0;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {Guarded} from "./Guarded.sol";
-import {Pausable} from "./Pausable.sol";
+import {Guarded} from "src/guarded/Guarded.sol";
+import {Pausable} from "src/pausable/Pausable.sol";
 
-import {Oracle} from "./Oracle.sol";
-import {IOracle} from "./IOracle.sol";
+import {Oracle} from "src/oracle/Oracle.sol";
+import {IOracle} from "src/oracle/IOracle.sol";
 
 // @notice Emitted when trying to add an oracle that already exists
 error AggregatorOracle__addOracle_oracleAlreadyRegistered(address oracle);
@@ -46,17 +46,13 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
     // Number of valid values from oracles
     uint256 private _aggregatedValidValues;
 
-    // MINIMUM_REQUIRED_VALID_VALUES_ROLE is able to set the minimum number of required valid values
-    bytes32 public constant MINIMUM_REQUIRED_VALID_VALUES_ROLE =
-        keccak256("MINIMUM_REQUIRED_VALID_VALUES_ROLE");
-
     /// @notice Returns the number of oracles
     function oracleCount() public view returns (uint256) {
         return _oracles.length();
     }
 
     /// @notice Adds an oracle to the list of oracles
-    function oracleAdd(address oracle) public onlyRoot {
+    function oracleAdd(address oracle) public checkCaller {
         bool added = _oracles.add(oracle);
         if (added == false) {
             revert AggregatorOracle__addOracle_oracleAlreadyRegistered(oracle);
@@ -69,7 +65,7 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
     }
 
     /// @notice Removes an oracle from the list of oracles
-    function oracleRemove(address oracle) public onlyRoot {
+    function oracleRemove(address oracle) public checkCaller {
         uint256 localOracleCount = oracleCount();
 
         // Make sure the minimum number of required valid values is not higher than the oracle count
@@ -136,9 +132,19 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
         return (_aggregatedValue, isValid);
     }
 
+    /// @notice Pause contract
+    function pause() public checkCaller {
+        _pause();
+    }
+
+    /// @notice Unpause contract
+    function unpause() public checkCaller {
+        _unpause();
+    }
+
     function setMinimumRequiredValidValues(uint256 minimumRequiredValidValues_)
         public
-        onlyRole(MINIMUM_REQUIRED_VALID_VALUES_ROLE)
+        checkCaller
     {
         uint256 localOracleCount = oracleCount();
         if (minimumRequiredValidValues_ > localOracleCount) {

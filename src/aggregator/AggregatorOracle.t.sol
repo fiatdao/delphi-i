@@ -3,12 +3,12 @@ pragma solidity ^0.8.0;
 
 import "ds-test/test.sol";
 
-import {Hevm} from "./test/utils/Hevm.sol";
-import {MockProvider} from "./test/utils/MockProvider.sol";
-import {Caller} from "./test/utils/Caller.sol";
+import {Hevm} from "src/test/utils/Hevm.sol";
+import {MockProvider} from "src/test/utils/MockProvider.sol";
+import {Caller} from "src/test/utils/Caller.sol";
 
-import {Oracle} from "./Oracle.sol";
-import {AggregatorOracle} from "./AggregatorOracle.sol";
+import {Oracle} from "src/oracle/Oracle.sol";
+import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
 
 contract AggregatorOracleTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
@@ -62,10 +62,10 @@ contract AggregatorOracleTest is DSTest {
         aggregatorOracle.oracleAdd(address(oracle1));
     }
 
-    function test_AddOracle_OnlyRootShouldBeAbleToAdd() public {
+    function test_AddOracle_OnlyAuthrorizedUserShouldBeAbleToAdd() public {
         Caller user = new Caller();
 
-        // Create a couple of oracles
+        // Create an oracle
         MockProvider oracle1 = new MockProvider();
 
         oracle1.givenQueryReturnResponse(
@@ -82,7 +82,10 @@ contract AggregatorOracleTest is DSTest {
                 address(oracle1)
             )
         );
-        assertTrue(ok == false);
+        assertTrue(
+            ok == false,
+            "Only authorized users should be able to add oracles"
+        );
     }
 
     function test_CheckExistenceOfOracle() public {
@@ -112,7 +115,7 @@ contract AggregatorOracleTest is DSTest {
         aggregatorOracle.oracleRemove(address(oracle1));
     }
 
-    function test_RemoveOracle_OnlyRootShouldBeAbleToRemove() public {
+    function test_RemoveOracle_OnlyAuthorizedUserShouldBeAbleToRemove() public {
         // Create a user without permissions
         Caller user = new Caller();
 
@@ -124,7 +127,10 @@ contract AggregatorOracleTest is DSTest {
                 address(oracle)
             )
         );
-        assertTrue(ok == false);
+        assertTrue(
+            ok == false,
+            "Only authorized users should be able to remove oracles"
+        );
     }
 
     function testFail_RemoveOracle_PossibleIf_MinimumRequiredNumberOfValidValues_CanStillBeMet()
@@ -354,11 +360,11 @@ contract AggregatorOracleTest is DSTest {
         assertEq(aggregatorOracle.minimumRequiredValidValues(), 1);
     }
 
-    function test_NonMINIMUM_REQUIRED_VALID_VALUES_ROLE_ShouldNotBeAbleTo_SetMinimumRequiredValidValues()
+    function test_NonAuthorizedUser_ShouldNotBeAbleTo_SetMinimumRequiredValidValues()
         public
     {
         // Create user
-        // Do not grant MINIMUM_REQUIRED_VALID_VALUES_ROLE to user
+        // Do not grant AuthorizedUser to user
         Caller user = new Caller();
 
         bool success;
@@ -372,19 +378,18 @@ contract AggregatorOracleTest is DSTest {
 
         assertTrue(
             success == false,
-            "Non-MINIMUM_REQUIRED_VALID_VALUES_ROLE should not be able to call setMinimumRequiredValidValues()"
+            "Non-AuthorizedUser should not be able to call setMinimumRequiredValidValues()"
         );
     }
 
-    function test_MINIMUM_REQUIRED_VALID_VALUES_ROLE_ShouldBeAbleTo_SetMinimumRequiredValidValues()
+    function test_AuthorizedUser_ShouldBeAbleTo_SetMinimumRequiredValidValues()
         public
     {
         // Create user
-        // Do not grant MINIMUM_REQUIRED_VALID_VALUES_ROLE to user
         Caller user = new Caller();
 
-        aggregatorOracle.grantRole(
-            aggregatorOracle.MINIMUM_REQUIRED_VALID_VALUES_ROLE(),
+        aggregatorOracle.allowCaller(
+            aggregatorOracle.setMinimumRequiredValidValues.selector,
             address(user)
         );
 
@@ -399,7 +404,7 @@ contract AggregatorOracleTest is DSTest {
 
         assertTrue(
             success,
-            "MINIMUM_REQUIRED_VALID_VALUES_ROLE should be able to call setMinimumRequiredValidValues()"
+            "Authorized user should be able to call setMinimumRequiredValidValues()"
         );
     }
 

@@ -3,10 +3,10 @@ pragma solidity ^0.8.0;
 
 import "ds-test/test.sol";
 
-import "./test/utils/Caller.sol";
-import {Hevm} from "./test/utils/Hevm.sol";
-import {MockProvider} from "./test/utils/MockProvider.sol";
-import {IValueProvider} from "./valueprovider/IValueProvider.sol";
+import "src/test/utils/Caller.sol";
+import {Hevm} from "src/test/utils/Hevm.sol";
+import {MockProvider} from "src/test/utils/MockProvider.sol";
+import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
 
 import {Oracle} from "./Oracle.sol";
 
@@ -416,12 +416,12 @@ contract OracleTest is DSTest {
         oracle.reset();
     }
 
-    function test_RESET_ROLE_ShouldBeAble_ToReset() public {
+    function test_AuthorizedUser_ShouldBeAble_ToReset() public {
         // Create user
         Caller user = new Caller();
 
-        // Grant RESET_ROLE to user
-        oracle.grantRole(oracle.RESET_ROLE(), address(user));
+        // Grant ability to reset
+        oracle.allowCaller(oracle.reset.selector, address(user));
 
         // Oracle should be paused when calling reset
         oracle.pause();
@@ -433,12 +433,15 @@ contract OracleTest is DSTest {
             abi.encodeWithSelector(oracle.reset.selector)
         );
 
-        assertTrue(success, "RESET_ROLE should be able to call reset()");
+        assertTrue(
+            success,
+            "Only authorized user should be able to call reset()"
+        );
     }
 
-    function test_NonRESET_ROLE_ShouldNotBeAble_ToReset() public {
+    function test_NonAuthorizedUser_ShouldNotBeAble_ToReset() public {
         // Create user
-        // Do not grant RESET_ROLE to user
+        // Do not authorize user
         Caller user = new Caller();
 
         // Oracle should be paused when calling reset
@@ -453,7 +456,7 @@ contract OracleTest is DSTest {
 
         assertTrue(
             success == false,
-            "Non-RESET_ROLE should not be able to call reset()"
+            "Non-authorized user should not be able to call reset()"
         );
     }
 }
