@@ -15,8 +15,6 @@ contract Pausable is Guarded {
 
     bool private _paused;
 
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-
     function paused() public view virtual returns (bool) {
         return _paused;
     }
@@ -37,12 +35,12 @@ contract Pausable is Guarded {
         _;
     }
 
-    function pause() public onlyRole(PAUSER_ROLE) whenNotPaused {
+    function _pause() internal whenNotPaused {
         _paused = true;
         emit Paused(msg.sender);
     }
 
-    function unpause() public onlyRole(PAUSER_ROLE) whenPaused {
+    function _unpause() internal whenPaused {
         _paused = false;
         emit Unpaused(msg.sender);
     }

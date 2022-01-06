@@ -29,9 +29,6 @@ contract Oracle is Pausable, IOracle {
 
     bool private _validReturnedValue;
 
-    // RESET_ROLE is able to reset the oracle
-    bytes32 public constant RESET_ROLE = keccak256("RESET_ROLE");
-
     constructor(
         address valueProvider_,
         uint256 timeUpdateWindow_,
@@ -100,7 +97,15 @@ contract Oracle is Pausable, IOracle {
         }
     }
 
-    function reset() public whenPaused onlyRole(RESET_ROLE) {
+    function pause() public checkCaller {
+        _pause();
+    }
+
+    function unpause() public checkCaller {
+        _unpause();
+    }
+
+    function reset() public whenPaused checkCaller {
         _currentValue = 0;
         nextValue = 0;
         lastTimestamp = 0;

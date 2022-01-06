@@ -1,41 +1,70 @@
 // SPDX-License-Identifier: Unlicensed
 pragma solidity ^0.8.0;
 
+/// @title Guarded
+/// @notice Mixin implementing an authentication scheme on a method level
 abstract contract Guarded {
-    bytes32 public constant ROOT_ROLE = keccak256("ROOT_ROLE");
+    /// ======== Custom Errors ======== ///
 
-    mapping(bytes32 => mapping(address => bool)) private _roleMembers;
+    error Guarded__notRoot();
+    error Guarded__notGranted();
 
-    event GrantRole(bytes32 role, address who);
-    event RevokeRole(bytes32 role, address who);
+    /// ======== Storage ======== ///
+
+    /// @notice Wildcard for granting a caller to call every guarded method
+    bytes32 public constant ANY_SIG = keccak256("ANY_SIG");
+
+    /// @notice Mapping storing who is granted to which method
+    /// @dev Method Signature => Caller => Bool
+    mapping(bytes32 => mapping(address => bool)) private _canCall;
+
+    /// ======== Events ======== ///
+
+    event AllowCaller(bytes32 sig, address who);
+    event BlockCaller(bytes32 sig, address who);
 
     constructor() {
-        // set root role
-        _roleMembers[ROOT_ROLE][msg.sender] = true;
-        emit GrantRole(ROOT_ROLE, msg.sender);
+        // set root
+        _canCall[ANY_SIG][msg.sender] = true;
+        emit AllowCaller(ANY_SIG, msg.sender);
     }
 
-    modifier onlyRoot() {
-        require(hasRole(ROOT_ROLE, msg.sender), "Guarded/not-root");
-        _;
+    /// ======== Auth ======== ///
+
+    modifier callerIsRoot() {
+        if (canCall(ANY_SIG, msg.sender)) {
+            _;
+        } else revert Guarded__notRoot();
     }
 
-    modifier onlyRole(bytes32 role) {
-        require(hasRole(role, msg.sender), "Guarded/not-granted");
-        _;
+    modifier checkCaller() {
+        if (canCall(msg.sig, msg.sender)) {
+            _;
+        } else revert Guarded__notGranted();
     }
 
-    function grantRole(bytes32 role, address who) external onlyRoot {
-        _roleMembers[role][who] = true;
-        emit GrantRole(role, who);
+    /// @notice Grant the right to call method `sig` to `who`
+    /// @dev Only the root user (granted `ANY_SIG`) is able to call this method
+    /// @param sig Method signature (4Byte)
+    /// @param who Address of who should be able to call `sig`
+    function allowCaller(bytes32 sig, address who) external callerIsRoot {
+        _canCall[sig][who] = true;
+        emit AllowCaller(sig, who);
     }
 
-    function revokeRole(bytes32 role, address who) external onlyRoot {
-        _roleMembers[role][who] = false;
-        emit RevokeRole(role, who);
+    /// @notice Revoke the right to call method `sig` from `who`
+    /// @dev Only the root user (granted `ANY_SIG`) is able to call this method
+    /// @param sig Method signature (4Byte)
+    /// @param who Address of who should not be able to call `sig` anymore
+    function blockCaller(bytes32 sig, address who) external callerIsRoot {
+        _canCall[sig][who] = false;
+        emit BlockCaller(sig, who);
     }
 
-    function hasRole(bytes32 role, address who) public view returns (bool) {
-        return (_roleMembers[role][who] || _roleMembers[ROOT_ROLE][who]);
+    /// @notice Returns if `who` can call `sig`
+    /// @param sig Method signature (4Byte)
+    /// @param who Address of who should be able to call `sig`
+    function canCall(bytes32 sig, address who) public view returns (bool) {
+        return (_canCall[sig][who] || _canCall[ANY_SIG][who]);
     }
 }
