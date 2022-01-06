@@ -16,12 +16,6 @@ jobs:
         with:
           name: dapp
 
-      - name: Clone private repo
-        env: 
-          TOKEN: ${{ secrets.TOKEN }}
-        run: |
-          git clone https://cleanunicorn:$TOKEN@github.com/fiatdao/fiat-lux
-
       - name: Install dependencies
         run: nix-shell --run 'make'
         
