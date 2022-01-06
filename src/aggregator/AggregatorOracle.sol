@@ -140,7 +140,7 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
     /// @notice Unpause contract
     function unpause() public checkCaller {
         _unpause();
-    }    
+    }
 
     function setMinimumRequiredValidValues(uint256 minimumRequiredValidValues_)
         public

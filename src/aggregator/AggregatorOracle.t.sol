@@ -82,7 +82,10 @@ contract AggregatorOracleTest is DSTest {
                 address(oracle1)
             )
         );
-        assertTrue(ok == false, "Only authorized users should be able to add oracles");
+        assertTrue(
+            ok == false,
+            "Only authorized users should be able to add oracles"
+        );
     }
 
     function test_CheckExistenceOfOracle() public {
@@ -124,7 +127,10 @@ contract AggregatorOracleTest is DSTest {
                 address(oracle)
             )
         );
-        assertTrue(ok == false, "Only authorized users should be able to remove oracles");
+        assertTrue(
+            ok == false,
+            "Only authorized users should be able to remove oracles"
+        );
     }
 
     function testFail_RemoveOracle_PossibleIf_MinimumRequiredNumberOfValidValues_CanStillBeMet()
@@ -382,7 +388,10 @@ contract AggregatorOracleTest is DSTest {
         // Create user
         Caller user = new Caller();
 
-        aggregatorOracle.allowCaller(aggregatorOracle.setMinimumRequiredValidValues.selector, address(user));
+        aggregatorOracle.allowCaller(
+            aggregatorOracle.setMinimumRequiredValidValues.selector,
+            address(user)
+        );
 
         bool success;
         (success, ) = user.externalCall(

@@ -433,7 +433,10 @@ contract OracleTest is DSTest {
             abi.encodeWithSelector(oracle.reset.selector)
         );
 
-        assertTrue(success, "Only authorized user should be able to call reset()");
+        assertTrue(
+            success,
+            "Only authorized user should be able to call reset()"
+        );
     }
 
     function test_NonAuthorizedUser_ShouldNotBeAble_ToReset() public {
