@@ -110,8 +110,12 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
                         // Increase count of valid values
                         validValues++;
                     }
-                } catch {}
-            } catch {}
+                } catch {
+                    continue;
+                }
+            } catch {
+                continue;
+            }
         }
 
         // Aggregate the returned values
