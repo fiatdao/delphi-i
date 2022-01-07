@@ -27,6 +27,7 @@ contract Oracle is Pausable, IOracle {
     // current EMA value
     int256 private _currentValue;
 
+    // whether the last returned value was valid
     bool private _validReturnedValue;
 
     constructor(
@@ -110,5 +111,21 @@ contract Oracle is Pausable, IOracle {
         nextValue = 0;
         lastTimestamp = 0;
         _validReturnedValue = false;
+    }
+
+    function setParam(bytes32 param_, uint256 value_) public {
+        if (param_ == "paused") {
+            if (value_ > 0) {
+                _pause();
+            } else {
+                _unpause();
+            }
+        }
+        // else if (param == "unpause") _unpause();
+        // else if (param == "timeUpdateWindow") timeUpdateWindow = value;
+        // else if (param == "maxValidTime") maxValidTime = value;
+        // else if (param == "alpha") alpha = value;
+        // else if (param == "valueProvider") valueProvider = IValueProvider(value);
+        // else throw;
     }
 }

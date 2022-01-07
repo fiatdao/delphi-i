@@ -459,4 +459,23 @@ contract OracleTest is DSTest {
             "Non-authorized user should not be able to call reset()"
         );
     }
+
+    function test_setParam_canPause() public {
+        // Pause oracle
+        oracle.setParam("paused", uint256(1)); 
+
+        // Check if paused
+        assertTrue(oracle.paused(), "Oracle should be paused");
+    }
+
+    function test_setParam_canUnpause() public {
+        // Make sure we start as paused
+        oracle.setParam("paused", uint256(1));
+
+        // Unpause
+        oracle.setParam("paused", uint256(0)); 
+
+        // Check if unpaused
+        assertTrue(oracle.paused() == false, "Oracle should be unpaused");
+    }
 }
