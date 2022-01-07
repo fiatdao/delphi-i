@@ -50,7 +50,13 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
         return _oracles.length();
     }
 
+    /// @notice Returns `true` if the oracle is registered
+    function oracleExists(address oracle) public view returns (bool) {
+        return _oracles.contains(oracle);
+    }
+
     /// @notice Adds an oracle to the list of oracles
+    /// @dev Reverts if the oracle is already registered
     function oracleAdd(address oracle) public checkCaller {
         bool added = _oracles.add(oracle);
         if (added == false) {
@@ -58,12 +64,9 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
         }
     }
 
-    /// @notice Returns `true` if the oracle is registered
-    function oracleExists(address oracle) public view returns (bool) {
-        return _oracles.contains(oracle);
-    }
-
     /// @notice Removes an oracle from the list of oracles
+    /// @dev Reverts if removing the oracle would break the minimum required valid values
+    /// @dev Reverts if removing the oracle is not registered
     function oracleRemove(address oracle) public checkCaller {
         uint256 localOracleCount = oracleCount();
 
@@ -119,6 +122,9 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
     }
 
     /// @notice Returns the aggregated value
+    /// @dev The value is considered valid if 
+    ///      - the number of valid values is higher than the minimum required valid values
+    ///      - the number of required valid values is > 0
     function value()
         public
         view
