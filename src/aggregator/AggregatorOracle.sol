@@ -6,7 +6,6 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {Guarded} from "src/guarded/Guarded.sol";
 import {Pausable} from "src/pausable/Pausable.sol";
 
-import {Oracle} from "src/oracle/Oracle.sol";
 import {IOracle} from "src/oracle/IOracle.sol";
 
 // @notice Emitted when trying to add an oracle that already exists
@@ -94,7 +93,7 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
 
         // Update each oracle and get its value
         for (uint256 i = 0; i < oracleLength; i++) {
-            Oracle oracle = Oracle(_oracles.at(i));
+            IOracle oracle = IOracle(_oracles.at(i));
 
             try oracle.update() {
                 try oracle.value() returns (
