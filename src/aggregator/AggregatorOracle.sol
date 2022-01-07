@@ -122,7 +122,7 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
     }
 
     /// @notice Returns the aggregated value
-    /// @dev The value is considered valid if 
+    /// @dev The value is considered valid if
     ///      - the number of valid values is higher than the minimum required valid values
     ///      - the number of required valid values is > 0
     function value()
