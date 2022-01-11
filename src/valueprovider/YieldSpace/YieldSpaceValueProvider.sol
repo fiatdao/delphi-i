@@ -42,8 +42,9 @@ contract YieldSpaceValueProvider is IValueProvider {
         );
 
         // Compute the result with the formula provided by the documentation
-        int256 result = PRBMathSD59x18.pow(tokenToReserveRatio59x18, ts59x18) -
-            PRBMathSD59x18.fromInt(1);
+        // Rate is per second so we scale it per Julien year, 365.25 days.
+        int256 result = (PRBMathSD59x18.pow(tokenToReserveRatio59x18, ts59x18) -
+            PRBMathSD59x18.fromInt(1)) * 31557600;
 
         // The result is a 59.18 fixed-point number.
         return result;
