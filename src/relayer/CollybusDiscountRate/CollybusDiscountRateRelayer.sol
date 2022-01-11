@@ -3,6 +3,10 @@ pragma solidity ^0.8.0;
 
 import {IRelayer} from "../IRelayer.sol";
 
+interface ICollybus {
+    function updateDiscountRate(uint256 tokenId, uint256 rate) external;
+}
+
 contract CollybusDiscountRateRelayer is IRelayer {
     struct OracleData {
         bool exists;
@@ -22,5 +26,13 @@ contract CollybusDiscountRateRelayer is IRelayer {
 
     function oracleExists(address oracle_) public returns (bool) {
         return oracles[oracle_].exists;
+    }
+
+    function check() public returns (bool) {
+        // Check if any of the oracle values differ more than the threshold from the last update
+    }
+
+    function execute() public {
+        // Update Collybus all tokenIds with the new discount rate
     }
 }
