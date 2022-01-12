@@ -86,7 +86,7 @@ contract ElementFinanceValueProviderTest is DSTest {
 
     function test_GetValue() public {
         // Computed value based on the parameters that are sent via the mock provider
-        int256 computedExpectedValue = -590114329;
+        int256 computedExpectedValue = -18622591948850400;
         int256 value = efValueProvider.value();
 
         assertTrue(value == computedExpectedValue);
