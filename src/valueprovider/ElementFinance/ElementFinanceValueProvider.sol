@@ -64,8 +64,8 @@ contract ElementFinanceValueProvider is IValueProvider {
 
         // We compute the token/underlier ratio and save it in signed 59.18 format
         int256 tokenToReserveRatio59x18 = PRBMathSD59x18.div(
-            PRBMathSD59x18.fromInt(int256(uint256(ePTokenBalance))),
-            PRBMathSD59x18.fromInt(int256(uint256(underlierBalance)))
+            PRBMathSD59x18.fromInt(int256(ePTokenBalance)),
+            PRBMathSD59x18.fromInt(int256(underlierBalance))
         );
 
         // Compute the result with the formula provided by the documentation
