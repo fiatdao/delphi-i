@@ -243,8 +243,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         // Check will search for at least one updatable oracle, which in our case is the first one in the list
         // therefore, the first oracle will be updated but the second will not.
         bool mustUpdate = cdrr.check();
-        if(mustUpdate)
-            cdrr.execute();
+        if (mustUpdate) cdrr.execute();
 
         (int256 value1, bool valid1) = oracle1.value();
         assertTrue(valid1);
