@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {IRelayer} from "src/relayer/IRelayer.sol";
 import {IOracle} from "src/oracle/IOracle.sol";
 import {ICollybus} from "src/relayer/ICollybus.sol";
+import {Guarded} from "src/guarded/Guarded.sol";
 
 // @notice Emitted when trying to add an oracle that already exists
 error CollybusDiscountRateRelayer__addOracle_oracleAlreadyRegistered(
@@ -12,10 +13,13 @@ error CollybusDiscountRateRelayer__addOracle_oracleAlreadyRegistered(
 
 // @notice Emitted when trying to add an oracle for a tokenId that already has a registered oracle.
 error CollybusDiscountRateRelayer__addOracle_tokenIdHasOracleRegistered(
+    address oracle,
     uint256 tokenId
 );
 
-contract CollybusDiscountRateRelayer is IRelayer {
+error CollybusDiscountRateRelayer__removeOracle_oracleNotRegistered(address oracle);
+
+contract CollybusDiscountRateRelayer is Guarded,IRelayer {
     struct OracleData {
         bool exists;
         uint256 tokenId;
@@ -33,11 +37,16 @@ contract CollybusDiscountRateRelayer is IRelayer {
         _collybus = ICollybus(collybusAddress_);
     }
 
+    /// @notice Returns the number of oracles
+    function oracleCount() public view returns (uint256) {
+        return _oracleAddressIndexes.length;
+    }
+
     function oracleAdd(
         address oracle_,
         uint256 tokenId_,
         uint256 minimumThresholdValue_
-    ) public {
+    )  public checkCaller {
         if (oracleExists(oracle_)) {
             revert CollybusDiscountRateRelayer__addOracle_oracleAlreadyRegistered(
                 oracle_
@@ -46,6 +55,7 @@ contract CollybusDiscountRateRelayer is IRelayer {
 
         if (_tokenIdHasOracle[tokenId_]) {
             revert CollybusDiscountRateRelayer__addOracle_tokenIdHasOracleRegistered(
+                oracle_,
                 tokenId_
             );
         }
@@ -61,7 +71,36 @@ contract CollybusDiscountRateRelayer is IRelayer {
         });
     }
 
-    function oracleExists(address oracle_) public view returns (bool) {
+    function oracleRemove(
+        address oracle_
+    ) public checkCaller {
+        if (!oracleExists(oracle_)) {
+            revert CollybusDiscountRateRelayer__removeOracle_oracleNotRegistered(
+                oracle_
+            );
+        }
+
+        // Reset the tokenId Mapping
+        _tokenIdHasOracle[_oracles[oracle_].tokenId] = false;
+
+        // Remove the oracle index from the array by swapping to the last element
+        uint256 arrayLength = _oracleAddressIndexes.length;
+        if(arrayLength > 1){
+            for (uint256 i = 0; i < arrayLength -1; i++) {
+                if(_oracleAddressIndexes[i] == oracle_){
+                    _oracleAddressIndexes[i] = _oracleAddressIndexes[arrayLength-1];
+                }
+            }
+        }
+
+        //delete the last element
+        _oracleAddressIndexes.pop();
+
+        // Reset struct to default values
+        delete _oracles[oracle_];
+    }
+
+    function oracleExists(address oracle_) public checkCaller view returns (bool) {
         return _oracles[oracle_].exists;
     }
 
@@ -102,8 +141,8 @@ contract CollybusDiscountRateRelayer is IRelayer {
                 oracleData.minimumThresholdValue
             ) {
                 oracleData.lastUpdateValue = rate;
-                _collybus.updateDiscountRate(oracleData.tokenId, rate);
                 _oracles[_oracleAddressIndexes[i]] = oracleData;
+                _collybus.updateDiscountRate(oracleData.tokenId, rate);
             }
         }
     }
