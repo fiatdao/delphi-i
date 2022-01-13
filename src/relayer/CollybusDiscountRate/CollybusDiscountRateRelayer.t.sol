@@ -240,8 +240,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         cdrr.oracleAdd(address(oracle2), mockRateId2, mockRateId2MinThreshold);
         hevm.warp(oracleTimeUpdateWindow);
 
-        // Check will search for at least one updatable oracle, which in our case is the first one in the list
-        // therefore, the first oracle will be updated but the second will not.
+        // Execute must call update on all oracles before pushing the values to Collybus.
         bool mustUpdate = cdrr.check();
         if (mustUpdate) cdrr.execute();
 
