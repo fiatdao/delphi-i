@@ -68,12 +68,18 @@ contract CollybusDiscountRateRelayerTest is DSTest {
 
     function test_CheckExistenceOfOracle() public {
         // Check that oracle was added
-        assertTrue(cdrr.oracleExists(address(oracle1)), "Oracle should be added");
+        assertTrue(
+            cdrr.oracleExists(address(oracle1)),
+            "Oracle should be added"
+        );
     }
 
     function test_ReturnNumberOfOracles() public {
         // Check the number of existing oracles
-        assertTrue(cdrr.oracleCount() == 1, "CollybusDiscountRateRelayer should contain 1 oracle.");
+        assertTrue(
+            cdrr.oracleCount() == 1,
+            "CollybusDiscountRateRelayer should contain 1 oracle."
+        );
     }
 
     function test_AddOracle() public {
@@ -86,13 +92,11 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     }
 
     function testFail_AddOracle_ShouldNotAllowDuplicateOracles() public {
-
         // Attemt to add the same oracle again
         cdrr.oracleAdd(address(oracle1), mockRateId1, mockRateId1MinThreshold);
     }
 
     function testFail_AddOracle_ShouldNotAllowDuplicateRates() public {
-
         Oracle oracle2 = new Oracle(
             address(oracleValueProvider1),
             oracleTimeUpdateWindow,
@@ -108,7 +112,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         Caller user = new Caller();
 
         address newOracle = address(0x1);
-        uint256 mockRateId2 = mockRateId1 + 1;        
+        uint256 mockRateId2 = mockRateId1 + 1;
         uint256 mockRateId2MinThreshold = mockRateId1MinThreshold;
         // Add the oracle
         (bool ok, ) = user.externalCall(
@@ -131,34 +135,31 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         cdrr.oracleRemove(address(oracle1));
 
         // Relayer should be empty
-        assertTrue(cdrr.oracleCount() == 0, "CollybusDiscountRateRelayer should be empty");
+        assertTrue(
+            cdrr.oracleCount() == 0,
+            "CollybusDiscountRateRelayer should be empty"
+        );
     }
 
     function testFail_RemoveOracle_ShouldFailIfOracleDoesNotExist() public {
-        address newOracle = address(0x1); 
+        address newOracle = address(0x1);
 
         // Attempt to remove oracle that does not exist.
         cdrr.oracleRemove(newOracle);
     }
 
-    function test_RemoveOracle_OnlyAuthorizedUserShouldBeAbleToRemove()
-        public
-    {
+    function test_RemoveOracle_OnlyAuthorizedUserShouldBeAbleToRemove() public {
         Caller user = new Caller();
 
         // Add the oracle
         (bool ok, ) = user.externalCall(
             address(cdrr),
-            abi.encodeWithSelector(
-                cdrr.oracleRemove.selector,
-                address(oracle1)
-            )
+            abi.encodeWithSelector(cdrr.oracleRemove.selector, address(oracle1))
         );
         assertTrue(
             ok == false,
             "Only authorized users should be able to add oracles"
         );
-
     }
 
     function test_checkCalls_returnsTrueWhenUpdateNeeded() public {
@@ -185,7 +186,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
             false
         );
 
-        uint256 mockRateId2 = mockRateId1+1;
+        uint256 mockRateId2 = mockRateId1 + 1;
         uint256 mockRateId2MinThreshold = mockRateId1MinThreshold;
         // Add oracle with rate id
         cdrr.oracleAdd(address(oracle2), mockRateId2, mockRateId2MinThreshold);
@@ -205,15 +206,12 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     }
 
     function test_checkCalls_returnsFalseAfterExecute() public {
-        
         bool checkBeforeUpdate = cdrr.check();
         assertTrue(checkBeforeUpdate);
-        
+
         cdrr.execute();
 
         bool checkAfterUpdate = cdrr.check();
         assertTrue(checkAfterUpdate == false);
     }
-
-    
 }

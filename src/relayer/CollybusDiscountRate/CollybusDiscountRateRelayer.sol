@@ -17,9 +17,11 @@ error CollybusDiscountRateRelayer__addOracle_tokenIdHasOracleRegistered(
     uint256 tokenId
 );
 
-error CollybusDiscountRateRelayer__removeOracle_oracleNotRegistered(address oracle);
+error CollybusDiscountRateRelayer__removeOracle_oracleNotRegistered(
+    address oracle
+);
 
-contract CollybusDiscountRateRelayer is Guarded,IRelayer {
+contract CollybusDiscountRateRelayer is Guarded, IRelayer {
     struct OracleData {
         bool exists;
         uint256 tokenId;
@@ -46,7 +48,7 @@ contract CollybusDiscountRateRelayer is Guarded,IRelayer {
         address oracle_,
         uint256 tokenId_,
         uint256 minimumThresholdValue_
-    )  public checkCaller {
+    ) public checkCaller {
         if (oracleExists(oracle_)) {
             revert CollybusDiscountRateRelayer__addOracle_oracleAlreadyRegistered(
                 oracle_
@@ -71,9 +73,7 @@ contract CollybusDiscountRateRelayer is Guarded,IRelayer {
         });
     }
 
-    function oracleRemove(
-        address oracle_
-    ) public checkCaller {
+    function oracleRemove(address oracle_) public checkCaller {
         if (!oracleExists(oracle_)) {
             revert CollybusDiscountRateRelayer__removeOracle_oracleNotRegistered(
                 oracle_
@@ -85,10 +85,12 @@ contract CollybusDiscountRateRelayer is Guarded,IRelayer {
 
         // Remove the oracle index from the array by swapping to the last element
         uint256 arrayLength = _oracleAddressIndexes.length;
-        if(arrayLength > 1){
-            for (uint256 i = 0; i < arrayLength -1; i++) {
-                if(_oracleAddressIndexes[i] == oracle_){
-                    _oracleAddressIndexes[i] = _oracleAddressIndexes[arrayLength-1];
+        if (arrayLength > 1) {
+            for (uint256 i = 0; i < arrayLength - 1; i++) {
+                if (_oracleAddressIndexes[i] == oracle_) {
+                    _oracleAddressIndexes[i] = _oracleAddressIndexes[
+                        arrayLength - 1
+                    ];
                 }
             }
         }
@@ -100,7 +102,12 @@ contract CollybusDiscountRateRelayer is Guarded,IRelayer {
         delete _oracles[oracle_];
     }
 
-    function oracleExists(address oracle_) public checkCaller view returns (bool) {
+    function oracleExists(address oracle_)
+        public
+        view
+        checkCaller
+        returns (bool)
+    {
         return _oracles[oracle_].exists;
     }
 
