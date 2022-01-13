@@ -168,16 +168,16 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     }
 
     function test_checkCallsUpdate_onlyOnFirstUpdatableOracle() public {
-        MockProvider oracle2ValueProvider = new MockProvider();
+        MockProvider oracleValueProvider2 = new MockProvider();
         Oracle oracle2 = new Oracle(
-            address(oracleValueProvider1),
+            address(oracleValueProvider2),
             oracleTimeUpdateWindow,
             oracleMaxValidTime,
             oracleAlpha
         );
 
         // Set the value returned by Value Provider to 100
-        oracle2ValueProvider.givenQueryReturnResponse(
+        oracleValueProvider2.givenQueryReturnResponse(
             abi.encodePacked(IValueProvider.value.selector),
             MockProvider.ReturnData({
                 success: true,
@@ -213,5 +213,45 @@ contract CollybusDiscountRateRelayerTest is DSTest {
 
         bool checkAfterUpdate = cdrr.check();
         assertTrue(checkAfterUpdate == false);
+    }
+
+    function test_executeCalls_updateOnAllOracles() public {
+        MockProvider oracleValueProvider2 = new MockProvider();
+        Oracle oracle2 = new Oracle(
+            address(oracleValueProvider2),
+            oracleTimeUpdateWindow,
+            oracleMaxValidTime,
+            oracleAlpha
+        );
+
+        // Set the value returned by Value Provider to 100
+        oracleValueProvider2.givenQueryReturnResponse(
+            abi.encodePacked(IValueProvider.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(int256(10 * 10**18))
+            }),
+            false
+        );
+
+        uint256 mockRateId2 = mockRateId1 + 1;
+        uint256 mockRateId2MinThreshold = mockRateId1MinThreshold;
+        // Add oracle with rate id
+        cdrr.oracleAdd(address(oracle2), mockRateId2, mockRateId2MinThreshold);
+        hevm.warp(oracleTimeUpdateWindow);
+
+        // Check will search for at least one updatable oracle, which in our case is the first one in the list
+        // therefore, the first oracle will be updated but the second will not.
+        bool mustUpdate = cdrr.check();
+        if(mustUpdate)
+            cdrr.execute();
+
+        (int256 value1, bool valid1) = oracle1.value();
+        assertTrue(valid1);
+        assertTrue(value1 == int256(100 * 10**18));
+
+        (int256 value2, bool valid2) = oracle2.value();
+        assertTrue(valid2);
+        assertTrue(value2 == int256(10 * 10**18));
     }
 }
