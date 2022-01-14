@@ -13,8 +13,8 @@ import {Oracle} from "src/oracle/Oracle.sol";
 import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
 
 contract TestCollybus is ICollybus {
-
     mapping(uint256 => int256) public rateForTokenId;
+
     function updateDiscountRate(uint256 tokenId, int256 rate)
         external
         override(ICollybus)
@@ -99,7 +99,11 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         // We can use any address, the oracle will not be interogated on add.
         address newOracle = address(0x1);
         // Add a new oracle that has the same rate id as the previously added oracle.
-        cdrr.oracleAdd(address(newOracle), mockRateId1, mockRateId1MinThreshold);
+        cdrr.oracleAdd(
+            address(newOracle),
+            mockRateId1,
+            mockRateId1MinThreshold
+        );
     }
 
     function test_AddOracle_OnlyAuthorizedUserShouldBeAbleToAdd() public {
@@ -268,11 +272,15 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         bool mustUpdate = cdrr.check();
         if (mustUpdate) cdrr.execute();
 
-        assertTrue(collybus.rateForTokenId(mockRateId1) == int256(100* 10**18));
-        assertTrue(collybus.rateForTokenId(mockRateId2) == int256(10* 10**18));
+        assertTrue(
+            collybus.rateForTokenId(mockRateId1) == int256(100 * 10**18)
+        );
+        assertTrue(collybus.rateForTokenId(mockRateId2) == int256(10 * 10**18));
     }
 
-    function test_execute_DoesNotUpdatesRatesInCollybusWhenDeltaIsBelowThreshold() public {
+    function test_execute_DoesNotUpdatesRatesInCollybusWhenDeltaIsBelowThreshold()
+        public
+    {
         MockProvider oracle2 = new MockProvider();
 
         int256 oracle2InitialValue = int256(10 * 10**18);
@@ -307,7 +315,9 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         );
 
         // Make the second value returned by the oracle to be just lower than the minimum threshold
-        int256 oracle2NewValue = oracle2InitialValue + int256(mockRateId2MinThreshold) - 1;
+        int256 oracle2NewValue = oracle2InitialValue +
+            int256(mockRateId2MinThreshold) -
+            1;
         oracle2.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
@@ -323,7 +333,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
 
         // Rate 1 from oracle 1 will be updated with the new value because the delta was bigger than the minimum threshold
         assertTrue(collybus.rateForTokenId(mockRateId1) == oracle1NewValue);
-        
+
         // Rate 2 from oracle 2 will NOT be updated because the delta is smaller
         assertTrue(collybus.rateForTokenId(mockRateId2) == oracle2InitialValue);
     }

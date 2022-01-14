@@ -144,7 +144,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
 
             OracleData memory oracleData = _oracles[_oracleAddressIndexes[i]];
             if (
-                absDelta(oracleData.lastUpdateValue, rate) >= 
+                absDelta(oracleData.lastUpdateValue, rate) >=
                 oracleData.minimumThresholdValue
             ) {
                 oracleData.lastUpdateValue = rate;
