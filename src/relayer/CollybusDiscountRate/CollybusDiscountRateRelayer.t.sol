@@ -177,7 +177,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         // In this test we will have 2 oracles in the relayer and both
         // have values that should trigger an update but the check function
         // should update and stop on the first oracle and return, the second
-        // oracle should not be updated. 
+        // oracle should not be updated.
         // We will check that by using a value provider for the second oracle
         // and check where the returned value is valid.
 
@@ -188,7 +188,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
             oracleMaxValidTime,
             oracleAlpha
         );
-        
+
         // Set the value returned by Value Provider.
         oracleValueProvider2.givenQueryReturnResponse(
             abi.encodePacked(IValueProvider.value.selector),
