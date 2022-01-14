@@ -106,7 +106,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
         // Reset the tokenId Mapping
         _tokenIdHasOracle[_oracles[oracle_].tokenId] = false;
 
-        // Remove the oracle index from the array by swapping to the last element
+        // Remove the oracle index from the array by swapping the target with the last element
         uint256 arrayLength = _oracleAddressIndexes.length;
         if (arrayLength > 1) {
             for (uint256 i = 0; i < arrayLength - 1; i++) {
@@ -114,11 +114,13 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
                     _oracleAddressIndexes[i] = _oracleAddressIndexes[
                         arrayLength - 1
                     ];
+                    // No need to continue iterating, we found our oracle.
+                    break;
                 }
             }
         }
 
-        //delete the last element
+        // Delete the last element
         _oracleAddressIndexes.pop();
 
         // Reset struct to default values
