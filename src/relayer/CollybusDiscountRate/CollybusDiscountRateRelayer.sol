@@ -51,7 +51,6 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
         return _oracleAddressIndexes.length;
     }
 
-
     /// @notice                         Registeres an oracle to a token id and set the minimum threshold delta value
     ///                                 calculate the annual rate.
     /// @param oracle_                  The address of the oracle.
@@ -138,7 +137,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
         return _oracles[oracle_].exists;
     }
 
-    /// @notice Iterates and updates each oracle until it finds one that should push data 
+    /// @notice Iterates and updates each oracle until it finds one that should push data
     ///         in the Collybus, more exactly, the delta change in value is bigger than the minimum
     ///         threshold value set for that oracle.
     /// @dev    Oracles that return invalid values are skipped.
