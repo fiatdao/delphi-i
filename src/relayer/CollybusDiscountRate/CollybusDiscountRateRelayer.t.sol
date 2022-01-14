@@ -28,7 +28,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     CollybusDiscountRateRelayer internal cdrr;
     TestCollybus internal collybus;
 
-    MockProvider oracle1;
+    MockProvider internal oracle1;
 
     uint256 internal oracleTimeUpdateWindow = 100; // seconds
     uint256 internal oracleMaxValidTime = 300;
@@ -86,7 +86,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     }
 
     function test_AddOracle() public {
-        // Create a new address since the oracle is not checked for validity in anyway
+        // Create a new address since the oracle is not checked for validity anyway
         address newOracle = address(0x1);
         uint256 mockTokenId2 = mockTokenId1 + 1;
 
@@ -95,7 +95,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     }
 
     function testFail_AddOracle_ShouldNotAllowDuplicateOracles() public {
-        // Attemt to add the same oracle again
+        // Attempt to add the same oracle again
         cdrr.oracleAdd(
             address(oracle1),
             mockTokenId1,
@@ -104,7 +104,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     }
 
     function testFail_AddOracle_ShouldNotAllowDuplicateTokenIds() public {
-        // We can use any address, the oracle will not be interogated on add.
+        // We can use any address, the oracle will not be interrogated on add.
         address newOracle = address(0x1);
         // Add a new oracle that has the same token id as the previously added oracle.
         cdrr.oracleAdd(
