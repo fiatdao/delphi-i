@@ -361,7 +361,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         // Rate 1 from oracle 1 will be updated with the new value because the delta was bigger than the minimum threshold
         assertTrue(collybus.rateForTokenId(mockTokenId1) == oracle1NewValue);
 
-        // Rate 2 from oracle 2 will NOT be updated because the delta is smaller
+        // Rate 2 from oracle 2 will NOT be updated because the delta is smaller than the threshold.
         assertTrue(
             collybus.rateForTokenId(mockTokenId2) == oracle2InitialValue
         );
