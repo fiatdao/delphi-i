@@ -107,6 +107,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
         _tokenIdHasOracle[_oracles[oracle_].tokenId] = false;
 
         // Remove the oracle index from the array by swapping the target with the last element
+        // We only need to iterate length - 1 elements.
         uint256 arrayLength = _oracleAddressIndexes.length;
         if (arrayLength > 1) {
             for (uint256 i = 0; i < arrayLength - 1; i++) {
