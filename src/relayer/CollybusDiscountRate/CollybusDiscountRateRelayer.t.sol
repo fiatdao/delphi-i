@@ -43,7 +43,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
 
         oracle1 = new MockProvider();
 
-        // Set the value returned by Value Provider to 100
+        // Set the value returned by Value Provider.
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
@@ -174,6 +174,13 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     }
 
     function test_CheckCallsUpdate_OnlyOnFirstUpdatableOracle() public {
+        // In this test we will have 2 oracles in the relayer and both
+        // have values that should trigger an update but the check function
+        // should update and stop on the first oracle and return, the second
+        // oracle should not be updated. 
+        // We will check that by using a value provider for the second oracle
+        // and check where the returned value is valid.
+
         MockProvider oracleValueProvider2 = new MockProvider();
         Oracle oracle2 = new Oracle(
             address(oracleValueProvider2),
@@ -181,7 +188,8 @@ contract CollybusDiscountRateRelayerTest is DSTest {
             oracleMaxValidTime,
             oracleAlpha
         );
-        // Set the value returned by Value Provider to 100
+        
+        // Set the value returned by Value Provider.
         oracleValueProvider2.givenQueryReturnResponse(
             abi.encodePacked(IValueProvider.value.selector),
             MockProvider.ReturnData({
@@ -232,7 +240,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
             oracleMaxValidTime,
             oracleAlpha
         );
-        // Set the value returned by Value Provider to 100
+        // Set the value returned by Value Provider.
         oracleValueProvider2.givenQueryReturnResponse(
             abi.encodePacked(IValueProvider.value.selector),
             MockProvider.ReturnData({
@@ -268,7 +276,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     function test_Execute_UpdatesRatesInCollybus() public {
         MockProvider oracle2 = new MockProvider();
 
-        // Set the value returned by Value Provider to 10
+        // Set the value returned by Value Provider.
         oracle2.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
@@ -280,7 +288,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
 
         uint256 mockTokenId2 = mockTokenId1 + 1;
         uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
-        // Add oracle with rate id
+        // Add oracle with rate id.
         cdrr.oracleAdd(
             address(oracle2),
             mockTokenId2,
@@ -289,8 +297,11 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         hevm.warp(oracleTimeUpdateWindow);
 
         // Execute must call update on all oracles before pushing the values to Collybus.
+        // Check should trigger an update because the value delta is bigger than the minimum for both oracles.
         bool mustUpdate = cdrr.check();
-        if (mustUpdate) cdrr.execute();
+        assertTrue(mustUpdate);
+
+        cdrr.execute();
 
         assertTrue(
             collybus.rateForTokenId(mockTokenId1) == int256(100 * 10**18)
@@ -306,7 +317,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         MockProvider oracle2 = new MockProvider();
 
         int256 oracle2InitialValue = int256(10 * 10**18);
-        // Set the value returned by Value Provider to 10
+        // Set the value returned by Value Provider.
         oracle2.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
