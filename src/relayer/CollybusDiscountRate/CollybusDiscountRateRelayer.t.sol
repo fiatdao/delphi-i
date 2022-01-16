@@ -9,13 +9,12 @@ import {Caller} from "src/test/utils/Caller.sol";
 import {ICollybus} from "src/relayer/ICollybus.sol";
 import {CollybusDiscountRateRelayer} from "./CollybusDiscountRateRelayer.sol";
 import {IOracle} from "src/oracle/IOracle.sol";
-import {Oracle} from "src/oracle/Oracle.sol";
 import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
 
 contract TestCollybus is ICollybus {
-    mapping(uint256 => int256) public rateForTokenId;
+    mapping(uint256 => uint256) public rateForTokenId;
 
-    function updateDiscountRate(uint256 tokenId, int256 rate)
+    function updateDiscountRate(uint256 tokenId, uint256 rate)
         external
         override(ICollybus)
     {
@@ -174,27 +173,13 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     }
 
     function test_CheckCallsUpdate_OnlyOnFirstUpdatableOracle() public {
-        // In this test we will have 2 oracles in the relayer and both
-        // have values that should trigger an update but the check function
-        // should update and stop on the first oracle and return, the second
-        // oracle should not be updated.
-        // We will check that by using a value provider for the second oracle
-        // and check where the returned value is valid.
-
-        MockProvider oracleValueProvider2 = new MockProvider();
-        Oracle oracle2 = new Oracle(
-            address(oracleValueProvider2),
-            oracleTimeUpdateWindow,
-            oracleMaxValidTime,
-            oracleAlpha
-        );
-
+        MockProvider oracle2 = new MockProvider();
         // Set the value returned by Value Provider.
-        oracleValueProvider2.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
+        oracle2.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(int256(10 * 10**18))
+                data: abi.encode(int256(100 * 10**18), true)
             }),
             false
         );
@@ -213,13 +198,13 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         // therefore, the first oracle will be updated but the second will not.
         cdrr.check();
 
-        (int256 value1, bool valid1) = IOracle(address(oracle1)).value();
-        assertTrue(valid1);
-        assertTrue(value1 == int256(100 * 10**18));
+        //update should be the first called function
+        MockProvider.CallData memory cd1 = oracle1.getCallData(0);
+        assertTrue(cd1.functionSelector == IOracle.update.selector);
 
-        (int256 value2, bool valid2) = IOracle(address(oracle2)).value();
-        assertTrue(valid2 == false);
-        assertTrue(value2 == 0);
+        //no function calls for our second oracle
+        MockProvider.CallData memory cd2 = oracle2.getCallData(0);
+        assertTrue(cd2.functionSelector == bytes4(0));
     }
 
     function test_CheckCalls_ReturnsFalseAfterExecute() public {
@@ -233,19 +218,13 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     }
 
     function test_ExecuteCalls_UpdateOnAllOracles() public {
-        MockProvider oracleValueProvider2 = new MockProvider();
-        Oracle oracle2 = new Oracle(
-            address(oracleValueProvider2),
-            oracleTimeUpdateWindow,
-            oracleMaxValidTime,
-            oracleAlpha
-        );
+        MockProvider oracle2 = new MockProvider();
         // Set the value returned by Value Provider.
-        oracleValueProvider2.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
+        oracle2.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(int256(1 * 10**18))
+                data: abi.encode(int256(100 * 10**18), true)
             }),
             false
         );
@@ -264,13 +243,12 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         cdrr.check();
         cdrr.execute();
 
-        (int256 value1, bool valid1) = IOracle(address(oracle1)).value();
-        assertTrue(valid1);
-        assertTrue(value1 == int256(100 * 10**18));
+        // Update was called for both oracles
+        MockProvider.CallData memory cd1 = oracle1.getCallData(0);
+        assertTrue(cd1.functionSelector == IOracle.update.selector);
 
-        (int256 value2, bool valid2) = IOracle(address(oracle2)).value();
-        assertTrue(valid2);
-        assertTrue(value2 == int256(1 * 10**18));
+        MockProvider.CallData memory cd2 = oracle2.getCallData(0);
+        assertTrue(cd2.functionSelector == IOracle.update.selector);
     }
 
     function test_Execute_UpdatesRatesInCollybus() public {
@@ -304,10 +282,10 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         cdrr.execute();
 
         assertTrue(
-            collybus.rateForTokenId(mockTokenId1) == int256(100 * 10**18)
+            collybus.rateForTokenId(mockTokenId1) == uint256(100 * 10**18)
         );
         assertTrue(
-            collybus.rateForTokenId(mockTokenId2) == int256(10 * 10**18)
+            collybus.rateForTokenId(mockTokenId2) == uint256(10 * 10**18)
         );
     }
 
@@ -370,11 +348,14 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         cdrr.execute();
 
         // Rate 1 from oracle 1 will be updated with the new value because the delta was bigger than the minimum threshold
-        assertTrue(collybus.rateForTokenId(mockTokenId1) == oracle1NewValue);
+        assertTrue(
+            collybus.rateForTokenId(mockTokenId1) == uint256(oracle1NewValue)
+        );
 
         // Rate 2 from oracle 2 will NOT be updated because the delta is smaller than the threshold.
         assertTrue(
-            collybus.rateForTokenId(mockTokenId2) == oracle2InitialValue
+            collybus.rateForTokenId(mockTokenId2) ==
+                uint256(oracle2InitialValue)
         );
     }
 }

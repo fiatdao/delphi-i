@@ -186,7 +186,8 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
             ) {
                 oracleData.lastUpdateValue = rate;
                 _oracles[_oracleAddressIndexes[i]] = oracleData;
-                _collybus.updateDiscountRate(oracleData.tokenId, rate);
+
+                _collybus.updateDiscountRate(oracleData.tokenId, uint256(rate));
             }
         }
     }
