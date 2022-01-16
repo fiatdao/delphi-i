@@ -20,9 +20,9 @@ contract ElementFinanceValueProviderTest is DSTest {
     function setUp() public {
         mockBalancerVault = new MockProvider();
 
-        // Values taken from a Element Curve Pool Contract deployed at
-        // https://etherscan.io/address/0x10a2F8bd81Ee2898D7eD18fb8f114034a549FA59
-        // block: 13951463
+        // Documentation page: 
+        // https://www.notion.so/fiatdao/FIAT-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
+        // For extra info about the values used check the second example from the documentation above.
         mockBalancerVault.givenQueryReturnResponse(
             // Used Parameters are: pool id, underlier address
             abi.encodeWithSelector(
@@ -35,9 +35,9 @@ contract ElementFinanceValueProviderTest is DSTest {
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(
-                    uint256(32149978535139),
+                    uint256(458783042838683314781124),
                     uint256(0),
-                    uint256(13945348),
+                    uint256(0),
                     address(0)
                 )
             }),
@@ -57,9 +57,9 @@ contract ElementFinanceValueProviderTest is DSTest {
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(
-                    uint256(20296393428881),
+                    uint256(386200838116957287987844),
                     uint256(0),
-                    uint256(13945348),
+                    uint256(0),
                     address(0)
                 )
             }),
@@ -75,8 +75,10 @@ contract ElementFinanceValueProviderTest is DSTest {
             0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
             // Principal bond token address
             0x8a2228705ec979961F0e16df311dEbcf097A2766,
+            // Timestamp to maturity,
+            1651275535,
             // Time scale in seconds
-            779456714
+            1000355378
         );
     }
 
@@ -86,7 +88,9 @@ contract ElementFinanceValueProviderTest is DSTest {
 
     function test_GetValue() public {
         // Computed value based on the parameters that are sent via the mock provider
-        int256 computedExpectedValue = -18622591948850400;
+        int256 computedExpectedValue = 31000116467775202;
+        hevm.warp(1642067742);
+
         int256 value = efValueProvider.value();
 
         assertTrue(value == computedExpectedValue);
