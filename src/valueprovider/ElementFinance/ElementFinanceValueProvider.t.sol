@@ -20,7 +20,7 @@ contract ElementFinanceValueProviderTest is DSTest {
     function setUp() public {
         mockBalancerVault = new MockProvider();
 
-        // Documentation page: 
+        // Documentation page:
         // https://www.notion.so/fiatdao/FIAT-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
         // For extra info about the values used check the second example from the documentation above.
         mockBalancerVault.givenQueryReturnResponse(

@@ -8,7 +8,9 @@ import {IVault} from "./IVault.sol";
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
 // @notice Emitted when trying to add an oracle that already exists
-error ElementFinanceValueProvider__value_timeToMaturityLessThanBlockchainTime(uint256 timeToMaturity);
+error ElementFinanceValueProvider__value_timeToMaturityLessThanBlockchainTime(
+    uint256 timeToMaturity
+);
 
 contract ElementFinanceValueProvider is IValueProvider {
     int256 private constant CALENDARYEAR_SECONDS = 31557600;
@@ -67,21 +69,39 @@ contract ElementFinanceValueProvider is IValueProvider {
         );
 
         // Check the block time agains the maturity date and revert if we're past the maturity date.
-        if(block.timestamp >= _timeToMaturity){
-            revert ElementFinanceValueProvider__value_timeToMaturityLessThanBlockchainTime(_timeToMaturity);
+        if (block.timestamp >= _timeToMaturity) {
+            revert ElementFinanceValueProvider__value_timeToMaturityLessThanBlockchainTime(
+                _timeToMaturity
+            );
         }
 
         // To better follow the formula check the documentation linked above.
-        int256 timeToMaturity59x18 = PRBMathSD59x18.fromInt(int256(_timeToMaturity - block.timestamp));
-        int256 underlierTokenRatio59x18 = PRBMathSD59x18.div(PRBMathSD59x18.fromInt(int256(underlierBalance)),
-                                        PRBMathSD59x18.fromInt(int256(2*ePTokenBalance + underlierBalance)));
-        int256 timeRatio59x18 = PRBMathSD59x18.div(timeToMaturity59x18,
-                                        PRBMathSD59x18.fromInt(int256(_unitSeconds)));
+        int256 timeToMaturity59x18 = PRBMathSD59x18.fromInt(
+            int256(_timeToMaturity - block.timestamp)
+        );
+        int256 underlierTokenRatio59x18 = PRBMathSD59x18.div(
+            PRBMathSD59x18.fromInt(int256(underlierBalance)),
+            PRBMathSD59x18.fromInt(
+                int256(2 * ePTokenBalance + underlierBalance)
+            )
+        );
+        int256 timeRatio59x18 = PRBMathSD59x18.div(
+            timeToMaturity59x18,
+            PRBMathSD59x18.fromInt(int256(_unitSeconds))
+        );
 
-        int256 tokenUnitPrice59x18 = PRBMathSD59x18.pow(underlierTokenRatio59x18,timeRatio59x18);
+        int256 tokenUnitPrice59x18 = PRBMathSD59x18.pow(
+            underlierTokenRatio59x18,
+            timeRatio59x18
+        );
 
-        int256 annualRate59x18 = PRBMathSD59x18.div(PRBMathSD59x18.SCALE - tokenUnitPrice59x18,
-        PRBMathSD59x18.div(timeToMaturity59x18,PRBMathSD59x18.fromInt(CALENDARYEAR_SECONDS)));
+        int256 annualRate59x18 = PRBMathSD59x18.div(
+            PRBMathSD59x18.SCALE - tokenUnitPrice59x18,
+            PRBMathSD59x18.div(
+                timeToMaturity59x18,
+                PRBMathSD59x18.fromInt(CALENDARYEAR_SECONDS)
+            )
+        );
         // The result is a 59.18 fixed-point number.
 
         return int256(annualRate59x18);
