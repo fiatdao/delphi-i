@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IValueProvider} from "../IValueProvider.sol";
-import {IVault} from "./IVault.sol";
+import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
+import {IVault} from "src/valueprovider/ElementFinance/IVault.sol";
 
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
