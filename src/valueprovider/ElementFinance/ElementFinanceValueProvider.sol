@@ -50,7 +50,8 @@ contract ElementFinanceValueProvider is IValueProvider {
     }
 
     /// @notice Calculates the annual rate used by the FIAT DAO contracts
-    /// based on the token reserves, underlier reserves and time scale from the element finance curve pool contact
+    /// based on the token reserves, underlier reserves in a time widow, values taken 
+    /// from the element finance curve pool contact
     /// @dev formula documentation:
     /// https://www.notion.so/fiatdao/FIAT-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
     /// @dev Reverts if the block time exceeds or is equal to the maturity date.
@@ -102,8 +103,8 @@ contract ElementFinanceValueProvider is IValueProvider {
                 PRBMathSD59x18.fromInt(CALENDARYEAR_SECONDS)
             )
         );
+        
         // The result is a 59.18 fixed-point number.
-
         return int256(annualRate59x18);
     }
 }
