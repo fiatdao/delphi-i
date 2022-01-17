@@ -17,8 +17,9 @@ solc:; nix-env -f https://github.com/dapphub/dapptools/archive/master.tar.gz -iA
 
 # Build & test & deploy
 build         :; dapp build
-xclean         :; dapp clean
+xclean        :; dapp clean
 debug         :; dapp debug
+deploy-goerli :; ./scripts/run.sh goerli "node scripts/georli_deploy.js"
 lint          :; yarn run lint
 test          :; dapp test # --ffi # enable if you need the `ffi` cheat code on HEVM
 test-fuzz	  :; DEEP_FUZZ=true dapp test
