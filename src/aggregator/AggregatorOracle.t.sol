@@ -137,7 +137,8 @@ contract AggregatorOracleTest is DSTest {
         public
     {
         // Set minimum number of required values to match the number of oracles
-        aggregatorOracle.setMinimumRequiredValidValues(
+        aggregatorOracle.setParam(
+            "requiredValidValues",
             aggregatorOracle.oracleCount()
         );
 
@@ -352,15 +353,19 @@ contract AggregatorOracleTest is DSTest {
         assertEq(value, 100 * 10**18);
     }
 
-    function test_Can_SetMinimumRequiredValidValues() public {
+    function test_CanSetParam_requiredValidValues() public {
         // Set the minimum required valid values
-        aggregatorOracle.setMinimumRequiredValidValues(1);
+        aggregatorOracle.setParam("requiredValidValues", 1);
 
         // Check the minimum required valid values
-        assertEq(aggregatorOracle.minimumRequiredValidValues(), 1);
+        assertEq(aggregatorOracle.requiredValidValues(), 1);
     }
 
-    function test_NonAuthorizedUser_ShouldNotBeAbleTo_SetMinimumRequiredValidValues()
+    function testFail_ShouldNotBeAbleToSet_InvalidParam() public {
+        aggregatorOracle.setParam("invalidParam", 1);
+    }
+
+    function test_NonAuthorizedUser_ShouldNotBeAbleTo_SetRequiredValidValues()
         public
     {
         // Create user
@@ -371,25 +376,26 @@ contract AggregatorOracleTest is DSTest {
         (success, ) = user.externalCall(
             address(aggregatorOracle),
             abi.encodeWithSelector(
-                aggregatorOracle.setMinimumRequiredValidValues.selector,
+                aggregatorOracle.setParam.selector,
+                "requiredValidValues",
                 1
             )
         );
 
         assertTrue(
             success == false,
-            "Non-AuthorizedUser should not be able to call setMinimumRequiredValidValues()"
+            "Non-AuthorizedUser should not be able to call setParam()"
         );
     }
 
-    function test_AuthorizedUser_ShouldBeAbleTo_SetMinimumRequiredValidValues()
+    function test_AuthorizedUser_ShouldBeAbleTo_SetRequiredValidValues()
         public
     {
         // Create user
         Caller user = new Caller();
 
         aggregatorOracle.allowCaller(
-            aggregatorOracle.setMinimumRequiredValidValues.selector,
+            aggregatorOracle.setParam.selector,
             address(user)
         );
 
@@ -397,25 +403,23 @@ contract AggregatorOracleTest is DSTest {
         (success, ) = user.externalCall(
             address(aggregatorOracle),
             abi.encodeWithSelector(
-                aggregatorOracle.setMinimumRequiredValidValues.selector,
+                aggregatorOracle.setParam.selector,
+                bytes32("requiredValidValues"),
                 1
             )
         );
 
         assertTrue(
             success,
-            "Authorized user should be able to call setMinimumRequiredValidValues()"
+            "Authorized user should be able to call setParam()"
         );
     }
 
-    function testFail_CanNot_SetMinimumRequiredValidValues_HigherThanOracleCount()
+    function testFail_ShouldNot_SetRequiredValidValues_HigherThanOracleCount()
         public
     {
-        // Get number of oracles
-        uint256 oracleCount = aggregatorOracle.oracleCount();
-
-        // Set the minimum required valid values
-        aggregatorOracle.setMinimumRequiredValidValues(oracleCount + 1);
+        // Set the minimum required valid values to (number of oracles + 1)
+        aggregatorOracle.setParam("requiredValidValues", aggregatorOracle.oracleCount() + 1);
     }
 
     function test_Aggregator_ReturnsInvalid_IfMinimumNumberOfValidValuesIsNotMet()
@@ -442,7 +446,7 @@ contract AggregatorOracleTest is DSTest {
         aggregatorOracle.oracleAdd(address(oracle1));
 
         // Set the minimum number of valid values to 2
-        aggregatorOracle.setMinimumRequiredValidValues(2);
+        aggregatorOracle.setParam("requiredValidValues", 2);
 
         // Trigger the update
         // There's only one oracle set in the aggregator
@@ -453,5 +457,11 @@ contract AggregatorOracleTest is DSTest {
 
         // Check the return value
         assertTrue(valid == false, "Minimum number of valid values not met");
+    }
+
+    function test_setParam_requiredValidValues_changesTheParameter() public {
+        aggregatorOracle.setParam("requiredValidValues", 1);
+
+        assertEq(aggregatorOracle.requiredValidValues(), 1);
     }
 }

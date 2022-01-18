@@ -16,7 +16,7 @@ error AggregatorOracle__removeOracle_oracleNotRegistered(address oracle);
 
 // @notice Emitted when trying to remove an oracle makes a valid value impossible
 error AggregatorOracle__removeOracle_minimumRequiredValidValues_higherThan_oracleCount(
-    uint256 minimumRequiredValidValues,
+    uint256 requiredValidValues,
     uint256 oracleCount
 );
 
@@ -24,10 +24,13 @@ error AggregatorOracle__removeOracle_minimumRequiredValidValues_higherThan_oracl
 error AggregatorOracle__notAuthorized();
 
 // @notice Emitted when trying to set the minimum number of valid values higher than the oracle count
-error AggregatorOracle__setMinimumRequiredValidValues_higherThan_oracleCount(
-    uint256 minimumRequiredValidValues,
+error AggregatorOracle__setParam_requiredValidValues_higherThan_oracleCount(
+    uint256 requiredValidValues,
     uint256 oracleCount
 );
+
+// @notice Emitted when trying to set a parameter that does not exist
+error AggregatorOracle__setParam_unrecognizedParam(bytes32 param);
 
 contract AggregatorOracle is Guarded, Pausable, IOracle {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -40,7 +43,7 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
 
     // Minimum number of valid values required
     // from oracles to consider an aggregated value valid
-    uint256 public minimumRequiredValidValues;
+    uint256 public requiredValidValues;
 
     // Number of valid values from oracles
     uint256 private _aggregatedValidValues;
@@ -71,9 +74,9 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
         uint256 localOracleCount = oracleCount();
 
         // Make sure the minimum number of required valid values is not higher than the oracle count
-        if (minimumRequiredValidValues >= localOracleCount) {
+        if (requiredValidValues >= localOracleCount) {
             revert AggregatorOracle__removeOracle_minimumRequiredValidValues_higherThan_oracleCount(
-                minimumRequiredValidValues,
+                requiredValidValues,
                 localOracleCount
             );
         }
@@ -136,7 +139,7 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
         whenNotPaused
         returns (int256, bool)
     {
-        bool isValid = _aggregatedValidValues >= minimumRequiredValidValues &&
+        bool isValid = _aggregatedValidValues >= requiredValidValues &&
             _aggregatedValidValues > 0;
         return (_aggregatedValue, isValid);
     }
@@ -151,18 +154,18 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
         _unpause();
     }
 
-    function setMinimumRequiredValidValues(uint256 minimumRequiredValidValues_)
-        public
-        checkCaller
-    {
-        uint256 localOracleCount = oracleCount();
-        if (minimumRequiredValidValues_ > localOracleCount) {
-            revert AggregatorOracle__setMinimumRequiredValidValues_higherThan_oracleCount(
-                minimumRequiredValidValues_,
-                localOracleCount
-            );
-        }
-        minimumRequiredValidValues = minimumRequiredValidValues_;
+    function setParam(bytes32 param, uint256 value) public checkCaller {
+        if (param == "requiredValidValues") {
+            uint256 localOracleCount = oracleCount();
+            // Should not be able to set the minimum number of required valid values higher than the oracle count
+            if (value > localOracleCount) {
+                revert AggregatorOracle__setParam_requiredValidValues_higherThan_oracleCount(
+                    value,
+                    localOracleCount
+                );
+            }
+            requiredValidValues = value;
+        } else revert AggregatorOracle__setParam_unrecognizedParam(param);
     }
 
     /// @notice Aggregates the values
