@@ -42,7 +42,7 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
     event OracleUpdated(bool, address);
     event OracleValue(int256 value, bool valid);
     event OracleValueFailed(address);
-    event AggregatedValue(int256 value,uint256 validValues);
+    event AggregatedValue(int256 value, uint256 validValues);
     event SetParam(bytes32 param, uint256 value);
 
     /// ======== Storage ======== ///
@@ -143,7 +143,7 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
 
         // Aggregate the returned values
         _aggregatedValue = _aggregateValues(values, validValues);
-        
+
         // Update the number of valid values
         _aggregatedValidValues = validValues;
 
@@ -188,7 +188,7 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
             }
             requiredValidValues = value;
 
-            emit SetParam(param,value);
+            emit SetParam(param, value);
         } else revert AggregatorOracle__setParam_unrecognizedParam(param);
     }
 
