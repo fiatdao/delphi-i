@@ -8,6 +8,14 @@ import {IOracle} from "src/oracle/IOracle.sol";
 import {Pausable} from "src/pausable/Pausable.sol";
 
 contract Oracle is Pausable, IOracle {
+    /// ======== Events ======== ///
+
+    event ValueInvalid();
+    event ValueUpdated(int256 currentValue, int256 nextValue);
+    event OracleReset();
+
+    /// ======== Storage ======== ///
+
     IValueProvider public immutable valueProvider;
 
     uint256 public immutable timeUpdateWindow;
@@ -52,7 +60,7 @@ contract Oracle is Pausable, IOracle {
         whenNotPaused
         returns (int256, bool)
     {
-        // Value is considered valid if the value provider succesfully returned a value
+        // Value is considered valid if the value provider successfully returned a value
         // and it was updated before maxValidTime ago
         bool valid = _validReturnedValue &&
             (block.timestamp < lastTimestamp + maxValidTime);
@@ -90,10 +98,13 @@ contract Oracle is Pausable, IOracle {
             // Save when the value was last updated
             lastTimestamp = block.timestamp;
             _validReturnedValue = true;
+
+            emit ValueUpdated(_currentValue, nextValue);
         } catch {
             // When a value provider fails, we update the valid flag which will
             // invalidate the value instantly
             _validReturnedValue = false;
+            emit ValueInvalid();
         }
     }
 
@@ -110,5 +121,7 @@ contract Oracle is Pausable, IOracle {
         nextValue = 0;
         lastTimestamp = 0;
         _validReturnedValue = false;
+
+        emit OracleReset();
     }
 }

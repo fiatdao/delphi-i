@@ -30,6 +30,16 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
         uint256 minimumThresholdValue;
     }
 
+    /// ======== Events ======== ///
+
+    event OracleAdded(address);
+    event OracleRemoved(address);
+    event ShouldUpdate(bool);
+    event UpdateOracle(address oracle, int256 value, bool valid);
+    event UpdatedCollybus(uint256 tokenId, uint256 rate);
+
+    /// ======== Storage ======== ///
+
     ICollybus private _collybus;
 
     // Mapping that will hold all the oracle params needed by the contract
@@ -51,7 +61,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
         return _oracleAddressIndexes.length;
     }
 
-    /// @notice                         Registeres an oracle to a token id and set the minimum threshold delta value
+    /// @notice                         Registers an oracle to a token id and set the minimum threshold delta value
     ///                                 calculate the annual rate.
     /// @param oracle_                  The address of the oracle.
     /// @param tokenId_                 The unique token id for which this oracle will update rate values.
@@ -90,9 +100,11 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
             tokenId: tokenId_,
             minimumThresholdValue: minimumThresholdValue_
         });
+
+        emit OracleAdded(oracle_);
     }
 
-    /// @notice         Unregisteres an oracle.
+    /// @notice         Unregisters an oracle.
     /// @param oracle_  The address of the oracle.
     /// @dev            Reverts if the oracle is not registered
     function oracleRemove(address oracle_) public checkCaller {
@@ -126,6 +138,8 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
 
         // Reset struct to default values
         delete _oracles[oracle_];
+
+        emit OracleRemoved(oracle_);
     }
 
     /// @notice         Checks whether an oracle is registered.
@@ -149,8 +163,11 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
         uint256 arrayLength = _oracleAddressIndexes.length;
         for (uint256 i = 0; i < arrayLength; i++) {
             IOracle(_oracleAddressIndexes[i]).update();
+
             (int256 rate, bool isValid) = IOracle(_oracleAddressIndexes[i])
                 .value();
+
+            emit UpdateOracle(_oracleAddressIndexes[i], rate, isValid);
             if (!isValid) continue;
 
             if (
@@ -159,10 +176,12 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
                     rate
                 ) >= _oracles[_oracleAddressIndexes[i]].minimumThresholdValue
             ) {
+                emit ShouldUpdate(true);
                 return true;
             }
         }
 
+        emit ShouldUpdate(false);
         return false;
     }
 
@@ -173,6 +192,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
         // Update Collybus all tokenIds with the new discount rate
         uint256 arrayLength = _oracleAddressIndexes.length;
         for (uint256 i = 0; i < arrayLength; i++) {
+            // We always update the oracles before retrieving the rates
             IOracle(_oracleAddressIndexes[i]).update();
             (int256 rate, bool isValid) = IOracle(_oracleAddressIndexes[i])
                 .value();
@@ -180,6 +200,9 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
             if (!isValid) continue;
 
             OracleData memory oracleData = _oracles[_oracleAddressIndexes[i]];
+
+            // If the change in delta rate from the last update is bigger than the threshold value push
+            // the rates to Collybus
             if (
                 absDelta(oracleData.lastUpdateValue, rate) >=
                 oracleData.minimumThresholdValue
@@ -188,6 +211,8 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
                 _oracles[_oracleAddressIndexes[i]] = oracleData;
 
                 _collybus.updateDiscountRate(oracleData.tokenId, uint256(rate));
+
+                emit UpdatedCollybus(oracleData.tokenId, uint256(rate));
             }
         }
     }

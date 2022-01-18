@@ -63,13 +63,13 @@ contract ElementFinanceValueProvider is IValueProvider {
             IERC20(_underlier)
         );
 
-        // Retrieve the pricipal token from the balancer vault.
+        // Retrieve the principal token from the balancer vault.
         (uint256 ePTokenBalance, , , ) = _balancerVault.getPoolTokenInfo(
             _poolId,
             IERC20(_ePTokenBond)
         );
 
-        // Check the block time agains the maturity date and revert if we're past the maturity date.
+        // Check the block time against the maturity date and revert if we're past the maturity date.
         if (block.timestamp >= _timeToMaturity) {
             revert ElementFinanceValueProvider__value_timeToMaturityLessThanBlockchainTime(
                 _timeToMaturity
