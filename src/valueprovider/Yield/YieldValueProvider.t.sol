@@ -6,25 +6,25 @@ import "ds-test/test.sol";
 import "src/test/utils/Caller.sol";
 import {Hevm} from "src/test/utils/Hevm.sol";
 import {MockProvider} from "src/test/utils/MockProvider.sol";
-import {YieldSpaceValueProvider} from "./YieldSpaceValueProvider.sol";
-import {IYieldSpacePool} from "./IYieldSpacePool.sol";
+import {YieldValueProvider} from "./YieldValueProvider.sol";
+import {IYieldPool} from "./IYieldPool.sol";
 
-contract YieldSpaceTest is DSTest {
+contract YieldValueProviderTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
 
     MockProvider internal mockValueProvider;
 
-    YieldSpaceValueProvider internal yieldSpaceVP;
+    YieldValueProvider internal yieldVP;
 
     function setUp() public {
         mockValueProvider = new MockProvider();
-        yieldSpaceVP = new YieldSpaceValueProvider(address(mockValueProvider));
+        yieldVP = new YieldValueProvider(address(mockValueProvider));
 
         // Set the value returned by the pool contract
-        // values taken from a YieldSpace Pool contract deployed at:
+        // values taken from a Yield Pool contract deployed at:
         // 0x3771c99c087a81df4633b50d8b149afaa83e3c9e at block 13911954
         mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IYieldSpacePool.ts.selector),
+            abi.encodePacked(IYieldPool.ts.selector),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(int128(58454204609))
@@ -33,7 +33,7 @@ contract YieldSpaceTest is DSTest {
         );
 
         mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IYieldSpacePool.getCache.selector),
+            abi.encodePacked(IYieldPool.getCache.selector),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(
@@ -47,13 +47,13 @@ contract YieldSpaceTest is DSTest {
     }
 
     function test_deploy() public {
-        assertTrue(address(yieldSpaceVP) != address(0));
+        assertTrue(address(yieldVP) != address(0));
     }
 
     function test_GetValue() public {
         // Computed value based on the parameters that are sent via the mock provider
-        int256 computedValue = 2072808605;
-        int256 value = yieldSpaceVP.value();
+        int256 computedValue = 65412864833148000;
+        int256 value = yieldVP.value();
 
         assertTrue(value == computedValue);
     }

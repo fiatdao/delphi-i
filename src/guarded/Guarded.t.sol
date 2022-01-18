@@ -8,15 +8,21 @@ import {Caller} from "src/test/utils/Caller.sol";
 import {Guarded} from "src/guarded/Guarded.sol";
 
 contract GuardedInstance is Guarded {
-    constructor() Guarded() {}
+    constructor() Guarded() {
+        this;
+    }
 
-    function guardedMethod() external checkCaller {}
+    function guardedMethod() external checkCaller {
+        this;
+    }
 
-    function guardedMethodRoot() external checkCaller {}
+    function guardedMethodRoot() external checkCaller {
+        this;
+    }
 }
 
 contract GuardedTest is DSTest {
-    GuardedInstance guarded;
+    GuardedInstance internal guarded;
 
     function setUp() public {
         guarded = new GuardedInstance();

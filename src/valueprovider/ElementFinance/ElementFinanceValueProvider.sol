@@ -2,18 +2,26 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IValueProvider} from "../IValueProvider.sol";
-import {IVault} from "./IVault.sol";
+import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
+import {IVault} from "src/valueprovider/ElementFinance/IVault.sol";
 
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
+// @notice Emitted when trying to add an oracle that already exists
+error ElementFinanceValueProvider__value_timeToMaturityLessThanBlockchainTime(
+    uint256 timeToMaturity
+);
+
 contract ElementFinanceValueProvider is IValueProvider {
+    int256 private constant CALENDARYEAR_SECONDS = 31557600;
+
     IVault private _balancerVault;
 
     bytes32 private immutable _poolId;
     address private immutable _underlier;
     address private immutable _ePTokenBond;
-    int256 private immutable _ts;
+    uint256 private immutable _timeToMaturity;
+    uint256 private immutable _unitSeconds;
 
     /// @notice                 Constructs the Value provider contracts with the needed Element data in order to
     ///                         calculate the annual rate.
@@ -21,58 +29,82 @@ contract ElementFinanceValueProvider is IValueProvider {
     /// @param balancerVault_   The vault address.
     /// @param underlier_       Address of the underlier IERC20 token.
     /// @param ePTokenBond_     Address of the bond IERC20 token.
+    /// @param timeToMaturity_  Timestamp for the time to maturity or the 'expiration' field from the Convergent Curve Pool contract.
     /// @param unitSeconds_     The number of seconds in the Element Convergent Curve Pool timescale.
     constructor(
         bytes32 poolId_,
         address balancerVault_,
         address underlier_,
         address ePTokenBond_,
+        uint256 timeToMaturity_,
         uint256 unitSeconds_
     ) {
         _poolId = poolId_;
 
         _balancerVault = IVault(balancerVault_);
 
+        _timeToMaturity = timeToMaturity_;
         _underlier = underlier_;
         _ePTokenBond = ePTokenBond_;
-
-        // Using the time scale window , we compute the 1/timescale and save it in 59.18 format to be used in the formula
-        // We can compute the TS from the start because it is immutable in the convergent curve contract
-        // and we can be sure it will not change.
-        _ts = PRBMathSD59x18.div(
-            PRBMathSD59x18.fromInt(1),
-            PRBMathSD59x18.fromInt(int256(unitSeconds_))
-        );
+        _unitSeconds = unitSeconds_;
     }
 
     /// @notice Calculates the annual rate used by the FIAT DAO contracts
-    /// based on the token reserves, underlier reserves and time scale from the element finance curve pool contact
+    /// based on the token reserves, underlier reserves in a time widow, values taken
+    /// from the element finance curve pool contact
     /// @dev formula documentation:
     /// https://www.notion.so/fiatdao/FIAT-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
+    /// @dev Reverts if the block time exceeds or is equal to the maturity date.
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function value() external view override(IValueProvider) returns (int256) {
-        // Retrieve the underlier and pricipal token reserves from the balancer vault.
+        // Retrieve the underlier from the balancer vault.
         (uint256 underlierBalance, , , ) = _balancerVault.getPoolTokenInfo(
             _poolId,
             IERC20(_underlier)
         );
 
+        // Retrieve the pricipal token from the balancer vault.
         (uint256 ePTokenBalance, , , ) = _balancerVault.getPoolTokenInfo(
             _poolId,
             IERC20(_ePTokenBond)
         );
 
-        // We compute the token/underlier ratio and save it in signed 59.18 format
-        int256 tokenToReserveRatio59x18 = PRBMathSD59x18.div(
-            PRBMathSD59x18.fromInt(int256(uint256(ePTokenBalance))),
-            PRBMathSD59x18.fromInt(int256(uint256(underlierBalance)))
+        // Check the block time agains the maturity date and revert if we're past the maturity date.
+        if (block.timestamp >= _timeToMaturity) {
+            revert ElementFinanceValueProvider__value_timeToMaturityLessThanBlockchainTime(
+                _timeToMaturity
+            );
+        }
+
+        // To better follow the formula check the documentation linked above.
+        int256 timeToMaturity59x18 = PRBMathSD59x18.fromInt(
+            int256(_timeToMaturity - block.timestamp)
+        );
+        int256 underlierTokenRatio59x18 = PRBMathSD59x18.div(
+            PRBMathSD59x18.fromInt(int256(underlierBalance)),
+            PRBMathSD59x18.fromInt(
+                int256(2 * ePTokenBalance + underlierBalance)
+            )
+        );
+        int256 timeRatio59x18 = PRBMathSD59x18.div(
+            timeToMaturity59x18,
+            PRBMathSD59x18.fromInt(int256(_unitSeconds))
         );
 
-        // Compute the result with the formula provided by the documentation
-        int256 result = PRBMathSD59x18.pow(tokenToReserveRatio59x18, _ts) -
-            PRBMathSD59x18.fromInt(1);
+        int256 tokenUnitPrice59x18 = PRBMathSD59x18.pow(
+            underlierTokenRatio59x18,
+            timeRatio59x18
+        );
+
+        int256 annualRate59x18 = PRBMathSD59x18.div(
+            PRBMathSD59x18.SCALE - tokenUnitPrice59x18,
+            PRBMathSD59x18.div(
+                timeToMaturity59x18,
+                PRBMathSD59x18.fromInt(CALENDARYEAR_SECONDS)
+            )
+        );
 
         // The result is a 59.18 fixed-point number.
-        return result;
+        return int256(annualRate59x18);
     }
 }
