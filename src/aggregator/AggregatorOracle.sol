@@ -187,7 +187,6 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
                 );
             }
             requiredValidValues = value;
-            
         } else revert AggregatorOracle__setParam_unrecognizedParam(param);
 
         emit SetParam(param, value);

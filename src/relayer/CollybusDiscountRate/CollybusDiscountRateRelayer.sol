@@ -163,13 +163,13 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
         uint256 arrayLength = _oracleAddressIndexes.length;
         for (uint256 i = 0; i < arrayLength; i++) {
             IOracle(_oracleAddressIndexes[i]).update();
-            
+
             (int256 rate, bool isValid) = IOracle(_oracleAddressIndexes[i])
                 .value();
 
             emit UpdateOracle(_oracleAddressIndexes[i], rate, isValid);
             if (!isValid) continue;
-            
+
             if (
                 absDelta(
                     _oracles[_oracleAddressIndexes[i]].lastUpdateValue,
