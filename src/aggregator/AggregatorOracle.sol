@@ -118,6 +118,7 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
             IOracle oracle = IOracle(_oracles.at(i));
 
             try oracle.update() {
+                emit OracleUpdated(true, address(oracle));
                 try oracle.value() returns (
                     int256 returnedValue,
                     bool isValid
@@ -134,7 +135,6 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
                     emit OracleValueFailed(address(oracle));
                     continue;
                 }
-                emit OracleUpdated(true, address(oracle));
             } catch {
                 emit OracleUpdated(false, address(oracle));
                 continue;
@@ -187,9 +187,10 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
                 );
             }
             requiredValidValues = value;
-
-            emit SetParam(param, value);
+            
         } else revert AggregatorOracle__setParam_unrecognizedParam(param);
+
+        emit SetParam(param, value);
     }
 
     /// @notice Aggregates the values
