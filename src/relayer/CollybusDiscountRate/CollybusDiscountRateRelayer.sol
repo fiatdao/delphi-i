@@ -51,7 +51,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
         return _oracleAddressIndexes.length;
     }
 
-    /// @notice                         Registeres an oracle to a token id and set the minimum threshold delta value
+    /// @notice                         Registers an oracle to a token id and set the minimum threshold delta value
     ///                                 calculate the annual rate.
     /// @param oracle_                  The address of the oracle.
     /// @param tokenId_                 The unique token id for which this oracle will update rate values.
@@ -92,7 +92,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
         });
     }
 
-    /// @notice         Unregisteres an oracle.
+    /// @notice         Unregisters an oracle.
     /// @param oracle_  The address of the oracle.
     /// @dev            Reverts if the oracle is not registered
     function oracleRemove(address oracle_) public checkCaller {

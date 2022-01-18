@@ -52,7 +52,7 @@ contract Oracle is Pausable, IOracle {
         whenNotPaused
         returns (int256, bool)
     {
-        // Value is considered valid if the value provider succesfully returned a value
+        // Value is considered valid if the value provider successfully returned a value
         // and it was updated before maxValidTime ago
         bool valid = _validReturnedValue &&
             (block.timestamp < lastTimestamp + maxValidTime);
