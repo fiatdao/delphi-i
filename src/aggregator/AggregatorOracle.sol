@@ -35,6 +35,18 @@ error AggregatorOracle__setParam_unrecognizedParam(bytes32 param);
 contract AggregatorOracle is Guarded, Pausable, IOracle {
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    /// ======== Events ======== ///
+
+    event OracleAdded(address);
+    event OracleRemoved(address);
+    event OracleUpdated(bool, address);
+    event OracleValue(int256 value, bool valid);
+    event OracleValueFailed(address);
+    event AggregatedValue(int256 value, uint256 validValues);
+    event SetParam(bytes32 param, uint256 value);
+
+    /// ======== Storage ======== ///
+
     // List of registered oracles
     EnumerableSet.AddressSet private _oracles;
 
@@ -65,6 +77,8 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
         if (added == false) {
             revert AggregatorOracle__addOracle_oracleAlreadyRegistered(oracle);
         }
+
+        emit OracleAdded(oracle);
     }
 
     /// @notice Removes an oracle from the list of oracles
@@ -86,6 +100,8 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
         if (removed == false) {
             revert AggregatorOracle__removeOracle_oracleNotRegistered(oracle);
         }
+
+        emit OracleRemoved(oracle);
     }
 
     /// @notice Update values from oracles and return aggregated value
@@ -102,6 +118,7 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
             IOracle oracle = IOracle(_oracles.at(i));
 
             try oracle.update() {
+                emit OracleUpdated(true, address(oracle));
                 try oracle.value() returns (
                     int256 returnedValue,
                     bool isValid
@@ -113,10 +130,13 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
                         // Increase count of valid values
                         validValues++;
                     }
+                    emit OracleValue(returnedValue, isValid);
                 } catch {
+                    emit OracleValueFailed(address(oracle));
                     continue;
                 }
             } catch {
+                emit OracleUpdated(false, address(oracle));
                 continue;
             }
         }
@@ -126,6 +146,8 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
 
         // Update the number of valid values
         _aggregatedValidValues = validValues;
+
+        emit AggregatedValue(_aggregatedValue, validValues);
     }
 
     /// @notice Returns the aggregated value
@@ -166,6 +188,8 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
             }
             requiredValidValues = value;
         } else revert AggregatorOracle__setParam_unrecognizedParam(param);
+
+        emit SetParam(param, value);
     }
 
     /// @notice Aggregates the values
