@@ -419,7 +419,10 @@ contract AggregatorOracleTest is DSTest {
         public
     {
         // Set the minimum required valid values to (number of oracles + 1)
-        aggregatorOracle.setParam("requiredValidValues", aggregatorOracle.oracleCount() + 1);
+        aggregatorOracle.setParam(
+            "requiredValidValues",
+            aggregatorOracle.oracleCount() + 1
+        );
     }
 
     function test_Aggregator_ReturnsInvalid_IfMinimumNumberOfValidValuesIsNotMet()
