@@ -13,15 +13,15 @@ error ElementFinanceValueProvider__value_timeToMaturityLessThanBlockchainTime(
 );
 
 contract ElementFinanceValueProvider is IValueProvider {
-    int256 private constant CALENDARYEAR_SECONDS = 31557600;
+    int256 public constant CALENDAR_YEAR_SECONDS = 31557600;
 
-    IVault private _balancerVault;
+    IVault public balancerVault;
 
-    bytes32 private immutable _poolId;
-    address private immutable _underlier;
-    address private immutable _ePTokenBond;
-    uint256 private immutable _timeToMaturity;
-    uint256 private immutable _unitSeconds;
+    bytes32 public immutable poolId;
+    address public immutable underlier;
+    address public immutable ePTokenBond;
+    uint256 public immutable timeToMaturity;
+    uint256 public immutable unitSeconds;
 
     /// @notice                 Constructs the Value provider contracts with the needed Element data in order to
     ///                         calculate the annual rate.
@@ -39,14 +39,14 @@ contract ElementFinanceValueProvider is IValueProvider {
         uint256 timeToMaturity_,
         uint256 unitSeconds_
     ) {
-        _poolId = poolId_;
+        poolId = poolId_;
 
-        _balancerVault = IVault(balancerVault_);
+        balancerVault = IVault(balancerVault_);
 
-        _timeToMaturity = timeToMaturity_;
-        _underlier = underlier_;
-        _ePTokenBond = ePTokenBond_;
-        _unitSeconds = unitSeconds_;
+        timeToMaturity = timeToMaturity_;
+        underlier = underlier_;
+        ePTokenBond = ePTokenBond_;
+        unitSeconds = unitSeconds_;
     }
 
     /// @notice Calculates the annual rate used by the FIAT DAO contracts
@@ -58,27 +58,27 @@ contract ElementFinanceValueProvider is IValueProvider {
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function value() external view override(IValueProvider) returns (int256) {
         // Retrieve the underlier from the balancer vault.
-        (uint256 underlierBalance, , , ) = _balancerVault.getPoolTokenInfo(
-            _poolId,
-            IERC20(_underlier)
+        (uint256 underlierBalance, , , ) = balancerVault.getPoolTokenInfo(
+            poolId,
+            IERC20(underlier)
         );
 
         // Retrieve the principal token from the balancer vault.
-        (uint256 ePTokenBalance, , , ) = _balancerVault.getPoolTokenInfo(
-            _poolId,
-            IERC20(_ePTokenBond)
+        (uint256 ePTokenBalance, , , ) = balancerVault.getPoolTokenInfo(
+            poolId,
+            IERC20(ePTokenBond)
         );
 
         // Check the block time against the maturity date and revert if we're past the maturity date.
-        if (block.timestamp >= _timeToMaturity) {
+        if (block.timestamp >= timeToMaturity) {
             revert ElementFinanceValueProvider__value_timeToMaturityLessThanBlockchainTime(
-                _timeToMaturity
+                timeToMaturity
             );
         }
 
         // To better follow the formula check the documentation linked above.
         int256 timeToMaturity59x18 = PRBMathSD59x18.fromInt(
-            int256(_timeToMaturity - block.timestamp)
+            int256(timeToMaturity - block.timestamp)
         );
         int256 underlierTokenRatio59x18 = PRBMathSD59x18.div(
             PRBMathSD59x18.fromInt(int256(underlierBalance)),
@@ -88,7 +88,7 @@ contract ElementFinanceValueProvider is IValueProvider {
         );
         int256 timeRatio59x18 = PRBMathSD59x18.div(
             timeToMaturity59x18,
-            PRBMathSD59x18.fromInt(int256(_unitSeconds))
+            PRBMathSD59x18.fromInt(int256(unitSeconds))
         );
 
         int256 tokenUnitPrice59x18 = PRBMathSD59x18.pow(
@@ -100,7 +100,7 @@ contract ElementFinanceValueProvider is IValueProvider {
             PRBMathSD59x18.SCALE - tokenUnitPrice59x18,
             PRBMathSD59x18.div(
                 timeToMaturity59x18,
-                PRBMathSD59x18.fromInt(CALENDARYEAR_SECONDS)
+                PRBMathSD59x18.fromInt(CALENDAR_YEAR_SECONDS)
             )
         );
 

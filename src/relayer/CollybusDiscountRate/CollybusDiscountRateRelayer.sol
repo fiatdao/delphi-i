@@ -30,7 +30,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
         uint256 minimumThresholdValue;
     }
 
-    ICollybus private _collybus;
+    ICollybus public collybus;
 
     // Mapping that will hold all the oracle params needed by the contract
     mapping(address => OracleData) private _oracles;
@@ -42,7 +42,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
     address[] private _oracleAddressIndexes;
 
     constructor(address collybusAddress_) {
-        _collybus = ICollybus(collybusAddress_);
+        collybus = ICollybus(collybusAddress_);
     }
 
     /// @notice Returns the number of registered oracles.
@@ -187,7 +187,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
                 oracleData.lastUpdateValue = rate;
                 _oracles[_oracleAddressIndexes[i]] = oracleData;
 
-                _collybus.updateDiscountRate(oracleData.tokenId, uint256(rate));
+                collybus.updateDiscountRate(oracleData.tokenId, uint256(rate));
             }
         }
     }
