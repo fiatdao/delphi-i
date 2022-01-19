@@ -50,12 +50,7 @@ const { parseEther: toWei, formatBytes32String: toBytes32 } = ethers.utils;
     var oracleCount = await elementAggregator.oracleCount();
     console.log("Oracle count "+ oracleCount);
 
-    await elementAggregator.setMinimumRequiredValidValues("1",{
-        gasPrice: 1000000000,
-        gasLimit: 300000
-    });
-
-    console.log("Post setMinimumRequiredValidValues");
+    await elementAggregator['setParam(bytes32,uint256)'](toBytes32('requiredValidValues'), "1");
 
     var tokenID = "1";
     var minimumThresholdValue = "1000000000";
