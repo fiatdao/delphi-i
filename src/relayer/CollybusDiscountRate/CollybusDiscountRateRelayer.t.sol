@@ -50,7 +50,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
 
         oracle1 = new MockProvider();
 
-        // Set the value returned by Value Provider.
+        // Set the value returned by the Oracle.
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
@@ -193,7 +193,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
 
     function test_CheckCallsUpdate_OnlyOnFirstUpdatableOracle() public {
         MockProvider oracle2 = new MockProvider();
-        // Set the value returned by Value Provider.
+        // Set the value returned by the Oracle.
         oracle2.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
@@ -273,7 +273,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     function test_Execute_UpdatesRatesInCollybus() public {
         MockProvider oracle2 = new MockProvider();
 
-        // Set the value returned by Value Provider.
+        // Set the value returned by the Oracle.
         oracle2.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
@@ -314,7 +314,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         MockProvider oracle2 = new MockProvider();
 
         int256 oracle2InitialValue = int256(10 * 10**18);
-        // Set the value returned by Value Provider.
+        // Set the value returned by the Oracle.
         oracle2.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
