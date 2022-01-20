@@ -121,13 +121,11 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
         // Remove the oracle index from the array by swapping the target with the last element
         // We only need to iterate length - 1 elements.
         uint256 arrayLength = _oracleList.length;
-        if (arrayLength > 1) {
-            for (uint256 i = 0; i < arrayLength - 1; i++) {
-                if (_oracleList[i] == oracle_) {
-                    _oracleList[i] = _oracleList[arrayLength - 1];
-                    // No need to continue iterating, we found our oracle.
-                    break;
-                }
+        for (uint256 i = 0; i < arrayLength - 1; i++) {
+            if (_oracleList[i] == oracle_) {
+                _oracleList[i] = _oracleList[arrayLength - 1];
+                // No need to continue iterating, we found our oracle.
+                break;
             }
         }
 
@@ -146,7 +144,6 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
     function oracleExists(address oracle_)
         public
         view
-        checkCaller
         returns (bool)
     {
         return _oracles[oracle_].exists;
@@ -195,8 +192,8 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
 
             OracleData memory oracleData = _oracles[_oracleList[i]];
 
-            // If the change in delta rate from the last update is bigger than the threshold value push
-            // the rates to Collybus
+            // If the change in delta rate from the last update is bigger or equal than the threshold value 
+            // push the rates to Collybus
             if (
                 absDelta(oracleData.lastUpdateValue, rate) >=
                 oracleData.minimumThresholdValue

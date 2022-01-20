@@ -203,16 +203,16 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         // therefore, the first oracle will be updated but the second will not.
         cdrr.check();
 
-        //update should be the first called function
+        // Update should be the first called function
         MockProvider.CallData memory cd1 = oracle1.getCallData(0);
         assertTrue(cd1.functionSelector == IOracle.update.selector);
 
-        //no function calls for our second oracle
+        // No function calls for our second oracle
         MockProvider.CallData memory cd2 = oracle2.getCallData(0);
         assertTrue(cd2.functionSelector == bytes4(0));
     }
 
-    function test_CheckCalls_ReturnsFalseAfterExecute() public {
+    function test_Check_ReturnsFalseAfterExecute() public {
         bool checkBeforeUpdate = cdrr.check();
         assertTrue(checkBeforeUpdate);
 
@@ -224,7 +224,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
 
     function test_ExecuteCalls_UpdateOnAllOracles() public {
         MockProvider oracle2 = new MockProvider();
-        // Set the value returned by Value Provider.
+        // Set the value returned by the Oracle.
         oracle2.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
@@ -324,16 +324,6 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         cdrr.check();
         cdrr.execute();
 
-        int256 oracle1NewValue = int256(10 * 10**18);
-        oracle1.givenQueryReturnResponse(
-            abi.encodePacked(IOracle.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(oracle1NewValue, true)
-            }),
-            false
-        );
-
         // Make the second value returned by the oracle to be just lower than the minimum threshold
         int256 oracle2NewValue = oracle2InitialValue +
             int256(mockTokenId2MinThreshold) -
@@ -352,12 +342,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
 
         cdrr.execute();
 
-        // Rate 1 from oracle 1 will be updated with the new value because the delta was bigger than the minimum threshold
-        assertTrue(
-            collybus.rateForTokenId(mockTokenId1) == uint256(oracle1NewValue)
-        );
-
-        // Rate 2 from oracle 2 will NOT be updated because the delta is smaller than the threshold.
+        // The rate will NOT be updated because the delta is smaller than the threshold.
         assertTrue(
             collybus.rateForTokenId(mockTokenId2) ==
                 uint256(oracle2InitialValue)
