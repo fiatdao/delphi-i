@@ -186,7 +186,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
 
             if (!isValid) continue;
 
-            OracleData storage oracleData = _oracles[_oracleAddressIndexes[i]];
+            OracleData storage oracleData = _oracles[_oracleList[i]];
 
             // If the change in delta rate from the last update is bigger than the threshold value push
             // the rates to Collybus
