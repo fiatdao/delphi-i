@@ -45,11 +45,11 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
     // Mapping that will hold all the oracle params needed by the contract
     mapping(address => OracleData) private _oracles;
 
-    // Mapping used to track used Rate Ids.
-    mapping(uint256 => bool) private _tokenIdHasOracle;
+    // Mapping used tokenId's
+    mapping(uint256 => bool) public _tokenIds;
 
     // Array used for iterating the oracles.
-    address[] private _oracleAddressIndexes;
+    address[] private _oracleList;
 
     constructor(address collybusAddress_) {
         _collybus = ICollybus(collybusAddress_);
@@ -58,7 +58,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
     /// @notice Returns the number of registered oracles.
     /// @return the total number of oracles.
     function oracleCount() public view returns (uint256) {
-        return _oracleAddressIndexes.length;
+        return _oracleList.length;
     }
 
     /// @notice                         Registers an oracle to a token id and set the minimum threshold delta value
@@ -80,7 +80,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
         }
 
         // Make sure there are no existing oracles registered for this rate Id
-        if (_tokenIdHasOracle[tokenId_]) {
+        if (_tokenIds[tokenId_]) {
             revert CollybusDiscountRateRelayer__addOracle_tokenIdHasOracleRegistered(
                 oracle_,
                 tokenId_
@@ -88,10 +88,10 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
         }
 
         // Add oracle in the oracle address array that is used for iterating.
-        _oracleAddressIndexes.push(oracle_);
+        _oracleList.push(oracle_);
 
         // Mark the token Id as used
-        _tokenIdHasOracle[tokenId_] = true;
+        _tokenIds[tokenId_] = true;
 
         // Update the oracle address => data mapping with the oracle parameters.
         _oracles[oracle_] = OracleData({
@@ -116,25 +116,21 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
         }
 
         // Reset the tokenId Mapping
-        _tokenIdHasOracle[_oracles[oracle_].tokenId] = false;
+        _tokenIds[_oracles[oracle_].tokenId] = false;
 
         // Remove the oracle index from the array by swapping the target with the last element
         // We only need to iterate length - 1 elements.
-        uint256 arrayLength = _oracleAddressIndexes.length;
-        if (arrayLength > 1) {
-            for (uint256 i = 0; i < arrayLength - 1; i++) {
-                if (_oracleAddressIndexes[i] == oracle_) {
-                    _oracleAddressIndexes[i] = _oracleAddressIndexes[
-                        arrayLength - 1
-                    ];
-                    // No need to continue iterating, we found our oracle.
-                    break;
-                }
+        uint256 arrayLength = _oracleList.length;
+        for (uint256 i = 0; i < arrayLength - 1; i++) {
+            if (_oracleList[i] == oracle_) {
+                _oracleList[i] = _oracleList[arrayLength - 1];
+                // No need to continue iterating, we found our oracle.
+                break;
             }
         }
 
         // Delete the last element
-        _oracleAddressIndexes.pop();
+        _oracleList.pop();
 
         // Reset struct to default values
         delete _oracles[oracle_];
@@ -155,21 +151,18 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
     /// @dev    Oracles that return invalid values are skipped.
     /// @return Returns 'true' if at least one oracle should update data in the Collybus
     function check() external override(IRelayer) returns (bool) {
-        uint256 arrayLength = _oracleAddressIndexes.length;
+        uint256 arrayLength = _oracleList.length;
         for (uint256 i = 0; i < arrayLength; i++) {
-            IOracle(_oracleAddressIndexes[i]).update();
+            IOracle(_oracleList[i]).update();
 
-            (int256 rate, bool isValid) = IOracle(_oracleAddressIndexes[i])
-                .value();
+            (int256 rate, bool isValid) = IOracle(_oracleList[i]).value();
 
-            emit UpdateOracle(_oracleAddressIndexes[i], rate, isValid);
+            emit UpdateOracle(_oracleList[i], rate, isValid);
             if (!isValid) continue;
 
             if (
-                absDelta(
-                    _oracles[_oracleAddressIndexes[i]].lastUpdateValue,
-                    rate
-                ) >= _oracles[_oracleAddressIndexes[i]].minimumThresholdValue
+                absDelta(_oracles[_oracleList[i]].lastUpdateValue, rate) >=
+                _oracles[_oracleList[i]].minimumThresholdValue
             ) {
                 emit ShouldUpdate(true);
                 return true;
@@ -185,12 +178,11 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
     /// @dev    Oracles that return invalid values are skipped.
     function execute() public override(IRelayer) {
         // Update Collybus all tokenIds with the new discount rate
-        uint256 arrayLength = _oracleAddressIndexes.length;
+        uint256 arrayLength = _oracleList.length;
         for (uint256 i = 0; i < arrayLength; i++) {
             // We always update the oracles before retrieving the rates
-            IOracle(_oracleAddressIndexes[i]).update();
-            (int256 rate, bool isValid) = IOracle(_oracleAddressIndexes[i])
-                .value();
+            IOracle(_oracleList[i]).update();
+            (int256 rate, bool isValid) = IOracle(_oracleList[i]).value();
 
             if (!isValid) continue;
 
