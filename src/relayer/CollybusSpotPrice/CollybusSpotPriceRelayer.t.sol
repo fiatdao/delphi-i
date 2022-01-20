@@ -7,21 +7,21 @@ import {MockProvider} from "src/test/utils/MockProvider.sol";
 import {Caller} from "src/test/utils/Caller.sol";
 
 import {ICollybus} from "src/relayer/ICollybus.sol";
-import {CollybusDiscountRateRelayer} from "./CollybusDiscountRateRelayer.sol";
+import {CollybusSpotPriceRelayer} from "./CollybusSpotPriceRelayer.sol";
 import {IOracle} from "src/oracle/IOracle.sol";
 import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
 
 contract TestCollybus is ICollybus {
-    mapping(uint256 => uint256) public rateForTokenId;
+    mapping(address => uint256) public rateForTokenAddress;
 
-    function updateDiscountRate(uint256 tokenId, uint256 rate)
+    function updateSpot(address tokenAddress, uint256 rate)
         external
         override(ICollybus)
     {
-        rateForTokenId[tokenId] = rate;
+        rateForTokenAddress[tokenAddress] = rate;
     }
 
-    function updateSpot(address token, uint256 spot)
+    function updateDiscountRate(uint256 tokenId, uint256 rate)
         public
         override(ICollybus)
     {}
@@ -29,7 +29,7 @@ contract TestCollybus is ICollybus {
 
 contract CollybusDiscountRateRelayerTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
-    CollybusDiscountRateRelayer internal cdrr;
+    CollybusSpotPriceRelayer internal cdrr;
     TestCollybus internal collybus;
 
     MockProvider internal oracle1;
@@ -38,12 +38,14 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     uint256 internal oracleMaxValidTime = 300;
     int256 internal oracleAlpha = 2 * 10**17; // 0.2
 
-    uint256 internal mockTokenId1 = 1;
-    uint256 internal mockTokenId1MinThreshold = 1;
+    address internal mockToken1Address = address(0x1);
+    address internal mockToken2Address = address(0x2);
+    uint256 internal mockToken1MinThreshold = 1;
+    uint256 internal mockToken2MinThreshold = 1;
 
     function setUp() public {
         collybus = new TestCollybus();
-        cdrr = new CollybusDiscountRateRelayer(address(collybus));
+        cdrr = new CollybusSpotPriceRelayer(address(collybus));
 
         oracle1 = new MockProvider();
 
@@ -60,8 +62,8 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         // Add oracle with rate id
         cdrr.oracleAdd(
             address(oracle1),
-            mockTokenId1,
-            mockTokenId1MinThreshold
+            mockToken1Address,
+            mockToken1MinThreshold
         );
         hevm.warp(oracleTimeUpdateWindow);
     }
@@ -92,18 +94,17 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     function test_AddOracle() public {
         // Create a new address since the oracle is not checked for validity anyway
         address newOracle = address(0x1);
-        uint256 mockTokenId2 = mockTokenId1 + 1;
 
-        // Add the oracle and use the same threshold as oracle 1
-        cdrr.oracleAdd(newOracle, mockTokenId2, mockTokenId1MinThreshold);
+        // Add the second oracle
+        cdrr.oracleAdd(newOracle, mockToken2Address, mockToken2MinThreshold);
     }
 
     function testFail_AddOracle_ShouldNotAllowDuplicateOracles() public {
         // Attempt to add the same oracle again
         cdrr.oracleAdd(
             address(oracle1),
-            mockTokenId1,
-            mockTokenId1MinThreshold
+            mockToken1Address,
+            mockToken1MinThreshold
         );
     }
 
@@ -113,8 +114,8 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         // Add a new oracle that has the same token id as the previously added oracle.
         cdrr.oracleAdd(
             address(newOracle),
-            mockTokenId1,
-            mockTokenId1MinThreshold
+            mockToken1Address,
+            mockToken1MinThreshold
         );
     }
 
@@ -122,16 +123,14 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         Caller user = new Caller();
 
         address newOracle = address(0x1);
-        uint256 mockTokenId2 = mockTokenId1 + 1;
-        uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
         // Add the oracle
         (bool ok, ) = user.externalCall(
             address(cdrr),
             abi.encodeWithSelector(
                 cdrr.oracleAdd.selector,
                 newOracle,
-                mockTokenId2,
-                mockTokenId2MinThreshold
+                mockToken2Address,
+                mockToken2MinThreshold
             )
         );
         assertTrue(
@@ -189,13 +188,11 @@ contract CollybusDiscountRateRelayerTest is DSTest {
             false
         );
 
-        uint256 mockTokenId2 = mockTokenId1 + 1;
-        uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
         // Add oracle with rate id
         cdrr.oracleAdd(
             address(oracle2),
-            mockTokenId2,
-            mockTokenId2MinThreshold
+            mockToken2Address,
+            mockToken2MinThreshold
         );
         hevm.warp(oracleTimeUpdateWindow);
 
@@ -234,13 +231,11 @@ contract CollybusDiscountRateRelayerTest is DSTest {
             false
         );
 
-        uint256 mockTokenId2 = mockTokenId1 + 1;
-        uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
         // Add oracle with rate id
         cdrr.oracleAdd(
             address(oracle2),
-            mockTokenId2,
-            mockTokenId2MinThreshold
+            mockToken2Address,
+            mockToken2MinThreshold
         );
         hevm.warp(oracleTimeUpdateWindow);
 
@@ -269,13 +264,11 @@ contract CollybusDiscountRateRelayerTest is DSTest {
             false
         );
 
-        uint256 mockTokenId2 = mockTokenId1 + 1;
-        uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
         // Add oracle with rate id.
         cdrr.oracleAdd(
             address(oracle2),
-            mockTokenId2,
-            mockTokenId2MinThreshold
+            mockToken2Address,
+            mockToken2MinThreshold
         );
         hevm.warp(oracleTimeUpdateWindow);
 
@@ -287,10 +280,12 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         cdrr.execute();
 
         assertTrue(
-            collybus.rateForTokenId(mockTokenId1) == uint256(100 * 10**18)
+            collybus.rateForTokenAddress(mockToken1Address) ==
+                uint256(100 * 10**18)
         );
         assertTrue(
-            collybus.rateForTokenId(mockTokenId2) == uint256(10 * 10**18)
+            collybus.rateForTokenAddress(mockToken2Address) ==
+                uint256(10 * 10**18)
         );
     }
 
@@ -310,13 +305,12 @@ contract CollybusDiscountRateRelayerTest is DSTest {
             false
         );
 
-        uint256 mockTokenId2 = mockTokenId1 + 1;
-        uint256 mockTokenId2MinThreshold = 1 * 10**18;
+        mockToken2MinThreshold = 1 * 10**18;
         // Add oracle with rate id
         cdrr.oracleAdd(
             address(oracle2),
-            mockTokenId2,
-            mockTokenId2MinThreshold
+            mockToken2Address,
+            mockToken2MinThreshold
         );
         hevm.warp(oracleTimeUpdateWindow);
 
@@ -336,7 +330,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
 
         // Make the second value returned by the oracle to be just lower than the minimum threshold
         int256 oracle2NewValue = oracle2InitialValue +
-            int256(mockTokenId2MinThreshold) -
+            int256(mockToken2MinThreshold) -
             1;
 
         oracle2.givenQueryReturnResponse(
@@ -354,12 +348,13 @@ contract CollybusDiscountRateRelayerTest is DSTest {
 
         // Rate 1 from oracle 1 will be updated with the new value because the delta was bigger than the minimum threshold
         assertTrue(
-            collybus.rateForTokenId(mockTokenId1) == uint256(oracle1NewValue)
+            collybus.rateForTokenAddress(mockToken1Address) ==
+                uint256(oracle1NewValue)
         );
 
         // Rate 2 from oracle 2 will NOT be updated because the delta is smaller than the threshold.
         assertTrue(
-            collybus.rateForTokenId(mockTokenId2) ==
+            collybus.rateForTokenAddress(mockToken2Address) ==
                 uint256(oracle2InitialValue)
         );
     }
