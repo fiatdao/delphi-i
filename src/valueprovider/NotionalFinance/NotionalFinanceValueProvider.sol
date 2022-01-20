@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {IValueProvider} from "../IValueProvider.sol";
-import {INotionalView} from "./INotionalView.sol";
-import {MarketParameters} from "./INotionalView.sol";
+import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
+import {INotionalView, MarketParameters} from "src/valueprovider/NotionalFinance/INotionalView.sol";
 
 contract NotionalFinanceValueProvider is IValueProvider {
     int256 internal constant RATE_PRECISION_CONVERSION = 1e9;
