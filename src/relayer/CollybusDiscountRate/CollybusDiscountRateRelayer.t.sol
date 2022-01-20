@@ -24,7 +24,10 @@ contract TestCollybus is ICollybus {
     function updateSpot(address token, uint256 spot)
         public
         override(ICollybus)
-    {}
+    {
+        // This should never be called, since this test only updates the discount rate
+        assert(false);
+    }
 }
 
 contract CollybusDiscountRateRelayerTest is DSTest {
@@ -96,6 +99,18 @@ contract CollybusDiscountRateRelayerTest is DSTest {
 
         // Add the oracle for a new token ID.
         cdrr.oracleAdd(newOracle, mockTokenId2, mockTokenId1MinThreshold);
+
+        // Check that oracle was added
+        assertTrue(
+            cdrr.oracleExists(newOracle),
+            "Oracle should be added"
+        );
+
+        // Check the number of existing oracles
+        assertTrue(
+            cdrr.oracleCount() == 2,
+            "CollybusDiscountRateRelayer should contain 2 oracles."
+        );
     }
 
     function testFail_AddOracle_ShouldNotAllowDuplicateOracles() public {
@@ -146,9 +161,9 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         // Remove the only oracle.
         cdrr.oracleRemove(address(oracle1));
 
-        // Relayer should be empty
+        // Oracle should not exist 
         assertTrue(
-            cdrr.oracleCount() == 0,
+            cdrr.oracleExists(address(oracle1)) == false,
             "CollybusDiscountRateRelayer should be empty"
         );
     }

@@ -186,7 +186,7 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
 
             if (!isValid) continue;
 
-            OracleData memory oracleData = _oracles[_oracleList[i]];
+            OracleData storage oracleData = _oracles[_oracleList[i]];
 
             // If the change in delta rate from the last update is bigger or equal than the threshold value
             // push the rates to Collybus
@@ -195,7 +195,6 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
                 oracleData.minimumThresholdValue
             ) {
                 oracleData.lastUpdateValue = rate;
-                _oracles[_oracleList[i]] = oracleData;
 
                 _collybus.updateSpot(oracleData.tokenAddress, uint256(rate));
 
