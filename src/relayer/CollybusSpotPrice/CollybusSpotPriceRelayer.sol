@@ -32,9 +32,9 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
 
     /// ======== Events ======== ///
 
-    event OracleAdded(address);
-    event OracleRemoved(address);
-    event ShouldUpdate(bool);
+    event OracleAdded(address oracleAddress);
+    event OracleRemoved(address oracleAddress);
+    event ShouldUpdate(bool shouldUpdate);
     event UpdateOracle(address oracle, int256 value, bool valid);
     event UpdatedCollybus(address tokenAddress, uint256 rate);
 
@@ -46,10 +46,10 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
     mapping(address => OracleData) private _oracles;
 
     // Mapping used to track used Rate Ids.
-    mapping(address => bool) private _tokenAddressHasOracle;
+    mapping(address => bool) private _tokenIds;
 
     // Array used for iterating the oracles.
-    address[] private _oracleAddressIndexes;
+    address[] private _oracleList;
 
     constructor(address collybusAddress_) {
         _collybus = ICollybus(collybusAddress_);
@@ -58,7 +58,7 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
     /// @notice Returns the number of registered oracles.
     /// @return the total number of oracles.
     function oracleCount() public view returns (uint256) {
-        return _oracleAddressIndexes.length;
+        return _oracleList.length;
     }
 
     /// @notice                         Registers an oracle to a token id and set the minimum threshold delta value
@@ -80,7 +80,7 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
         }
 
         // Make sure there are no existing oracles registered for this rate Id
-        if (_tokenAddressHasOracle[tokenAddress_]) {
+        if (_tokenIds[tokenAddress_]) {
             revert CollybusSpotPriceRelayer__addOracle_tokenIdHasOracleRegistered(
                 oracle_,
                 tokenAddress_
@@ -88,10 +88,10 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
         }
 
         // Add oracle in the oracle address array that is used for iterating.
-        _oracleAddressIndexes.push(oracle_);
+        _oracleList.push(oracle_);
 
         // Mark the token address as used
-        _tokenAddressHasOracle[tokenAddress_] = true;
+        _tokenIds[tokenAddress_] = true;
 
         // Update the oracle address => data mapping with the oracle parameters.
         _oracles[oracle_] = OracleData({
@@ -116,15 +116,15 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
         }
 
         // Reset the token address Mapping
-        _tokenAddressHasOracle[_oracles[oracle_].tokenAddress] = false;
+        _tokenIds[_oracles[oracle_].tokenAddress] = false;
 
         // Remove the oracle index from the array by swapping the target with the last element
         // We only need to iterate length - 1 elements.
-        uint256 arrayLength = _oracleAddressIndexes.length;
+        uint256 arrayLength = _oracleList.length;
         if (arrayLength > 1) {
             for (uint256 i = 0; i < arrayLength - 1; i++) {
-                if (_oracleAddressIndexes[i] == oracle_) {
-                    _oracleAddressIndexes[i] = _oracleAddressIndexes[
+                if (_oracleList[i] == oracle_) {
+                    _oracleList[i] = _oracleList[
                         arrayLength - 1
                     ];
                     // No need to continue iterating, we found our oracle.
@@ -134,7 +134,7 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
         }
 
         // Delete the last element
-        _oracleAddressIndexes.pop();
+        _oracleList.pop();
 
         // Reset struct to default values
         delete _oracles[oracle_];
@@ -160,21 +160,21 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
     /// @dev    Oracles that return invalid values are skipped.
     /// @return Returns 'true' if at least one oracle should update data in the Collybus
     function check() external override(IRelayer) returns (bool) {
-        uint256 arrayLength = _oracleAddressIndexes.length;
+        uint256 arrayLength = _oracleList.length;
         for (uint256 i = 0; i < arrayLength; i++) {
-            IOracle(_oracleAddressIndexes[i]).update();
+            IOracle(_oracleList[i]).update();
 
-            (int256 rate, bool isValid) = IOracle(_oracleAddressIndexes[i])
+            (int256 rate, bool isValid) = IOracle(_oracleList[i])
                 .value();
 
-            emit UpdateOracle(_oracleAddressIndexes[i], rate, isValid);
+            emit UpdateOracle(_oracleList[i], rate, isValid);
             if (!isValid) continue;
 
             if (
                 absDelta(
-                    _oracles[_oracleAddressIndexes[i]].lastUpdateValue,
+                    _oracles[_oracleList[i]].lastUpdateValue,
                     rate
-                ) >= _oracles[_oracleAddressIndexes[i]].minimumThresholdValue
+                ) >= _oracles[_oracleList[i]].minimumThresholdValue
             ) {
                 emit ShouldUpdate(true);
                 return true;
@@ -190,16 +190,16 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
     /// @dev    Oracles that return invalid values are skipped.
     function execute() public override(IRelayer) {
         // Update Collybus all tokenIds with the new discount rate
-        uint256 arrayLength = _oracleAddressIndexes.length;
+        uint256 arrayLength = _oracleList.length;
         for (uint256 i = 0; i < arrayLength; i++) {
             // We always update the oracles before retrieving the rates
-            IOracle(_oracleAddressIndexes[i]).update();
-            (int256 rate, bool isValid) = IOracle(_oracleAddressIndexes[i])
+            IOracle(_oracleList[i]).update();
+            (int256 rate, bool isValid) = IOracle(_oracleList[i])
                 .value();
 
             if (!isValid) continue;
 
-            OracleData memory oracleData = _oracles[_oracleAddressIndexes[i]];
+            OracleData memory oracleData = _oracles[_oracleList[i]];
 
             // If the change in delta rate from the last update is bigger than the threshold value push
             // the rates to Collybus
@@ -208,7 +208,7 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
                 oracleData.minimumThresholdValue
             ) {
                 oracleData.lastUpdateValue = rate;
-                _oracles[_oracleAddressIndexes[i]] = oracleData;
+                _oracles[_oracleList[i]] = oracleData;
 
                 _collybus.updateSpot(oracleData.tokenAddress, uint256(rate));
 
