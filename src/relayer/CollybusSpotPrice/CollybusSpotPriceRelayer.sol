@@ -141,11 +141,7 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
     /// @notice         Checks whether an oracle is registered.
     /// @param oracle_  The address of the oracle.
     /// @return         Returns 'true' if the oracle is registered.
-    function oracleExists(address oracle_)
-        public
-        view
-        returns (bool)
-    {
+    function oracleExists(address oracle_) public view returns (bool) {
         return _oracles[oracle_].exists;
     }
 
@@ -192,7 +188,7 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
 
             OracleData memory oracleData = _oracles[_oracleList[i]];
 
-            // If the change in delta rate from the last update is bigger or equal than the threshold value 
+            // If the change in delta rate from the last update is bigger or equal than the threshold value
             // push the rates to Collybus
             if (
                 absDelta(oracleData.lastUpdateValue, rate) >=
