@@ -124,9 +124,7 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
         if (arrayLength > 1) {
             for (uint256 i = 0; i < arrayLength - 1; i++) {
                 if (_oracleList[i] == oracle_) {
-                    _oracleList[i] = _oracleList[
-                        arrayLength - 1
-                    ];
+                    _oracleList[i] = _oracleList[arrayLength - 1];
                     // No need to continue iterating, we found our oracle.
                     break;
                 }
@@ -164,17 +162,14 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
         for (uint256 i = 0; i < arrayLength; i++) {
             IOracle(_oracleList[i]).update();
 
-            (int256 rate, bool isValid) = IOracle(_oracleList[i])
-                .value();
+            (int256 rate, bool isValid) = IOracle(_oracleList[i]).value();
 
             emit UpdateOracle(_oracleList[i], rate, isValid);
             if (!isValid) continue;
 
             if (
-                absDelta(
-                    _oracles[_oracleList[i]].lastUpdateValue,
-                    rate
-                ) >= _oracles[_oracleList[i]].minimumThresholdValue
+                absDelta(_oracles[_oracleList[i]].lastUpdateValue, rate) >=
+                _oracles[_oracleList[i]].minimumThresholdValue
             ) {
                 emit ShouldUpdate(true);
                 return true;
@@ -194,8 +189,7 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
         for (uint256 i = 0; i < arrayLength; i++) {
             // We always update the oracles before retrieving the rates
             IOracle(_oracleList[i]).update();
-            (int256 rate, bool isValid) = IOracle(_oracleList[i])
-                .value();
+            (int256 rate, bool isValid) = IOracle(_oracleList[i]).value();
 
             if (!isValid) continue;
 
