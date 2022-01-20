@@ -101,10 +101,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         cdrr.oracleAdd(newOracle, mockTokenId2, mockTokenId1MinThreshold);
 
         // Check that oracle was added
-        assertTrue(
-            cdrr.oracleExists(newOracle),
-            "Oracle should be added"
-        );
+        assertTrue(cdrr.oracleExists(newOracle), "Oracle should be added");
 
         // Check the number of existing oracles
         assertTrue(
@@ -161,7 +158,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         // Remove the only oracle.
         cdrr.oracleRemove(address(oracle1));
 
-        // Oracle should not exist 
+        // Oracle should not exist
         assertTrue(
             cdrr.oracleExists(address(oracle1)) == false,
             "CollybusDiscountRateRelayer should be empty"

@@ -87,10 +87,7 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         cdrr.oracleAdd(newOracle, mockToken2Address, mockToken2MinThreshold);
 
         // Check that oracle was added
-        assertTrue(
-            cdrr.oracleExists(newOracle),
-            "Oracle should be added"
-        );
+        assertTrue(cdrr.oracleExists(newOracle), "Oracle should be added");
 
         // Check the number of existing oracles
         assertTrue(
@@ -150,7 +147,7 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         // Remove the only oracle.
         cdrr.oracleRemove(address(oracle1));
 
-        // Oracle should not exist 
+        // Oracle should not exist
         assertTrue(
             cdrr.oracleExists(address(oracle1)) == false,
             "CollybusSpotPriceRelayer should be empty"
@@ -245,7 +242,7 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         // Use a new address for token 2
         address mockToken2Address = address(0x2);
         uint256 mockToken2MinThreshold = 1;
-        
+
         cdrr.oracleAdd(
             address(oracle2),
             mockToken2Address,
@@ -281,7 +278,7 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         // Use a new address for token 2
         address mockToken2Address = address(0x2);
         uint256 mockToken2MinThreshold = 1;
-        
+
         cdrr.oracleAdd(
             address(oracle2),
             mockToken2Address,
