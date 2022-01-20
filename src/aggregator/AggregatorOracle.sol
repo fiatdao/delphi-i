@@ -37,11 +37,11 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
 
     /// ======== Events ======== ///
 
-    event OracleAdded(address);
-    event OracleRemoved(address);
-    event OracleUpdated(bool, address);
+    event OracleAdded(address oracleAddress);
+    event OracleRemoved(address oracleAddress);
+    event OracleUpdated(bool success, address oracleAddress);
     event OracleValue(int256 value, bool valid);
-    event OracleValueFailed(address);
+    event OracleValueFailed(address oracleAddress);
     event AggregatedValue(int256 value, uint256 validValues);
     event SetParam(bytes32 param, uint256 value);
 

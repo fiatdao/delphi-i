@@ -32,9 +32,9 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
 
     /// ======== Events ======== ///
 
-    event OracleAdded(address);
-    event OracleRemoved(address);
-    event ShouldUpdate(bool);
+    event OracleAdded(address oracleAddress);
+    event OracleRemoved(address oracleAddress);
+    event ShouldUpdate(bool shouldUpdate);
     event UpdateOracle(address oracle, int256 value, bool valid);
     event UpdatedCollybus(uint256 tokenId, uint256 rate);
 
