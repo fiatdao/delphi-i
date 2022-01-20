@@ -145,12 +145,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
     /// @notice         Checks whether an oracle is registered.
     /// @param oracle_  The address of the oracle.
     /// @return         Returns 'true' if the oracle is registered.
-    function oracleExists(address oracle_)
-        public
-        view
-        checkCaller
-        returns (bool)
-    {
+    function oracleExists(address oracle_) public view returns (bool) {
         return _oracles[oracle_].exists;
     }
 
