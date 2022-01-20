@@ -90,19 +90,21 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     }
 
     function test_AddOracle() public {
-        // Create a new address since the oracle is not checked for validity anyway
+        // Create a new address that differs from the oracle already added
         address newOracle = address(0x1);
         uint256 mockTokenId2 = mockTokenId1 + 1;
 
-        // Add the oracle and use the same threshold as oracle 1
+        // Add the oracle for a new token ID.
         cdrr.oracleAdd(newOracle, mockTokenId2, mockTokenId1MinThreshold);
     }
 
     function testFail_AddOracle_ShouldNotAllowDuplicateOracles() public {
-        // Attempt to add the same oracle again
+        // Attempt to add the same oracle again but use a different token id.
+        uint256 mockTokenId2 = mockTokenId1 + 1;
+
         cdrr.oracleAdd(
             address(oracle1),
-            mockTokenId1,
+            mockTokenId2,
             mockTokenId1MinThreshold
         );
     }
