@@ -29,7 +29,7 @@ contract YieldValueProvider is IValueProvider {
 
         // Using the time scale window , we compute the 1/ts and save it in 59.18 format to be used in the formula
         int256 ts59x18 = PRBMathSD59x18.div(
-            PRBMathSD59x18.fromInt(1),
+            PRBMathSD59x18.SCALE,
             PRBMathSD59x18.fromInt(inverseTS)
         );
 
@@ -45,7 +45,7 @@ contract YieldValueProvider is IValueProvider {
         int256 annualRate59x18 = (PRBMathSD59x18.pow(
             tokenToReserveRatio59x18,
             ts59x18
-        ) - PRBMathSD59x18.fromInt(1));
+        ) - PRBMathSD59x18.SCALE);
 
         // The result is a 59.18 fixed-point number.
         return annualRate59x18;
