@@ -52,7 +52,7 @@ contract YieldValueProviderTest is DSTest {
 
     function test_GetValue() public {
         // Computed value based on the parameters that are sent via the mock provider
-        int256 computedValue = 65412864833148000;
+        int256 computedValue = 2072808605;
         int256 value = yieldVP.value();
 
         assertTrue(value == computedValue);

@@ -13,7 +13,7 @@ contract YieldValueProvider is IValueProvider {
         yieldPool = IYieldPool(yieldPool_);
     }
 
-    /// @notice Calculates the annual rate used by the FiatDao contracts
+    /// @notice Calculates the per second rate used by the FiatDao contracts
     /// based on the token reservers, underlier reserves and time scale from the yield contract
     /// @dev formula documentation:
     /// https://www.notion.so/fiatdao/FIAT-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
@@ -42,9 +42,8 @@ contract YieldValueProvider is IValueProvider {
         );
 
         // Compute the result with the formula provided by the documentation
-        // Rate is per second so we scale it per Julien year, 365.25 days.
         int256 result = (PRBMathSD59x18.pow(tokenToReserveRatio59x18, ts59x18) -
-            PRBMathSD59x18.fromInt(1)) * 31557600;
+            PRBMathSD59x18.fromInt(1));
 
         // The result is a 59.18 fixed-point number.
         return result;

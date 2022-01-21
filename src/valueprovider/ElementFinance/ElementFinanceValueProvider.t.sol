@@ -73,8 +73,12 @@ contract ElementFinanceValueProviderTest is DSTest {
             address(mockBalancerVault),
             // Underlier token address
             0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
+            // Underlier decimal format
+            6,
             // Principal bond token address
             0x8a2228705ec979961F0e16df311dEbcf097A2766,
+            // Principal bond decimal format
+            6,
             // Timestamp to maturity,
             1651275535,
             // Time scale in seconds
@@ -88,7 +92,7 @@ contract ElementFinanceValueProviderTest is DSTest {
 
     function test_GetValue() public {
         // Computed value based on the parameters that are sent via the mock provider
-        int256 computedExpectedValue = 31000116467775202;
+        int256 computedExpectedValue = 967415710;
         hevm.warp(1642067742);
 
         int256 value = efValueProvider.value();

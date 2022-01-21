@@ -12,14 +12,21 @@ error ElementFinanceValueProvider__value_timeToMaturityLessThanBlockchainTime(
     uint256 timeToMaturity
 );
 
+// @notice Emitted when a token with unsupported decimals is used
+error ElementFinanceValueProvider__unsupportedDecimalFormat(
+    address tokenAddress
+);
+
 contract ElementFinanceValueProvider is IValueProvider {
-    int256 private constant CALENDARYEAR_SECONDS = 31557600;
+    int256 private constant SECONDS_PER_YEAR = 31557600;
 
     IVault private _balancerVault;
 
     bytes32 private immutable _poolId;
     address private immutable _underlier;
+    uint256 private immutable _underlierConversion;
     address private immutable _ePTokenBond;
+    uint256 private immutable _ePTokenBondConversion;
     uint256 private immutable _timeToMaturity;
     uint256 private immutable _unitSeconds;
 
@@ -35,7 +42,9 @@ contract ElementFinanceValueProvider is IValueProvider {
         bytes32 poolId_,
         address balancerVault_,
         address underlier_,
+        uint256 underlierDecimals_,
         address ePTokenBond_,
+        uint256 epTolenBondDecimals_,
         uint256 timeToMaturity_,
         uint256 unitSeconds_
     ) {
@@ -45,8 +54,23 @@ contract ElementFinanceValueProvider is IValueProvider {
 
         _timeToMaturity = timeToMaturity_;
         _underlier = underlier_;
-        _ePTokenBond = ePTokenBond_;
         _unitSeconds = unitSeconds_;
+
+        // For better precision we compute the needed conversion factor to scale to 18 digits fixed point number
+        if (underlierDecimals_ > 18)
+            revert ElementFinanceValueProvider__unsupportedDecimalFormat(
+                underlier_
+            );
+        _underlierConversion = 18 - underlierDecimals_;
+
+        _ePTokenBond = ePTokenBond_;
+
+        // For better precision we compute the needed conversion factor to scale to 18 digits fixed point number
+        if (epTolenBondDecimals_ > 18)
+            revert ElementFinanceValueProvider__unsupportedDecimalFormat(
+                ePTokenBond_
+            );
+        _ePTokenBondConversion = 18 - epTolenBondDecimals_;
     }
 
     /// @notice Calculates the annual rate used by the FIAT DAO contracts
@@ -63,11 +87,17 @@ contract ElementFinanceValueProvider is IValueProvider {
             IERC20(_underlier)
         );
 
+        // Convert to 18 digits precision
+        underlierBalance = underlierBalance * _underlierConversion;
+
         // Retrieve the principal token from the balancer vault.
         (uint256 ePTokenBalance, , , ) = _balancerVault.getPoolTokenInfo(
             _poolId,
             IERC20(_ePTokenBond)
         );
+
+        // Convert to 18 digits precision
+        ePTokenBalance = ePTokenBalance * _ePTokenBondConversion;
 
         // Check the block time against the maturity date and revert if we're past the maturity date.
         if (block.timestamp >= _timeToMaturity) {
@@ -80,12 +110,12 @@ contract ElementFinanceValueProvider is IValueProvider {
         int256 timeToMaturity59x18 = PRBMathSD59x18.fromInt(
             int256(_timeToMaturity - block.timestamp)
         );
+
         int256 underlierTokenRatio59x18 = PRBMathSD59x18.div(
-            PRBMathSD59x18.fromInt(int256(underlierBalance)),
-            PRBMathSD59x18.fromInt(
-                int256(2 * ePTokenBalance + underlierBalance)
-            )
+            int256(underlierBalance),
+            int256(2 * ePTokenBalance + underlierBalance)
         );
+
         int256 timeRatio59x18 = PRBMathSD59x18.div(
             timeToMaturity59x18,
             PRBMathSD59x18.fromInt(int256(_unitSeconds))
@@ -100,11 +130,18 @@ contract ElementFinanceValueProvider is IValueProvider {
             PRBMathSD59x18.SCALE - tokenUnitPrice59x18,
             PRBMathSD59x18.div(
                 timeToMaturity59x18,
-                PRBMathSD59x18.fromInt(CALENDARYEAR_SECONDS)
+                PRBMathSD59x18.fromInt(SECONDS_PER_YEAR)
             )
         );
 
+        int256 ratePerSecond = PRBMathSD59x18.pow(
+            PRBMathSD59x18.SCALE + annualRate59x18,
+            PRBMathSD59x18.div(
+                PRBMathSD59x18.SCALE,
+                PRBMathSD59x18.fromInt(SECONDS_PER_YEAR)
+            )
+        ) - PRBMathSD59x18.SCALE;
         // The result is a 59.18 fixed-point number.
-        return int256(annualRate59x18);
+        return ratePerSecond;
     }
 }
