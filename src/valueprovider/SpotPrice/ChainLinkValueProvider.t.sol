@@ -86,6 +86,8 @@ contract ChainLinkValueProviderTest is DSTest {
         ChainLinkValueProvider vp = new ChainLinkValueProvider(
             address(unsupportedDecimalsMP)
         );
+
+        assertTrue(address(vp) == address(0));
     }
 
     function test_GetValue() public {
