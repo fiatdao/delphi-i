@@ -54,6 +54,7 @@ contract NotionalFinanceValueProviderTest is DSTest {
         notionalVP = new NotionalFinanceValueProvider(
             address(mockNotionalView),
             2,
+            9,
             1671840000,
             1648512000
         );

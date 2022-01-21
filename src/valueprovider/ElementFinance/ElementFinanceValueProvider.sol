@@ -61,7 +61,7 @@ contract ElementFinanceValueProvider is IValueProvider {
             revert ElementFinanceValueProvider__unsupportedDecimalFormat(
                 underlier_
             );
-        _underlierConversion = 18 - underlierDecimals_;
+        _underlierConversion = 10 ** (18 - underlierDecimals_);
 
         _ePTokenBond = ePTokenBond_;
 
@@ -70,7 +70,7 @@ contract ElementFinanceValueProvider is IValueProvider {
             revert ElementFinanceValueProvider__unsupportedDecimalFormat(
                 ePTokenBond_
             );
-        _ePTokenBondConversion = 18 - epTolenBondDecimals_;
+        _ePTokenBondConversion = 10 ** (18 - epTolenBondDecimals_);
     }
 
     /// @notice Calculates the annual rate used by the FIAT DAO contracts
