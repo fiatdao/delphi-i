@@ -52,13 +52,15 @@ contract NotionalFinanceValueProvider is IValueProvider {
             RATE_PRECISION_CONVERSION;
 
         // Apply rate per second conversion formula
-        int256 ratePerSecond = PRBMathSD59x18.pow(
+        int256 ratePerSecondD59x18 = PRBMathSD59x18.pow(
             PRBMathSD59x18.SCALE + ratePerAnnum,
             PRBMathSD59x18.div(
                 PRBMathSD59x18.SCALE,
                 PRBMathSD59x18.fromInt(SECONDS_PER_YEAR)
             )
         ) - PRBMathSD59x18.SCALE;
-        return ratePerSecond;
+
+        // The result is a 59.18 fixed-point number.
+        return ratePerSecondD59x18;
     }
 }

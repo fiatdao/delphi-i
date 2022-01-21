@@ -42,10 +42,10 @@ contract YieldValueProvider is IValueProvider {
         );
 
         // Compute the result with the formula provided by the documentation
-        int256 result = (PRBMathSD59x18.pow(tokenToReserveRatio59x18, ts59x18) -
+        int256 annualRate59x18 = (PRBMathSD59x18.pow(tokenToReserveRatio59x18, ts59x18) -
             PRBMathSD59x18.fromInt(1));
 
         // The result is a 59.18 fixed-point number.
-        return result;
+        return annualRate59x18;
     }
 }
