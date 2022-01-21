@@ -141,7 +141,7 @@ contract ElementFinanceValueProvider is IValueProvider {
                 PRBMathSD59x18.fromInt(SECONDS_PER_YEAR)
             )
         ) - PRBMathSD59x18.SCALE;
-        
+
         // The result is a 59.18 fixed-point number.
         return ratePerSecond59x18;
     }
