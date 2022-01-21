@@ -57,20 +57,22 @@ contract ElementFinanceValueProvider is IValueProvider {
         _unitSeconds = unitSeconds_;
 
         // For better precision we compute the needed conversion factor to scale to 18 digits fixed point number
-        if (underlierDecimals_ > 18)
+        if (underlierDecimals_ > 18) {
             revert ElementFinanceValueProvider__unsupportedDecimalFormat(
                 underlier_
             );
-        _underlierConversion = 10 ** (18 - underlierDecimals_);
+        }
+        _underlierConversion = 10**(18 - underlierDecimals_);
 
         _ePTokenBond = ePTokenBond_;
 
         // For better precision we compute the needed conversion factor to scale to 18 digits fixed point number
-        if (epTolenBondDecimals_ > 18)
+        if (epTolenBondDecimals_ > 18) {
             revert ElementFinanceValueProvider__unsupportedDecimalFormat(
                 ePTokenBond_
             );
-        _ePTokenBondConversion = 10 ** (18 - epTolenBondDecimals_);
+        }
+        _ePTokenBondConversion = 10**(18 - epTolenBondDecimals_);
     }
 
     /// @notice Calculates the annual rate used by the FIAT DAO contracts

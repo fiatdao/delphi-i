@@ -5,15 +5,10 @@ import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
 import {INotionalView, MarketParameters} from "src/valueprovider/NotionalFinance/INotionalView.sol";
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
-
 // @notice Emitted when a token with unsupported decimals is used
-error NotionalFinanceValueProvider__unsupportedDecimalFormat(
-    uint16 currencyID
-);
+error NotionalFinanceValueProvider__unsupportedDecimalFormat(uint16 currencyID);
 
 contract NotionalFinanceValueProvider is IValueProvider {
-    
-
     //Julien year, 365.25 days
     int256 internal constant SECONDS_PER_YEAR = 31557600;
 
@@ -37,12 +32,13 @@ contract NotionalFinanceValueProvider is IValueProvider {
         uint256 maturity_,
         uint256 settlementDate_
     ) {
-        if (decimals_ > 18)
+        if (decimals_ > 18) {
             revert NotionalFinanceValueProvider__unsupportedDecimalFormat(
                 currencyID_
             );
+        }
 
-        _decimalConversion = 10 ** (18 - decimals_);
+        _decimalConversion = 10**(18 - decimals_);
 
         _notionalView = INotionalView(notionalViewContract_);
         _currencyID = currencyID_;
