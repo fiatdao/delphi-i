@@ -5,6 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
 import {IVault} from "src/valueprovider/ElementFinance/IVault.sol";
 
+import "src/utils/Math.sol";
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
 // @notice Emitted when trying to add an oracle that already exists
@@ -12,67 +13,48 @@ error ElementFinanceValueProvider__value_timeToMaturityLessThanBlockchainTime(
     uint256 timeToMaturity
 );
 
-// @notice Emitted when a token with unsupported decimals is used
-error ElementFinanceValueProvider__unsupportedDecimalFormat(
-    address tokenAddress
-);
-
 contract ElementFinanceValueProvider is IValueProvider {
-    int256 private constant SECONDS_PER_YEAR = 31557600;
+    int256 private constant SECONDS_PER_YEAR = 31557600 * 1e18;
 
-    IVault private _balancerVault;
+    IVault private immutable _balancerVault;
 
     bytes32 private immutable _poolId;
     address private immutable _underlier;
-    uint256 private immutable _underlierConversion;
+    uint256 private immutable _underlierDecimals;
     address private immutable _ePTokenBond;
-    uint256 private immutable _ePTokenBondConversion;
+    uint256 private immutable _ePTokenBondDecimals;
     uint256 private immutable _timeToMaturity;
     uint256 private immutable _unitSeconds;
 
-    /// @notice                 Constructs the Value provider contracts with the needed Element data in order to
-    ///                         calculate the annual rate.
-    /// @param poolId_          The poolID of the Element Convergent Curve Pool
-    /// @param balancerVault_   The vault address.
-    /// @param underlier_       Address of the underlier IERC20 token.
-    /// @param ePTokenBond_     Address of the bond IERC20 token.
-    /// @param timeToMaturity_  Timestamp for the time to maturity or the 'expiration' field from the Convergent Curve Pool contract.
-    /// @param unitSeconds_     The number of seconds in the Element Convergent Curve Pool timescale.
+    /// @notice                     Constructs the Value provider contracts with the needed Element data in order to
+    ///                             calculate the annual rate.
+    /// @param poolId_              The poolID of the Element Convergent Curve Pool
+    /// @param balancerVault_       The vault address.
+    /// @param underlier_           Address of the underlier IERC20 token.
+    /// @param underlierDecimals_   Precision of the underlier
+    /// @param ePTokenBond_         Address of the bond IERC20 token.
+    /// @param ePTokenBondDecimals_ Precision of the bond.
+    /// @param timeToMaturity_      Timestamp for the time to maturity or the 'expiration' field from the Convergent Curve Pool contract.
+    /// @param unitSeconds_         The number of seconds in the Element Convergent Curve Pool timescale.
     constructor(
         bytes32 poolId_,
         address balancerVault_,
         address underlier_,
         uint256 underlierDecimals_,
         address ePTokenBond_,
-        uint256 epTokenBondDecimals_,
+        uint256 ePTokenBondDecimals_,
         uint256 timeToMaturity_,
         uint256 unitSeconds_
     ) {
         _poolId = poolId_;
 
         _balancerVault = IVault(balancerVault_);
-
         _timeToMaturity = timeToMaturity_;
         _underlier = underlier_;
+        _underlierDecimals = underlierDecimals_;
         _unitSeconds = unitSeconds_;
-
-        // For better precision we compute the needed conversion factor to scale to 18 digits fixed point number
-        if (underlierDecimals_ > 18) {
-            revert ElementFinanceValueProvider__unsupportedDecimalFormat(
-                underlier_
-            );
-        }
-        _underlierConversion = 10**(18 - underlierDecimals_);
-
         _ePTokenBond = ePTokenBond_;
-
-        // For better precision we compute the needed conversion factor to scale to 18 digits fixed point number
-        if (epTokenBondDecimals_ > 18) {
-            revert ElementFinanceValueProvider__unsupportedDecimalFormat(
-                ePTokenBond_
-            );
-        }
-        _ePTokenBondConversion = 10**(18 - epTokenBondDecimals_);
+        _ePTokenBondDecimals = ePTokenBondDecimals_;
     }
 
     /// @notice Calculates the annual rate used by the FIAT DAO contracts
@@ -90,7 +72,7 @@ contract ElementFinanceValueProvider is IValueProvider {
         );
 
         // Convert to 18 digits precision
-        underlierBalance = underlierBalance * _underlierConversion;
+        underlierBalance = uconvert(underlierBalance , _underlierDecimals, 18);
 
         // Retrieve the principal token from the balancer vault.
         (uint256 ePTokenBalance, , , ) = _balancerVault.getPoolTokenInfo(
@@ -99,7 +81,7 @@ contract ElementFinanceValueProvider is IValueProvider {
         );
 
         // Convert to 18 digits precision
-        ePTokenBalance = ePTokenBalance * _ePTokenBondConversion;
+        ePTokenBalance = uconvert(ePTokenBalance , _ePTokenBondDecimals, 18);
 
         // Check the block time against the maturity date and revert if we're past the maturity date.
         if (block.timestamp >= _timeToMaturity) {
@@ -132,7 +114,7 @@ contract ElementFinanceValueProvider is IValueProvider {
             PRBMathSD59x18.SCALE - tokenUnitPrice59x18,
             PRBMathSD59x18.div(
                 timeToMaturity59x18,
-                PRBMathSD59x18.fromInt(SECONDS_PER_YEAR)
+                SECONDS_PER_YEAR
             )
         );
 
@@ -140,10 +122,19 @@ contract ElementFinanceValueProvider is IValueProvider {
             PRBMathSD59x18.SCALE + annualRate59x18,
             PRBMathSD59x18.div(
                 PRBMathSD59x18.SCALE,
-                PRBMathSD59x18.fromInt(SECONDS_PER_YEAR)
+                SECONDS_PER_YEAR
             )
         ) - PRBMathSD59x18.SCALE;
 
+        /*int256 ratePerSecond59x18_2 = PRBMathSD59x18.pow(
+            PRBMathSD59x18.div(PRBMathSD59x18.mul(-tokenUnitPrice59x18, SECONDS_PER_YEAR) + timeToMaturity59x18 + SECONDS_PER_YEAR, timeToMaturity59x18),
+            PRBMathSD59x18.div(
+                PRBMathSD59x18.SCALE,
+                SECONDS_PER_YEAR
+            )
+        ) - PRBMathSD59x18.SCALE;
+        */
+        
         // The result is a 59.18 fixed-point number.
         return ratePerSecond59x18;
     }
