@@ -110,31 +110,11 @@ contract ElementFinanceValueProvider is IValueProvider {
             timeRatio59x18
         );
 
-        int256 annualRate59x18 = PRBMathSD59x18.div(
+        int256 ratePerSecond59x18 = PRBMathSD59x18.div(
             PRBMathSD59x18.SCALE - tokenUnitPrice59x18,
-            PRBMathSD59x18.div(
-                timeToMaturity59x18,
-                SECONDS_PER_YEAR
-            )
+            timeToMaturity59x18
         );
 
-        int256 ratePerSecond59x18 = PRBMathSD59x18.pow(
-            PRBMathSD59x18.SCALE + annualRate59x18,
-            PRBMathSD59x18.div(
-                PRBMathSD59x18.SCALE,
-                SECONDS_PER_YEAR
-            )
-        ) - PRBMathSD59x18.SCALE;
-
-        /*int256 ratePerSecond59x18_2 = PRBMathSD59x18.pow(
-            PRBMathSD59x18.div(PRBMathSD59x18.mul(-tokenUnitPrice59x18, SECONDS_PER_YEAR) + timeToMaturity59x18 + SECONDS_PER_YEAR, timeToMaturity59x18),
-            PRBMathSD59x18.div(
-                PRBMathSD59x18.SCALE,
-                SECONDS_PER_YEAR
-            )
-        ) - PRBMathSD59x18.SCALE;
-        */
-        
         // The result is a 59.18 fixed-point number.
         return ratePerSecond59x18;
     }

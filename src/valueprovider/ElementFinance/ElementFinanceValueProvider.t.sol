@@ -22,7 +22,7 @@ contract ElementFinanceValueProviderTest is DSTest {
 
         // Documentation page:
         // https://www.notion.so/fiatdao/FIAT-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
-        // For extra info about the values used check the second example from the documentation above.
+        // For extra info about the values used check the examples from the documentation above.
         mockBalancerVault.givenQueryReturnResponse(
             // Used Parameters are: pool id, underlier address
             abi.encodeWithSelector(
@@ -35,7 +35,7 @@ contract ElementFinanceValueProviderTest is DSTest {
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(
-                    uint256(458783042838683314781124),
+                    uint256(30217616208648),
                     uint256(0),
                     uint256(0),
                     address(0)
@@ -57,7 +57,7 @@ contract ElementFinanceValueProviderTest is DSTest {
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(
-                    uint256(386200838116957287987844),
+                    uint256(19501271312513),
                     uint256(0),
                     uint256(0),
                     address(0)
@@ -80,9 +80,9 @@ contract ElementFinanceValueProviderTest is DSTest {
             // Principal bond decimal format
             6,
             // Timestamp to maturity,
-            1651275535,
+            1643382476,
             // Time scale in seconds
-            1000355378
+            779456714
         );
     }
 
@@ -92,8 +92,8 @@ contract ElementFinanceValueProviderTest is DSTest {
 
     function test_GetValue() public {
         // Computed value based on the parameters that are sent via the mock provider
-        int256 computedExpectedValue = 967415710;
-        hevm.warp(1642067742);
+        int256 computedExpectedValue = 1062059964;
+        hevm.warp(1641026803);
 
         int256 value = efValueProvider.value();
 
