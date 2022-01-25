@@ -7,32 +7,32 @@ import {MockProvider} from "src/test/utils/MockProvider.sol";
 import {Caller} from "src/test/utils/Caller.sol";
 
 import {ICollybus} from "src/relayer/ICollybus.sol";
-import {CollybusDiscountRateRelayer} from "./CollybusDiscountRateRelayer.sol";
+import {CollybusSpotPriceRelayer} from "./CollybusSpotPriceRelayer.sol";
 import {IOracle} from "src/oracle/IOracle.sol";
 import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
 
 contract TestCollybus is ICollybus {
-    mapping(uint256 => uint256) public rateForTokenId;
+    mapping(address => uint256) public spotForTokenAddress;
 
-    function updateDiscountRate(uint256 tokenId, uint256 rate)
+    function updateSpot(address tokenAddress, uint256 spot)
         external
         override(ICollybus)
     {
-        rateForTokenId[tokenId] = rate;
+        spotForTokenAddress[tokenAddress] = spot;
     }
 
-    function updateSpot(address token, uint256 spot)
+    function updateDiscountRate(uint256 tokenId, uint256 rate)
         public
         override(ICollybus)
     {
-        // This should never be called, since this test only updates the discount rate
+        // This should never be called, since this test only updates the spot price
         assert(false);
     }
 }
 
-contract CollybusDiscountRateRelayerTest is DSTest {
+contract CollybusSpotPriceRelayerTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
-    CollybusDiscountRateRelayer internal cdrr;
+    CollybusSpotPriceRelayer internal cdrr;
     TestCollybus internal collybus;
 
     MockProvider internal oracle1;
@@ -41,12 +41,12 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     uint256 internal oracleMaxValidTime = 300;
     int256 internal oracleAlpha = 2 * 10**17; // 0.2
 
-    uint256 internal mockTokenId1 = 1;
-    uint256 internal mockTokenId1MinThreshold = 1;
+    address internal mockToken1Address = address(0x1);
+    uint256 internal mockToken1MinThreshold = 1;
 
     function setUp() public {
         collybus = new TestCollybus();
-        cdrr = new CollybusDiscountRateRelayer(address(collybus));
+        cdrr = new CollybusSpotPriceRelayer(address(collybus));
 
         oracle1 = new MockProvider();
 
@@ -63,8 +63,8 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         // Add oracle with rate id
         cdrr.oracleAdd(
             address(oracle1),
-            mockTokenId1,
-            mockTokenId1MinThreshold
+            mockToken1Address,
+            mockToken1MinThreshold
         );
         hevm.warp(oracleTimeUpdateWindow);
     }
@@ -72,63 +72,53 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     function test_Deploy() public {
         assertTrue(
             address(cdrr) != address(0),
-            "CollybusDiscountRateRelayer should be deployed"
+            "CollybusSpotPriceRelayer should be deployed"
         );
     }
 
-    function test_CheckExistenceOfOracle() public {
-        // Check that oracle was added
-        assertTrue(
-            cdrr.oracleExists(address(oracle1)),
-            "Oracle should be added"
-        );
-    }
-
-    function test_ReturnNumberOfOracles() public {
-        // Check the number of existing oracles
-        assertTrue(
-            cdrr.oracleCount() == 1,
-            "CollybusDiscountRateRelayer should contain 1 oracle"
-        );
-    }
-
-    function test_AddOracle() public {
+    function test_AddOracle_CheckItExistsAndIncreasesOracleCount() public {
         // Create a new address that differs from the oracle already added
         address newOracle = address(0x1);
-        uint256 mockTokenId2 = mockTokenId1 + 1;
+        // Use a new address for token 2
+        address mockToken2Address = address(0x2);
+        uint256 mockToken2MinThreshold = 1;
 
-        // Add the oracle for a new token ID.
-        cdrr.oracleAdd(newOracle, mockTokenId2, mockTokenId1MinThreshold);
+        // Cache oracle count
+        uint256 oracleCount = cdrr.oracleCount();
+
+        // Add the second oracle for a new token address
+        cdrr.oracleAdd(newOracle, mockToken2Address, mockToken2MinThreshold);
 
         // Check that oracle was added
         assertTrue(cdrr.oracleExists(newOracle), "Oracle should be added");
 
         // Check the number of existing oracles
         assertTrue(
-            cdrr.oracleCount() == 2,
-            "CollybusDiscountRateRelayer should contain 2 oracles"
+            cdrr.oracleCount() == oracleCount + 1,
+            "CollybusSpotPriceRelayer should contain an additional oracle"
         );
     }
 
     function testFail_AddOracle_ShouldNotAllowDuplicateOracles() public {
-        // Attempt to add the same oracle again but use a different token id.
-        uint256 mockTokenId2 = mockTokenId1 + 1;
+        // Attempt to add the same oracle again but use a different token address
+        address mockToken2Address = address(0x2);
+        uint256 mockToken2MinThreshold = 1;
 
         cdrr.oracleAdd(
             address(oracle1),
-            mockTokenId2,
-            mockTokenId1MinThreshold
+            mockToken2Address,
+            mockToken2MinThreshold
         );
     }
 
-    function testFail_AddOracle_ShouldNotAllowDuplicateTokenIds() public {
-        // We can use any address, the oracle will not be interrogated on add.
+    function testFail_AddOracle_ShouldNotAllowDuplicateTokenAddress() public {
+        // Create a new address that differs from the oracle already added
         address newOracle = address(0x1);
-        // Add a new oracle that has the same token id as the previously added oracle.
+        // Add a new oracle that has the same token id as the previously added oracle
         cdrr.oracleAdd(
             address(newOracle),
-            mockTokenId1,
-            mockTokenId1MinThreshold
+            mockToken1Address,
+            mockToken1MinThreshold
         );
     }
 
@@ -136,16 +126,18 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         Caller user = new Caller();
 
         address newOracle = address(0x1);
-        uint256 mockTokenId2 = mockTokenId1 + 1;
-        uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
+        // Use a new address for token 2
+        address mockToken2Address = address(0x2);
+        uint256 mockToken2MinThreshold = 1;
+
         // Add the oracle
         (bool ok, ) = user.externalCall(
             address(cdrr),
             abi.encodeWithSelector(
                 cdrr.oracleAdd.selector,
                 newOracle,
-                mockTokenId2,
-                mockTokenId2MinThreshold
+                mockToken2Address,
+                mockToken2MinThreshold
             )
         );
         assertTrue(
@@ -161,14 +153,14 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         // Oracle should not exist
         assertTrue(
             cdrr.oracleExists(address(oracle1)) == false,
-            "CollybusDiscountRateRelayer oracle should be deleted"
+            "CollybusSpotPriceRelayer oracle should be deleted"
         );
     }
 
     function testFail_RemoveOracle_ShouldFailIfOracleDoesNotExist() public {
         address newOracle = address(0x1);
 
-        // Attempt to remove oracle that does not exist.
+        // Attempt to remove oracle that does not exist
         cdrr.oracleRemove(newOracle);
     }
 
@@ -203,18 +195,20 @@ contract CollybusDiscountRateRelayerTest is DSTest {
             false
         );
 
-        uint256 mockTokenId2 = mockTokenId1 + 1;
-        uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
+        // Use a new address for token 2
+        address mockToken2Address = address(0x2);
+        uint256 mockToken2MinThreshold = 1;
+
         // Add oracle with rate id
         cdrr.oracleAdd(
             address(oracle2),
-            mockTokenId2,
-            mockTokenId2MinThreshold
+            mockToken2Address,
+            mockToken2MinThreshold
         );
         hevm.warp(oracleTimeUpdateWindow);
 
         // Check will search for at least one updatable oracle, which in our case is the first one in the list
-        // therefore, the first oracle will be updated but the second will not
+        // therefore, the first oracle will be updated but the second will not.
         cdrr.check();
 
         // Update should be the first called function
@@ -248,17 +242,18 @@ contract CollybusDiscountRateRelayerTest is DSTest {
             false
         );
 
-        uint256 mockTokenId2 = mockTokenId1 + 1;
-        uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
-        // Add oracle with rate id
+        // Use a new address for token 2
+        address mockToken2Address = address(0x2);
+        uint256 mockToken2MinThreshold = 1;
+
         cdrr.oracleAdd(
             address(oracle2),
-            mockTokenId2,
-            mockTokenId2MinThreshold
+            mockToken2Address,
+            mockToken2MinThreshold
         );
         hevm.warp(oracleTimeUpdateWindow);
 
-        // Execute must call update on all oracles before pushing the values to Collybus
+        // Execute must call update on all oracles before pushing the values to Collybus.
         cdrr.check();
         cdrr.execute();
 
@@ -283,28 +278,31 @@ contract CollybusDiscountRateRelayerTest is DSTest {
             false
         );
 
-        uint256 mockTokenId2 = mockTokenId1 + 1;
-        uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
-        // Add oracle with rate id.
+        // Use a new address for token 2
+        address mockToken2Address = address(0x2);
+        uint256 mockToken2MinThreshold = 1;
+
         cdrr.oracleAdd(
             address(oracle2),
-            mockTokenId2,
-            mockTokenId2MinThreshold
+            mockToken2Address,
+            mockToken2MinThreshold
         );
         hevm.warp(oracleTimeUpdateWindow);
 
-        // Execute must call update on all oracles before pushing the values to Collybus
-        // Check should trigger an update because the value delta is bigger than the minimum for both oracles
+        // Execute must call update on all oracles before pushing the values to Collybus.
+        // Check should trigger an update because the value delta is bigger than the minimum for both oracles.
         bool mustUpdate = cdrr.check();
         assertTrue(mustUpdate);
 
         cdrr.execute();
 
         assertTrue(
-            collybus.rateForTokenId(mockTokenId1) == uint256(100 * 10**18)
+            collybus.spotForTokenAddress(mockToken1Address) ==
+                uint256(100 * 10**18)
         );
         assertTrue(
-            collybus.rateForTokenId(mockTokenId2) == uint256(10 * 10**18)
+            collybus.spotForTokenAddress(mockToken2Address) ==
+                uint256(10 * 10**18)
         );
     }
 
@@ -324,23 +322,24 @@ contract CollybusDiscountRateRelayerTest is DSTest {
             false
         );
 
-        uint256 mockTokenId2 = mockTokenId1 + 1;
-        uint256 mockTokenId2MinThreshold = 1 * 10**18;
+        // New address for token 2
+        address mockToken2Address = address(0x2);
+        uint256 mockToken2MinThreshold = 1 * 10**18;
         // Add oracle with rate id
         cdrr.oracleAdd(
             address(oracle2),
-            mockTokenId2,
-            mockTokenId2MinThreshold
+            mockToken2Address,
+            mockToken2MinThreshold
         );
         hevm.warp(oracleTimeUpdateWindow);
 
-        // Execute must call update on all oracles before pushing the values to Collybus
+        // Execute must call update on all oracles before pushing the values to Collybus.
         cdrr.check();
         cdrr.execute();
 
         // Make the second value returned by the oracle to be just lower than the minimum threshold
         int256 oracle2NewValue = oracle2InitialValue +
-            int256(mockTokenId2MinThreshold) -
+            int256(mockToken2MinThreshold) -
             1;
 
         oracle2.givenQueryReturnResponse(
@@ -356,9 +355,9 @@ contract CollybusDiscountRateRelayerTest is DSTest {
 
         cdrr.execute();
 
-        // The rate will NOT be updated because the delta is smaller than the threshold
+        // The rate will NOT be updated because the delta is smaller than the threshold.
         assertTrue(
-            collybus.rateForTokenId(mockTokenId2) ==
+            collybus.spotForTokenAddress(mockToken2Address) ==
                 uint256(oracle2InitialValue)
         );
     }
