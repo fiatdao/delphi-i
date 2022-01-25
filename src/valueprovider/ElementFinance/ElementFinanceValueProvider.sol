@@ -72,7 +72,7 @@ contract ElementFinanceValueProvider is IValueProvider {
         );
 
         // Convert to 18 digits precision
-        underlierBalance = uconvert(underlierBalance , _underlierDecimals, 18);
+        underlierBalance = uconvert(underlierBalance, _underlierDecimals, 18);
 
         // Retrieve the principal token from the balancer vault.
         (uint256 ePTokenBalance, , , ) = _balancerVault.getPoolTokenInfo(
@@ -81,7 +81,7 @@ contract ElementFinanceValueProvider is IValueProvider {
         );
 
         // Convert to 18 digits precision
-        ePTokenBalance = uconvert(ePTokenBalance , _ePTokenBondDecimals, 18);
+        ePTokenBalance = uconvert(ePTokenBalance, _ePTokenBondDecimals, 18);
 
         // Check the block time against the maturity date and revert if we're past the maturity date.
         if (block.timestamp >= _timeToMaturity) {

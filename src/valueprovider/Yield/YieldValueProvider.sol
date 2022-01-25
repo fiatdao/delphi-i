@@ -46,7 +46,7 @@ contract YieldValueProvider is IValueProvider {
             tokenToReserveRatio59x18,
             ts59x18
         ) - PRBMathSD59x18.SCALE);
-        
+
         // The result is a 59.18 fixed-point number.
         return ratePerSecond;
     }

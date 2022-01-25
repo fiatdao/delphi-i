@@ -10,15 +10,23 @@ uint256 constant RAD = 10**18;
 
 /* solhint-disable func-visibility, no-inline-assembly */
 
-function convert(int256 x, uint256 currentPrecision, uint256 targetPrecision) pure returns (int256 z){
-    if(targetPrecision > currentPrecision)
+function convert(
+    int256 x,
+    uint256 currentPrecision,
+    uint256 targetPrecision
+) pure returns (int256 z) {
+    if (targetPrecision > currentPrecision)
         return x * int256(10**(targetPrecision - currentPrecision));
 
     return x / int256(10**(currentPrecision - targetPrecision));
 }
 
-function uconvert(uint256 x, uint256 currentPrecision, uint256 targetPrecision) pure returns (uint256 z){
-    if(targetPrecision > currentPrecision)
+function uconvert(
+    uint256 x,
+    uint256 currentPrecision,
+    uint256 targetPrecision
+) pure returns (uint256 z) {
+    if (targetPrecision > currentPrecision)
         return x * 10**(targetPrecision - currentPrecision);
 
     return x / 10**(currentPrecision - targetPrecision);
@@ -48,7 +56,8 @@ error Math__diff_overflow(uint256 x, uint256 y);
 function diff(uint256 x, uint256 y) pure returns (int256 z) {
     unchecked {
         z = int256(x) - int256(y);
-        if (!(int256(x) >= 0 && int256(y) >= 0)) revert Math__diff_overflow(x, y);
+        if (!(int256(x) >= 0 && int256(y) >= 0))
+            revert Math__diff_overflow(x, y);
     }
 }
 
@@ -110,7 +119,8 @@ function mul(uint256 x, int256 y) pure returns (int256 z) {
     unchecked {
         z = int256(x) * y;
         if (int256(x) < 0) revert Math__mul_overflow_signed(x, y);
-        if (!(y == 0 || z / y == int256(x))) revert Math__mul_overflow_signed(x, y);
+        if (!(y == 0 || z / y == int256(x)))
+            revert Math__mul_overflow_signed(x, y);
     }
 }
 
@@ -174,7 +184,10 @@ function wpow(
                         x := div(xxRound, b)
                         if mod(n, 2) {
                             let zx := mul(z, x)
-                            if and(iszero(iszero(x)), iszero(eq(div(zx, x), z))) {
+                            if and(
+                                iszero(iszero(x)),
+                                iszero(eq(div(zx, x), z))
+                            ) {
                                 revert(0, 0)
                             }
                             let zxRound := add(zx, half)

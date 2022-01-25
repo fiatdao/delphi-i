@@ -12,11 +12,11 @@ contract NotionalFinanceValueProvider is IValueProvider {
     int256 internal constant SECONDS_PER_YEAR = 31557600;
 
     INotionalView private immutable _notionalView;
-    uint16 private immutable        _currencyID;
-    uint256 private immutable       _maturityDate;
-    uint256 private immutable       _settlementDate;
+    uint16 private immutable _currencyID;
+    uint256 private immutable _maturityDate;
+    uint256 private immutable _settlementDate;
 
-    uint256 private immutable       _lastImpliedRateDecimals;
+    uint256 private immutable _lastImpliedRateDecimals;
 
     /// @notice                         Constructs the Value provider contracts with the needed Notional contract data in order to
     ///                                 calculate the annual rate.
@@ -53,7 +53,11 @@ contract NotionalFinanceValueProvider is IValueProvider {
         );
 
         // Convert rate per anum to 18 digits precision.
-        uint256 ratePerAnnum = uconvert(marketParams.lastImpliedRate,_lastImpliedRateDecimals,18);
+        uint256 ratePerAnnum = uconvert(
+            marketParams.lastImpliedRate,
+            _lastImpliedRateDecimals,
+            18
+        );
 
         // Apply rate per second conversion formula
         int256 ratePerSecondD59x18 = PRBMathSD59x18.pow(

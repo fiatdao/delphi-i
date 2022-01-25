@@ -16,8 +16,8 @@ contract ChainLinkValueProvider is IValueProvider {
         _chainlinkAggregator = IChainlinkAggregatorV3Interface(
             chainlinkAggregatorAddress_
         );
-        
-        _underlierDecimals =  uint256(_chainlinkAggregator.decimals());
+
+        _underlierDecimals = uint256(_chainlinkAggregator.decimals());
     }
 
     /// @notice Retrieves the price from the chainlink aggregator
@@ -26,7 +26,7 @@ contract ChainLinkValueProvider is IValueProvider {
         // The returned annual rate is in 1e9 precision so we need to convert it to 1e18 precision.
         (, int256 answer, , , ) = _chainlinkAggregator.latestRoundData();
 
-        return convert(answer,_underlierDecimals,18);
+        return convert(answer, _underlierDecimals, 18);
     }
 
     /// @notice returns the description of the chainlink aggregator the proxy points to.
