@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "src/utils/Math.sol";
+import "src/valueprovider/utils/Convert.sol";
 import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
 import {IChainlinkAggregatorV3Interface} from "src/valueprovider/SpotPrice/ChainlinkAggregatorV3Interface.sol";
 
-contract ChainLinkValueProvider is IValueProvider {
+contract ChainLinkValueProvider is IValueProvider, Convert {
     uint256 private immutable _underlierDecimals;
     address private _underlierAddress;
     IChainlinkAggregatorV3Interface private _chainlinkAggregator;
