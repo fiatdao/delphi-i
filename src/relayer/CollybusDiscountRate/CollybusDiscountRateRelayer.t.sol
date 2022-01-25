@@ -88,7 +88,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         // Check the number of existing oracles
         assertTrue(
             cdrr.oracleCount() == 1,
-            "CollybusDiscountRateRelayer should contain 1 oracle."
+            "CollybusDiscountRateRelayer should contain 1 oracle"
         );
     }
 
@@ -106,7 +106,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         // Check the number of existing oracles
         assertTrue(
             cdrr.oracleCount() == 2,
-            "CollybusDiscountRateRelayer should contain 2 oracles."
+            "CollybusDiscountRateRelayer should contain 2 oracles"
         );
     }
 
@@ -161,7 +161,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         // Oracle should not exist
         assertTrue(
             cdrr.oracleExists(address(oracle1)) == false,
-            "CollybusDiscountRateRelayer should be empty"
+            "CollybusDiscountRateRelayer oracle should be deleted"
         );
     }
 
@@ -214,7 +214,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         hevm.warp(oracleTimeUpdateWindow);
 
         // Check will search for at least one updatable oracle, which in our case is the first one in the list
-        // therefore, the first oracle will be updated but the second will not.
+        // therefore, the first oracle will be updated but the second will not
         cdrr.check();
 
         // Update should be the first called function
@@ -258,7 +258,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         );
         hevm.warp(oracleTimeUpdateWindow);
 
-        // Execute must call update on all oracles before pushing the values to Collybus.
+        // Execute must call update on all oracles before pushing the values to Collybus
         cdrr.check();
         cdrr.execute();
 
@@ -293,8 +293,8 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         );
         hevm.warp(oracleTimeUpdateWindow);
 
-        // Execute must call update on all oracles before pushing the values to Collybus.
-        // Check should trigger an update because the value delta is bigger than the minimum for both oracles.
+        // Execute must call update on all oracles before pushing the values to Collybus
+        // Check should trigger an update because the value delta is bigger than the minimum for both oracles
         bool mustUpdate = cdrr.check();
         assertTrue(mustUpdate);
 
@@ -334,7 +334,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         );
         hevm.warp(oracleTimeUpdateWindow);
 
-        // Execute must call update on all oracles before pushing the values to Collybus.
+        // Execute must call update on all oracles before pushing the values to Collybus
         cdrr.check();
         cdrr.execute();
 
@@ -356,7 +356,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
 
         cdrr.execute();
 
-        // The rate will NOT be updated because the delta is smaller than the threshold.
+        // The rate will NOT be updated because the delta is smaller than the threshold
         assertTrue(
             collybus.rateForTokenId(mockTokenId2) ==
                 uint256(oracle2InitialValue)

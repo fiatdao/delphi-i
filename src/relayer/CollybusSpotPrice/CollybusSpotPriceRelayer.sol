@@ -146,7 +146,7 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
     }
 
     /// @notice Iterates and updates each oracle until it finds one that should push data
-    ///         in the Collybus, more exactly, the delta change in value is bigger than the minimum
+    ///         in the Collybus, more exactly, the delta change in value is greater than the minimum
     ///         threshold value set for that oracle.
     /// @dev    Oracles that return invalid values are skipped.
     /// @return Returns 'true' if at least one oracle should update data in the Collybus
@@ -174,7 +174,7 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
     }
 
     /// @notice Iterates and updates all the oracles and pushes the updated data to Collybus for the
-    ///         oracles that have delta changes in value bigger than the minimum threshold values.
+    ///         oracles that have delta changes in value greater than the minimum threshold values.
     /// @dev    Oracles that return invalid values are skipped.
     function execute() public override(IRelayer) {
         // Update Collybus all tokenIds with the new discount rate
@@ -188,7 +188,7 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
 
             OracleData storage oracleData = _oracles[_oracleList[i]];
 
-            // If the change in delta rate from the last update is bigger or equal than the threshold value
+            // If the change in delta rate from the last update is greater or equal than the threshold value
             // push the rates to Collybus
             if (
                 absDelta(oracleData.lastUpdateValue, rate) >=

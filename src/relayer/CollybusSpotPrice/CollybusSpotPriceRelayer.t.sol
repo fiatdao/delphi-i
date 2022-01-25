@@ -76,12 +76,15 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         );
     }
 
-    function test_AddOracle() public {
+    function test_AddOracle_CheckItExistsAndIncreasesOracleCount() public {
         // Create a new address that differs from the oracle already added
         address newOracle = address(0x1);
         // Use a new address for token 2
         address mockToken2Address = address(0x2);
         uint256 mockToken2MinThreshold = 1;
+
+        // Cache oracle count
+        uint256 oracleCount = cdrr.oracleCount();
 
         // Add the second oracle for a new token address
         cdrr.oracleAdd(newOracle, mockToken2Address, mockToken2MinThreshold);
@@ -91,8 +94,8 @@ contract CollybusSpotPriceRelayerTest is DSTest {
 
         // Check the number of existing oracles
         assertTrue(
-            cdrr.oracleCount() == 2,
-            "CollybusSpotPriceRelayer should contain 2 oracles."
+            cdrr.oracleCount() == oracleCount + 1,
+            "CollybusSpotPriceRelayer should contain an additional oracle"
         );
     }
 
@@ -111,7 +114,7 @@ contract CollybusSpotPriceRelayerTest is DSTest {
     function testFail_AddOracle_ShouldNotAllowDuplicateTokenAddress() public {
         // Create a new address that differs from the oracle already added
         address newOracle = address(0x1);
-        // Add a new oracle that has the same token id as the previously added oracle.
+        // Add a new oracle that has the same token id as the previously added oracle
         cdrr.oracleAdd(
             address(newOracle),
             mockToken1Address,
@@ -150,14 +153,14 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         // Oracle should not exist
         assertTrue(
             cdrr.oracleExists(address(oracle1)) == false,
-            "CollybusSpotPriceRelayer should be empty"
+            "CollybusSpotPriceRelayer oracle should be deleted"
         );
     }
 
     function testFail_RemoveOracle_ShouldFailIfOracleDoesNotExist() public {
         address newOracle = address(0x1);
 
-        // Attempt to remove oracle that does not exist.
+        // Attempt to remove oracle that does not exist
         cdrr.oracleRemove(newOracle);
     }
 
