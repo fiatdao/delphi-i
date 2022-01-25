@@ -4,12 +4,12 @@ pragma solidity ^0.8.0;
 import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
 import {INotionalView, MarketParameters} from "src/valueprovider/NotionalFinance/INotionalView.sol";
 
-import "src/utils/Math.sol";
+import {Convert} from "src/valueprovider/utils/Convert.sol";
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
-contract NotionalFinanceValueProvider is IValueProvider {
+contract NotionalFinanceValueProvider is IValueProvider, Convert {
     //Julien year, 365.25 days
-    int256 internal constant SECONDS_PER_YEAR = 31557600;
+    int256 internal constant SECONDS_PER_YEAR = 31557600 * 1e18;
 
     INotionalView private immutable _notionalView;
     uint16 private immutable _currencyID;
@@ -60,13 +60,10 @@ contract NotionalFinanceValueProvider is IValueProvider {
         );
 
         // Apply rate per second conversion formula
-        int256 ratePerSecondD59x18 = PRBMathSD59x18.pow(
-            PRBMathSD59x18.SCALE + int256(ratePerAnnum),
-            PRBMathSD59x18.div(
-                PRBMathSD59x18.SCALE,
-                PRBMathSD59x18.fromInt(SECONDS_PER_YEAR)
-            )
-        ) - PRBMathSD59x18.SCALE;
+        int256 ratePerSecondD59x18 = PRBMathSD59x18.div(
+            int256(ratePerAnnum),
+            SECONDS_PER_YEAR
+        );
 
         // The result is a 59.18 fixed-point number.
         return ratePerSecondD59x18;

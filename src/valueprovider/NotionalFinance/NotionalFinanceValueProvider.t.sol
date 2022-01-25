@@ -66,7 +66,7 @@ contract NotionalFinanceValueProviderTest is DSTest {
 
     function test_GetValue() public {
         // Expected value is the lastImpliedRate(1e9 precision) in 1e18 precision
-        int256 expectedValue = 2692642201;
+        int256 expectedValue = 2810353955;
 
         // Computed value based on the parameters that are sent via the mock provider
         int256 value = notionalVP.value();

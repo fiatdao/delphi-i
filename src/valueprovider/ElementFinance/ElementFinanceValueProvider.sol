@@ -5,7 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
 import {IVault} from "src/valueprovider/ElementFinance/IVault.sol";
 
-import "src/utils/Math.sol";
+import {Convert} from "src/valueprovider/utils/Convert.sol";
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
 // @notice Emitted when trying to add an oracle that already exists
@@ -13,11 +13,10 @@ error ElementFinanceValueProvider__value_timeToMaturityLessThanBlockchainTime(
     uint256 timeToMaturity
 );
 
-contract ElementFinanceValueProvider is IValueProvider {
+contract ElementFinanceValueProvider is IValueProvider, Convert {
     int256 private constant SECONDS_PER_YEAR = 31557600 * 1e18;
 
     IVault private immutable _balancerVault;
-
     bytes32 private immutable _poolId;
     address private immutable _underlier;
     uint256 private immutable _underlierDecimals;
