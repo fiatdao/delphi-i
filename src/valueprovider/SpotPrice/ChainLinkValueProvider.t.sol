@@ -20,7 +20,7 @@ contract ChainLinkValueProviderTest is DSTest {
     function setUp() public {
         mockChainlinkAggregator = new MockProvider();
 
-        // Values take from https://etherscan.io/address/0x8fffffd4afb6115b954bd326cbe7b4ba576818f6
+        // Values taken from https://etherscan.io/address/0x8fffffd4afb6115b954bd326cbe7b4ba576818f6
         // At block: 14041337
         mockChainlinkAggregator.givenQueryReturnResponse(
             abi.encodeWithSelector(
@@ -107,5 +107,13 @@ contract ChainLinkValueProviderTest is DSTest {
             keccak256(abi.encodePacked(desc)) ==
                 keccak256(abi.encodePacked(expectedDescription))
         );
+    }
+
+    function test_check_underlierDecimalsConversion() public {
+        assertEq(chainlinkVP.underlierDecimalsConversion(), 1e10);
+    }
+
+    function test_check_chainlinkAggregator() public {
+        assertEq(chainlinkVP.chainlinkAggregator(), address(mockChainlinkAggregator));
     }
 }
