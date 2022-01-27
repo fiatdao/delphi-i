@@ -8,7 +8,7 @@ import {IVault} from "src/valueprovider/ElementFinance/IVault.sol";
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
 // @notice Emitted when trying to add an oracle that already exists
-error ElementFinanceValueProvider__valuetimeToMaturityLessThanBlockchainTime(
+error ElementFinanceValueProvider__value_timeToMaturityLessThanBlockchainTime(
     uint256 timeToMaturity
 );
 
