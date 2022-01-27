@@ -44,7 +44,7 @@ const { parseEther: toWei, formatBytes32String: toBytes32 } = ethers.utils;
     // Collybus goerli deployment: 0xa63FA19ec499F7755581Ff30E138767A856B3312
     const relayer = await deployContract('DiscountRateRelayer',
         await getContractFactory('src/relayer/CollybusDiscountRate/CollybusDiscountRateRelayer.sol', 'CollybusDiscountRateRelayer', deployer),
-        "0xa63FA19ec499F7755581Ff30E138767A856B3312"
+        "0x5438Fd8541135676e990295C1cd62EF779b05Ebb"
     );
 
     var oracleCount = await elementAggregator.oracleCount();
