@@ -7,6 +7,7 @@ import {Guarded} from "src/guarded/Guarded.sol";
 import {Pausable} from "src/pausable/Pausable.sol";
 
 import {IOracle} from "src/oracle/IOracle.sol";
+import {IAggregatorOracle} from "src/aggregator/IAggregatorOracle.sol";
 
 // @notice Emitted when trying to add an oracle that already exists
 error AggregatorOracle__addOracle_oracleAlreadyRegistered(address oracle);
@@ -32,7 +33,7 @@ error AggregatorOracle__setParam_requiredValidValues_higherThan_oracleCount(
 // @notice Emitted when trying to set a parameter that does not exist
 error AggregatorOracle__setParam_unrecognizedParam(bytes32 param);
 
-contract AggregatorOracle is Guarded, Pausable, IOracle {
+contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     /// ======== Events ======== ///
@@ -61,18 +62,44 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
     uint256 private _aggregatedValidValues;
 
     /// @notice Returns the number of oracles
-    function oracleCount() public view returns (uint256) {
+    function oracleCount()
+        public
+        view
+        override(IAggregatorOracle)
+        returns (uint256)
+    {
         return _oracles.length();
     }
 
     /// @notice Returns `true` if the oracle is registered
-    function oracleExists(address oracle) public view returns (bool) {
+    function oracleExists(address oracle)
+        public
+        view
+        override(IAggregatorOracle)
+        returns (bool)
+    {
         return _oracles.contains(oracle);
+    }
+
+    /// @notice         Returns the address of an oracle at index
+    /// @param index_   The internal index of the oracle
+    /// @return         Returns the address pf the oracle
+    function oracleAt(uint256 index_)
+        external
+        view
+        override(IAggregatorOracle)
+        returns (address)
+    {
+        return _oracles.at(index_);
     }
 
     /// @notice Adds an oracle to the list of oracles
     /// @dev Reverts if the oracle is already registered
-    function oracleAdd(address oracle) public checkCaller {
+    function oracleAdd(address oracle)
+        public
+        override(IAggregatorOracle)
+        checkCaller
+    {
         bool added = _oracles.add(oracle);
         if (added == false) {
             revert AggregatorOracle__addOracle_oracleAlreadyRegistered(oracle);
@@ -84,7 +111,11 @@ contract AggregatorOracle is Guarded, Pausable, IOracle {
     /// @notice Removes an oracle from the list of oracles
     /// @dev Reverts if removing the oracle would break the minimum required valid values
     /// @dev Reverts if removing the oracle is not registered
-    function oracleRemove(address oracle) public checkCaller {
+    function oracleRemove(address oracle)
+        public
+        override(IAggregatorOracle)
+        checkCaller
+    {
         uint256 localOracleCount = oracleCount();
 
         // Make sure the minimum number of required valid values is not higher than the oracle count

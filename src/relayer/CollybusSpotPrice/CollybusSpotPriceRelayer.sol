@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+import {ICollybusSpotPriceRelayer} from "src/relayer/CollybusSpotPrice/ICollybusSpotPriceReplayer.sol";
 import {IRelayer} from "src/relayer/IRelayer.sol";
 import {IOracle} from "src/oracle/IOracle.sol";
 import {ICollybus} from "src/relayer/ICollybus.sol";
@@ -22,7 +23,7 @@ error CollybusSpotPriceRelayer__removeOracle_oracleNotRegistered(
     address oracle
 );
 
-contract CollybusSpotPriceRelayer is Guarded, IRelayer {
+contract CollybusSpotPriceRelayer is Guarded, ICollybusSpotPriceRelayer {
     struct OracleData {
         bool exists;
         address tokenAddress;
@@ -40,7 +41,7 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
 
     /// ======== Storage ======== ///
 
-    ICollybus private _collybus;
+    ICollybus public collybus;
 
     // Mapping that will hold all the oracle params needed by the contract
     mapping(address => OracleData) private _oracles;
@@ -52,12 +53,17 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
     address[] private _oracleList;
 
     constructor(address collybusAddress_) {
-        _collybus = ICollybus(collybusAddress_);
+        collybus = ICollybus(collybusAddress_);
     }
 
     /// @notice Returns the number of registered oracles.
     /// @return the total number of oracles.
-    function oracleCount() public view returns (uint256) {
+    function oracleCount()
+        public
+        view
+        override(ICollybusSpotPriceRelayer)
+        returns (uint256)
+    {
         return _oracleList.length;
     }
 
@@ -71,7 +77,7 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
         address oracle_,
         address tokenAddress_,
         uint256 minimumThresholdValue_
-    ) public checkCaller {
+    ) public override(ICollybusSpotPriceRelayer) checkCaller {
         // Make sure the oracle was not added previously
         if (oracleExists(oracle_)) {
             revert CollybusSpotPriceRelayer__addOracle_oracleAlreadyRegistered(
@@ -107,7 +113,11 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
     /// @notice         Unregisters an oracle.
     /// @param oracle_  The address of the oracle.
     /// @dev            Reverts if the oracle is not registered
-    function oracleRemove(address oracle_) public checkCaller {
+    function oracleRemove(address oracle_)
+        public
+        override(ICollybusSpotPriceRelayer)
+        checkCaller
+    {
         // Make sure the oracle is registered
         if (!oracleExists(oracle_)) {
             revert CollybusSpotPriceRelayer__removeOracle_oracleNotRegistered(
@@ -141,8 +151,26 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
     /// @notice         Checks whether an oracle is registered.
     /// @param oracle_  The address of the oracle.
     /// @return         Returns 'true' if the oracle is registered.
-    function oracleExists(address oracle_) public view returns (bool) {
+    function oracleExists(address oracle_)
+        public
+        view
+        override(ICollybusSpotPriceRelayer)
+        returns (bool)
+    {
         return _oracles[oracle_].exists;
+    }
+
+    /// @notice         Returns the address of an oracle at index
+    /// @param index_   The internal index of the oracle
+    /// @return         Returns the address pf the oracle
+    function oracleAt(uint256 index_)
+        external
+        view
+        override(ICollybusSpotPriceRelayer)
+        returns (address)
+    {
+        // todo:Revert on out of bounds
+        return _oracleList[index_];
     }
 
     /// @notice Iterates and updates each oracle until it finds one that should push data
@@ -196,7 +224,7 @@ contract CollybusSpotPriceRelayer is Guarded, IRelayer {
             ) {
                 oracleData.lastUpdateValue = rate;
 
-                _collybus.updateSpot(oracleData.tokenAddress, uint256(rate));
+                collybus.updateSpot(oracleData.tokenAddress, uint256(rate));
 
                 emit UpdatedCollybus(oracleData.tokenAddress, uint256(rate));
             }

@@ -1,14 +1,64 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
+pragma experimental ABIEncoderV2;
 
+import {IOracle} from "src/oracle/IOracle.sol";
 import {Oracle} from "src/oracle/Oracle.sol";
 import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
+import {IAggregatorOracle} from "src/aggregator/IAggregatorOracle.sol";
 
 // Value providers
 import {ElementFinanceValueProvider} from "src/valueprovider/ElementFinance/ElementFinanceValueProvider.sol";
+import {NotionalFinanceValueProvider} from "src/valueprovider/NotionalFinance/NotionalFinanceValueProvider.sol";
 
 // Relayers
 import {CollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/CollybusDiscountRateRelayer.sol";
+import {CollybusSpotPriceRelayer} from "src/relayer/CollybusSpotPrice/CollybusSpotPriceRelayer.sol";
+
+struct OracleData {
+    address aggregatorAddress;
+    uint256 timeWindow;
+    uint256 maxValidTime;
+    int256 alpha;
+}
+
+struct ElementVPData {
+    bytes32 poolId;
+    address balancerVault;
+    address underlier;
+    address ePTokenBond;
+    uint256 timeToMaturity;
+    uint256 unitSeconds;
+}
+
+struct NotionalVPData {
+    address notionalViewAddress;
+    uint16 currencyID;
+    uint256 maturity;
+    uint256 settlementDate;
+}
+
+struct ElementData {
+    ElementVPData vpData;
+    OracleData oracleData;
+}
+
+struct NotionalData {
+    NotionalVPData notionalData;
+    OracleData oracleData;
+}
+
+struct AggregatorData {
+    uint256 tokenId;
+    bytes[] oracleData;
+    address relayerAddress;
+}
+
+struct DiscountRateDeployData {
+    bytes[] notionalData;
+    bytes[] elementData;
+    address discountRateRelayerAddress;
+}
 
 contract Factory {
     function deployOracle(
@@ -64,42 +114,46 @@ contract Factory {
         return address(elementFinanceValueProvider);
     }
 
-    function deployCollybusDiscountRateRelayer(address collybus_) public returns (address) {
-        CollybusDiscountRateRelayer collybusDiscountRateRelayer = new CollybusDiscountRateRelayer(collybus_);
-        return address(collybusDiscountRateRelayer);
+    function deployNotionalFinanceProvider(
+        address notionalViewAddress_,
+        uint16 currencyId_,
+        uint256 maturityDate_,
+        uint256 settlementDate_
+    ) public returns (address) {
+        NotionalFinanceValueProvider notionalFinanceValueProvider = new NotionalFinanceValueProvider(
+                notionalViewAddress_,
+                currencyId_,
+                maturityDate_,
+                settlementDate_
+            );
+
+        return address(notionalFinanceValueProvider);
     }
 
-    // function deployAggregatorForElement(
-    //     // ElementFinance arguments
-    //     bytes32 poolId_,
-    //     address balancerVault_,
-    //     address underlier_,
-    //     address ePTokenBond_,
-    //     uint256 timeToMaturity_,
-    //     uint256 unitSeconds_
-    // )
-    //     public
-    //     returns (
-    //         // Oracle
-    //         address
-    //     )
-    // {
-    //     // Create the ElementFinanceValueProvider
-    //     ElementFinanceValueProvider elementFinanceValueProvider = new ElementFinanceValueProvider(
-    //             poolId_,
-    //             balancerVault_,
-    //             underlier_,
-    //             ePTokenBond_,
-    //             timeToMaturity_,
-    //             unitSeconds_
-    //         );
+    function deployCollybusDiscountRateRelayer(address collybus_)
+        public
+        returns (address)
+    {
+        CollybusDiscountRateRelayer discountRateRelayer = new CollybusDiscountRateRelayer(
+                collybus_
+            );
+        return address(discountRateRelayer);
+    }
 
-    //     // Create the oracle
-    //     Oracle oracle = new Oracle(
-    //         address(elementFinanceValueProvider),
-    //         uint256(86400),
-    //         uint256(86400),
-    //         int256(0)
-    //     );
-    // }
+    function deployCollybusSpotPriceRelayer(address collybus_)
+        public
+        returns (address)
+    {
+        CollybusSpotPriceRelayer spotPriceRelayer = new CollybusSpotPriceRelayer(
+                collybus_
+            );
+        return address(spotPriceRelayer);
+    }
+
+    function deployDiscountRate(DiscountRateDeployData memory deployData)
+        public
+        returns (address)
+    {
+        return address(0);
+    }
 }

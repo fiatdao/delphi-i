@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {IRelayer} from "src/relayer/IRelayer.sol";
 import {IOracle} from "src/oracle/IOracle.sol";
 import {ICollybus} from "src/relayer/ICollybus.sol";
+import {ICollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/ICollybusDiscountRate.sol";
 import {Guarded} from "src/guarded/Guarded.sol";
 
 // @notice Emitted when trying to add an oracle that already exists
@@ -22,7 +23,7 @@ error CollybusDiscountRateRelayer__removeOracle_oracleNotRegistered(
     address oracle
 );
 
-contract CollybusDiscountRateRelayer is Guarded, IRelayer {
+contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
     struct OracleData {
         bool exists;
         uint256 tokenId;
@@ -40,7 +41,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
 
     /// ======== Storage ======== ///
 
-    ICollybus private _collybus;
+    ICollybus public collybus;
 
     // Mapping that will hold all the oracle params needed by the contract
     mapping(address => OracleData) private _oracles;
@@ -57,7 +58,12 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
 
     /// @notice Returns the number of registered oracles.
     /// @return the total number of oracles.
-    function oracleCount() public view returns (uint256) {
+    function oracleCount()
+        public
+        view
+        override(ICollybusDiscountRateRelayer)
+        returns (uint256)
+    {
         return _oracleList.length;
     }
 
@@ -71,7 +77,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
         address oracle_,
         uint256 tokenId_,
         uint256 minimumThresholdValue_
-    ) public checkCaller {
+    ) public override(ICollybusDiscountRateRelayer) checkCaller {
         // Make sure the oracle was not added previously
         if (oracleExists(oracle_)) {
             revert CollybusDiscountRateRelayer__addOracle_oracleAlreadyRegistered(
@@ -107,7 +113,11 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
     /// @notice         Unregisters an oracle.
     /// @param oracle_  The address of the oracle.
     /// @dev            Reverts if the oracle is not registered
-    function oracleRemove(address oracle_) public checkCaller {
+    function oracleRemove(address oracle_)
+        public
+        override(ICollybusDiscountRateRelayer)
+        checkCaller
+    {
         // Make sure the oracle is registered
         if (!oracleExists(oracle_)) {
             revert CollybusDiscountRateRelayer__removeOracle_oracleNotRegistered(
@@ -141,9 +151,34 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
     /// @notice         Checks whether an oracle is registered.
     /// @param oracle_  The address of the oracle.
     /// @return         Returns 'true' if the oracle is registered.
-    function oracleExists(address oracle_) public view returns (bool) {
+    function oracleExists(address oracle_)
+        public
+        view
+        override(ICollybusDiscountRateRelayer)
+        returns (bool)
+    {
         return _oracles[oracle_].exists;
     }
+
+    /// @notice         Returns the address of an oracle at index
+    /// @param index_   The internal index of the oracle
+    /// @return         Returns the address pf the oracle
+    function oracleAt(uint256 index_)
+        external
+        view
+        override(ICollybusDiscountRateRelayer)
+        returns (address)
+    {
+        // todo:Revert on out of bounds
+        return _oracleList[index_];
+    }
+
+    function oracleFor(uint256 tokenId)
+        external
+        view
+        override(ICollybusDiscountRateRelayer)
+        returns (address)
+    {}
 
     /// @notice Iterates and updates each oracle until it finds one that should push data
     ///         in the Collybus, more exactly, the delta change in value is bigger than the minimum
@@ -195,7 +230,7 @@ contract CollybusDiscountRateRelayer is Guarded, IRelayer {
                 oracleData.minimumThresholdValue
             ) {
                 oracleData.lastUpdateValue = rate;
-                _collybus.updateDiscountRate(oracleData.tokenId, uint256(rate));
+                collybus.updateDiscountRate(oracleData.tokenId, uint256(rate));
 
                 emit UpdatedCollybus(oracleData.tokenId, uint256(rate));
             }
