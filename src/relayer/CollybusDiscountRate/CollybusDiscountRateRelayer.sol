@@ -25,8 +25,6 @@ error CollybusDiscountRateRelayer__removeOracle_oracleNotRegistered(
 );
 
 contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
-    using EnumerableSet for EnumerableSet.AddressSet;
-
     struct OracleData {
         bool exists;
         uint256 tokenId;
@@ -53,6 +51,7 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
     mapping(uint256 => bool) public _tokenIds;
 
     // Array used for iterating the oracles.
+    using EnumerableSet for EnumerableSet.AddressSet;    
     EnumerableSet.AddressSet private _oracleList;
 
     constructor(address collybusAddress_) {
@@ -183,6 +182,8 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
         for (uint256 i = 0; i < arrayLength; i++) {
             // Cache oracle address
             address localOracle = _oracleList.at(i);
+
+            // Trigger the oracle to update its data
             IOracle(localOracle).update();
 
             (int256 rate, bool isValid) = IOracle(localOracle).value();
