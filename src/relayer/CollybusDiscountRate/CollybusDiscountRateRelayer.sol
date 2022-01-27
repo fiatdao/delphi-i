@@ -132,6 +132,7 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
         _tokenIds[_oracles[oracle_].tokenId] = false;
 
         // Remove the oracle from the list
+        // This returns true/false depending on if the oracle was removed
         _oracleList.remove(oracle_);
 
         // Reset struct to default values
