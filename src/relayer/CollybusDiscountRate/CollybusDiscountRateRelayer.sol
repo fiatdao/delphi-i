@@ -42,7 +42,7 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
 
     /// ======== Storage ======== ///
 
-    ICollybus public collybus;
+    ICollybus public immutable collybus;
 
     // Mapping that will hold all the oracle params needed by the contract
     mapping(address => OracleData) private _oracles;
@@ -67,6 +67,19 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
         returns (uint256)
     {
         return _oracleList.length();
+    }
+
+    /// @notice         Returns the address of an oracle at index
+    /// @dev            Reverts if the index is out of bounds
+    /// @param index_   The internal index of the oracle
+    /// @return         Returns the address pf the oracle
+    function oracleAt(uint256 index_)
+        external
+        view
+        override(ICollybusDiscountRateRelayer)
+        returns (address)
+    {
+        return _oracleList.at(index_);
     }
 
     /// @notice                         Registers an oracle to a token id and set the minimum threshold delta value
@@ -150,19 +163,6 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
         returns (bool)
     {
         return _oracles[oracle_].exists;
-    }
-
-    /// @notice         Returns the address of an oracle at index
-    /// @dev            Reverts if the index is out of bounds
-    /// @param index_   The internal index of the oracle
-    /// @return         Returns the address pf the oracle
-    function oracleAt(uint256 index_)
-        external
-        view
-        override(ICollybusDiscountRateRelayer)
-        returns (address)
-    {
-        return _oracleList.at(index_);
     }
 
     function oracleFor(uint256 tokenId)

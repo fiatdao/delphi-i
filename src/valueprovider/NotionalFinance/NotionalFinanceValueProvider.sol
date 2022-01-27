@@ -37,11 +37,8 @@ contract NotionalFinanceValueProvider is IValueProvider {
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function value() external view override(IValueProvider) returns (int256) {
         // The returned annual rate is in 1e9 precision so we need to convert it to 1e18 precision.
-        MarketParameters memory marketParams = INotionalView(notionalView).getMarket(
-            currencyID,
-            maturityDate,
-            settlementDate
-        );
+        MarketParameters memory marketParams = INotionalView(notionalView)
+            .getMarket(currencyID, maturityDate, settlementDate);
         return int256(marketParams.lastImpliedRate) * RATE_PRECISION_CONVERSION;
     }
 }

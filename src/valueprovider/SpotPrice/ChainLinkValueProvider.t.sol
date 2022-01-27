@@ -114,6 +114,9 @@ contract ChainLinkValueProviderTest is DSTest {
     }
 
     function test_check_chainlinkAggregator() public {
-        assertEq(chainlinkVP.chainlinkAggregator(), address(mockChainlinkAggregator));
+        assertEq(
+            chainlinkVP.chainlinkAggregator(),
+            address(mockChainlinkAggregator)
+        );
     }
 }

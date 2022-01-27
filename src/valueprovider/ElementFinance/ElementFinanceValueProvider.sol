@@ -58,10 +58,8 @@ contract ElementFinanceValueProvider is IValueProvider {
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function value() external view override(IValueProvider) returns (int256) {
         // Retrieve the underlier from the balancer vault.
-        (uint256 underlierBalance, , , ) = IVault(balancerVault).getPoolTokenInfo(
-            poolId,
-            IERC20(underlier)
-        );
+        (uint256 underlierBalance, , , ) = IVault(balancerVault)
+            .getPoolTokenInfo(poolId, IERC20(underlier));
 
         // Retrieve the principal token from the balancer vault.
         (uint256 ePTokenBalance, , , ) = IVault(balancerVault).getPoolTokenInfo(

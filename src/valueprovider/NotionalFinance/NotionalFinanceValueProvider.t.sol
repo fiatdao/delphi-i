@@ -81,7 +81,7 @@ contract NotionalFinanceValueProviderTest is DSTest {
 
     function test_check_settlementDate() public {
         assertEq(notionalVP.settlementDate(), _settlementDate);
-    }    
+    }
 
     function test_GetValue() public {
         // Expected value is the lastImpliedRate(1e9 precision) in 1e18 precision

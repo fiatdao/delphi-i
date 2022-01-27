@@ -18,7 +18,9 @@ contract ChainLinkValueProvider is IValueProvider {
     /// @param chainlinkAggregator_     Address of the deployed chainlink aggregator contract.
     constructor(address chainlinkAggregator_) {
         chainlinkAggregator = chainlinkAggregator_;
-        uint8 underlierDecimals = IChainlinkAggregatorV3Interface(chainlinkAggregator_).decimals();
+        uint8 underlierDecimals = IChainlinkAggregatorV3Interface(
+            chainlinkAggregator_
+        ).decimals();
         if (underlierDecimals > 18)
             revert ChainLinkValueProvider__constructor_unsupportedUnderlierDecimalFormat(
                 underlierDecimals
@@ -31,12 +33,15 @@ contract ChainLinkValueProvider is IValueProvider {
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function value() external view override(IValueProvider) returns (int256) {
         // The returned annual rate is in 1e9 precision so we need to convert it to 1e18 precision.
-        (, int256 answer, , , ) = IChainlinkAggregatorV3Interface(chainlinkAggregator).latestRoundData();
+        (, int256 answer, , , ) = IChainlinkAggregatorV3Interface(
+            chainlinkAggregator
+        ).latestRoundData();
         return answer * underlierDecimalsConversion;
     }
 
     /// @notice returns the description of the chainlink aggregator the proxy points to.
     function description() external view returns (string memory) {
-        return IChainlinkAggregatorV3Interface(chainlinkAggregator).description();
+        return
+            IChainlinkAggregatorV3Interface(chainlinkAggregator).description();
     }
 }

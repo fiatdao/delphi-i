@@ -17,7 +17,8 @@ contract ElementFinanceValueProviderTest is DSTest {
 
     ElementFinanceValueProvider internal efValueProvider;
 
-    bytes32 internal _poolId = 0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090;
+    bytes32 internal _poolId =
+        0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090;
     uint256 internal _timeToMaturity = 1651275535;
     address internal _underlier = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address internal _ePTokenBond = 0x8a2228705ec979961F0e16df311dEbcf097A2766;
@@ -33,9 +34,7 @@ contract ElementFinanceValueProviderTest is DSTest {
             // Used Parameters are: pool id, underlier address
             abi.encodeWithSelector(
                 IVault.getPoolTokenInfo.selector,
-                bytes32(
-                    _poolId
-                ),
+                _poolId,
                 IERC20(_underlier)
             ),
             MockProvider.ReturnData({
@@ -55,9 +54,7 @@ contract ElementFinanceValueProviderTest is DSTest {
         mockBalancerVault.givenQueryReturnResponse(
             abi.encodeWithSelector(
                 IVault.getPoolTokenInfo.selector,
-                bytes32(
-                    _poolId
-                ),
+                _poolId,
                 IERC20(address(_ePTokenBond))
             ),
             MockProvider.ReturnData({

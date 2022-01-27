@@ -69,6 +69,19 @@ contract CollybusSpotPriceRelayer is Guarded, ICollybusSpotPriceRelayer {
         return _oracleList.length();
     }
 
+    /// @notice         Returns the address of an oracle at index
+    /// @dev            Reverts if the index is out of bounds
+    /// @param index_   The internal index of the oracle
+    /// @return         Returns the address pf the oracle
+    function oracleAt(uint256 index_)
+        external
+        view
+        override(ICollybusSpotPriceRelayer)
+        returns (address)
+    {
+        return _oracleList.at(index_);
+    }
+
     /// @notice                         Registers an oracle to a token id and set the minimum threshold delta value
     ///                                 calculate the annual rate.
     /// @param oracle_                  The address of the oracle.
@@ -150,19 +163,6 @@ contract CollybusSpotPriceRelayer is Guarded, ICollybusSpotPriceRelayer {
         returns (bool)
     {
         return _oracles[oracle_].exists;
-    }
-
-    /// @notice         Returns the address of an oracle at index
-    /// @dev            Reverts if the index is out of bounds
-    /// @param index_   The internal index of the oracle
-    /// @return         Returns the address pf the oracle
-    function oracleAt(uint256 index_)
-        external
-        view
-        override(ICollybusSpotPriceRelayer)
-        returns (address)
-    {
-        return _oracleList.at(index_);
     }
 
     /// @notice Iterates and updates each oracle until it finds one that should push data
