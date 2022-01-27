@@ -223,7 +223,7 @@ contract CollybusSpotPriceRelayer is Guarded, ICollybusSpotPriceRelayer {
             ) {
                 oracleData.lastUpdateValue = rate;
                 collybus.updateSpot(oracleData.tokenAddress, uint256(rate));
-                
+
                 emit UpdatedCollybus(oracleData.tokenAddress, uint256(rate));
             }
         }

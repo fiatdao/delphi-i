@@ -51,7 +51,7 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
     mapping(uint256 => bool) public _tokenIds;
 
     // Array used for iterating the oracles.
-    using EnumerableSet for EnumerableSet.AddressSet;    
+    using EnumerableSet for EnumerableSet.AddressSet;
     EnumerableSet.AddressSet private _oracleList;
 
     constructor(address collybusAddress_) {
