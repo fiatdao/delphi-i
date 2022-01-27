@@ -13,9 +13,9 @@ error ElementFinanceValueProvider__valuetimeToMaturityLessThanBlockchainTime(
 );
 
 contract ElementFinanceValueProvider is IValueProvider {
-    int256 private constant CALENDARYEAR_SECONDS = 31557600;
+    int256 public constant CALENDAR_YEAR_SECONDS = 31557600;
 
-    address public balancerVault;
+    address public immutable balancerVault;
 
     bytes32 public immutable poolId;
     address public immutable underlier;
@@ -71,7 +71,7 @@ contract ElementFinanceValueProvider is IValueProvider {
 
         // Check the block time against the maturity date and revert if we're past the maturity date.
         if (block.timestamp >= timeToMaturity) {
-            revert ElementFinanceValueProvider__valuetimeToMaturityLessThanBlockchainTime(
+            revert ElementFinanceValueProvider__value_timeToMaturityLessThanBlockchainTime(
                 timeToMaturity
             );
         }
@@ -100,7 +100,7 @@ contract ElementFinanceValueProvider is IValueProvider {
             PRBMathSD59x18.SCALE - tokenUnitPrice59x18,
             PRBMathSD59x18.div(
                 timeToMaturity59x18,
-                PRBMathSD59x18.fromInt(CALENDARYEAR_SECONDS)
+                PRBMathSD59x18.fromInt(CALENDAR_YEAR_SECONDS)
             )
         );
 
