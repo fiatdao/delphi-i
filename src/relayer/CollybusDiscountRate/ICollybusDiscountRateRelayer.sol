@@ -5,6 +5,12 @@ import {IRelayer} from "src/relayer/IRelayer.sol";
 interface ICollybusDiscountRateRelayer is IRelayer {
     function oracleCount() external view returns (uint256);
 
+    function oracleExists(address oracle_) external view returns (bool);
+
+    function oracleAt(uint256 index) external view returns (address);
+
+    function oracleFor(uint256 tokenId) external view returns (address);
+
     function oracleAdd(
         address oracle_,
         uint256 tokenId_,
@@ -12,10 +18,4 @@ interface ICollybusDiscountRateRelayer is IRelayer {
     ) external;
 
     function oracleRemove(address oracle_) external;
-
-    function oracleExists(address oracle_) external view returns (bool);
-
-    function oracleAt(uint256 index) external view returns (address);
-
-    function oracleFor(uint256 tokenId) external view returns (address);
 }

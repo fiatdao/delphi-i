@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IRelayer} from "src/relayer/IRelayer.sol";
 import {IOracle} from "src/oracle/IOracle.sol";
 import {ICollybus} from "src/relayer/ICollybus.sol";
-import {ICollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/ICollybusDiscountRate.sol";
+import {ICollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/ICollybusDiscountRateRelayer.sol";
 import {Guarded} from "src/guarded/Guarded.sol";
 
 // @notice Emitted when trying to add an oracle that already exists
@@ -50,7 +51,8 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
     mapping(uint256 => bool) public _tokenIds;
 
     // Array used for iterating the oracles.
-    address[] private _oracleList;
+    using EnumerableSet for EnumerableSet.AddressSet;
+    EnumerableSet.AddressSet private _oracleList;
 
     constructor(address collybusAddress_) {
         collybus = ICollybus(collybusAddress_);
@@ -64,7 +66,7 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
         override(ICollybusDiscountRateRelayer)
         returns (uint256)
     {
-        return _oracleList.length;
+        return _oracleList.length();
     }
 
     /// @notice                         Registers an oracle to a token id and set the minimum threshold delta value
@@ -94,7 +96,7 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
         }
 
         // Add oracle in the oracle address array that is used for iterating.
-        _oracleList.push(oracle_);
+        _oracleList.add(oracle_);
 
         // Mark the token Id as used
         _tokenIds[tokenId_] = true;
@@ -128,19 +130,9 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
         // Reset the tokenId Mapping
         _tokenIds[_oracles[oracle_].tokenId] = false;
 
-        // Remove the oracle index from the array by swapping the target with the last element
-        // We only need to iterate length - 1 elements.
-        uint256 arrayLength = _oracleList.length;
-        for (uint256 i = 0; i < arrayLength - 1; i++) {
-            if (_oracleList[i] == oracle_) {
-                _oracleList[i] = _oracleList[arrayLength - 1];
-                // No need to continue iterating, we found our oracle.
-                break;
-            }
-        }
-
-        // Delete the last element
-        _oracleList.pop();
+        // Remove the oracle from the list
+        // This returns true/false depending on if the oracle was removed
+        _oracleList.remove(oracle_);
 
         // Reset struct to default values
         delete _oracles[oracle_];
@@ -161,6 +153,7 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
     }
 
     /// @notice         Returns the address of an oracle at index
+    /// @dev            Reverts if the index is out of bounds
     /// @param index_   The internal index of the oracle
     /// @return         Returns the address pf the oracle
     function oracleAt(uint256 index_)
@@ -169,8 +162,7 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
         override(ICollybusDiscountRateRelayer)
         returns (address)
     {
-        // todo:Revert on out of bounds
-        return _oracleList[index_];
+        return _oracleList.at(index_);
     }
 
     function oracleFor(uint256 tokenId)
@@ -186,18 +178,22 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
     /// @dev    Oracles that return invalid values are skipped.
     /// @return Returns 'true' if at least one oracle should update data in the Collybus
     function check() external override(IRelayer) returns (bool) {
-        uint256 arrayLength = _oracleList.length;
+        uint256 arrayLength = _oracleList.length();
         for (uint256 i = 0; i < arrayLength; i++) {
-            IOracle(_oracleList[i]).update();
+            // Cache oracle address
+            address localOracle = _oracleList.at(i);
 
-            (int256 rate, bool isValid) = IOracle(_oracleList[i]).value();
+            // Trigger the oracle to update its data
+            IOracle(localOracle).update();
 
-            emit UpdateOracle(_oracleList[i], rate, isValid);
+            (int256 rate, bool isValid) = IOracle(localOracle).value();
+
+            emit UpdateOracle(localOracle, rate, isValid);
             if (!isValid) continue;
 
             if (
-                absDelta(_oracles[_oracleList[i]].lastUpdateValue, rate) >=
-                _oracles[_oracleList[i]].minimumThresholdValue
+                absDelta(_oracles[localOracle].lastUpdateValue, rate) >=
+                _oracles[localOracle].minimumThresholdValue
             ) {
                 emit ShouldUpdate(true);
                 return true;
@@ -213,15 +209,18 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
     /// @dev    Oracles that return invalid values are skipped.
     function execute() public override(IRelayer) {
         // Update Collybus all tokenIds with the new discount rate
-        uint256 arrayLength = _oracleList.length;
+        uint256 arrayLength = _oracleList.length();
         for (uint256 i = 0; i < arrayLength; i++) {
+            // Cache oracle address
+            address localOracle = _oracleList.at(i);
+
             // We always update the oracles before retrieving the rates
-            IOracle(_oracleList[i]).update();
-            (int256 rate, bool isValid) = IOracle(_oracleList[i]).value();
+            IOracle(localOracle).update();
+            (int256 rate, bool isValid) = IOracle(localOracle).value();
 
             if (!isValid) continue;
 
-            OracleData storage oracleData = _oracles[_oracleList[i]];
+            OracleData storage oracleData = _oracles[localOracle];
 
             // If the change in delta rate from the last update is bigger than the threshold value push
             // the rates to Collybus

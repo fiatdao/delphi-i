@@ -21,10 +21,10 @@ contract TestCollybus is ICollybus {
         rateForTokenId[tokenId] = rate;
     }
 
-    function updateSpot(address token, uint256 spot)
-        public
-        override(ICollybus)
-    {
+    function updateSpot(
+        address, /*token*/
+        uint256 /*spot*/
+    ) public override(ICollybus) {
         // This should never be called, since this test only updates the discount rate
         assert(false);
     }
