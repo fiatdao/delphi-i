@@ -118,7 +118,7 @@ contract FactoryTest is DSTest {
 
         deployData.notionalData = new bytes[](1);
         deployData.notionalData[0] = abi.encode(notionalAggregatorData);
-        
+
         deployData.collybusAddress = address(0x1234);
 
         return deployData;
@@ -311,7 +311,9 @@ contract FactoryTest is DSTest {
             memory deployData = buildDiscountRateDeployData();
 
         // Deploy the oracle architecture
-        address discountRateRelayer = factory.deployDiscountRateArchitecture(deployData);
+        address discountRateRelayer = factory.deployDiscountRateArchitecture(
+            deployData
+        );
 
         // Check the creation of the discount rate relayer
         assertTrue(
@@ -351,9 +353,10 @@ contract FactoryTest is DSTest {
             IAggregatorOracle notionalAggregator = IAggregatorOracle(
                 discountRelayer.oracleAt(aggIndex)
             );
-            
+
             assertTrue(
-                notionalAggregator.oracleCount() == aggregatorData.oracleData.length,
+                notionalAggregator.oracleCount() ==
+                    aggregatorData.oracleData.length,
                 "Notional aggregator oracle count missmatch"
             );
         }
@@ -382,6 +385,5 @@ contract FactoryTest is DSTest {
         }
     }
 
-    function disabled_test_deployAddToExistingDiscountRateRelayer() public {
-    }
+    function disabled_test_deployAddToExistingDiscountRateRelayer() public {}
 }
