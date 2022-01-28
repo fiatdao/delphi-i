@@ -31,23 +31,23 @@ contract FactoryTest is DSTest {
         returns (DiscountRateDeployData memory)
     {
         NotionalData memory notional1;
-        notional1.notionalData.notionalViewAddress = address(
+        notional1.vpData.notionalViewAddress = address(
             0x1344A36A1B56144C3Bc62E7757377D288fDE0369
         );
-        notional1.notionalData.currencyID = 2;
-        notional1.notionalData.maturity = 1671840000;
-        notional1.notionalData.settlementDate = 1648512000;
+        notional1.vpData.currencyID = 2;
+        notional1.vpData.maturity = 1671840000;
+        notional1.vpData.settlementDate = 1648512000;
         notional1.oracleData.timeWindow = 200;
         notional1.oracleData.maxValidTime = 600;
         notional1.oracleData.alpha = 2 * 10**17;
 
         NotionalData memory notional2;
-        notional2.notionalData.notionalViewAddress = address(
+        notional2.vpData.notionalViewAddress = address(
             0x1344A36A1B56144C3Bc62E7757377D288fDE0369
         );
-        notional2.notionalData.currencyID = 3;
-        notional2.notionalData.maturity = 1671840000;
-        notional2.notionalData.settlementDate = 1648512000;
+        notional2.vpData.currencyID = 3;
+        notional2.vpData.maturity = 1671840000;
+        notional2.vpData.settlementDate = 1648512000;
         notional2.oracleData.timeWindow = 200;
         notional2.oracleData.maxValidTime = 600;
         notional2.oracleData.alpha = 2 * 10**17;
@@ -99,7 +99,7 @@ contract FactoryTest is DSTest {
 
         AggregatorData memory elementAggregatorData;
         elementAggregatorData.tokenId = 1;
-
+        elementAggregatorData.requiredValidValues = 3;
         elementAggregatorData.oracleData = new bytes[](3);
         elementAggregatorData.oracleData[0] = abi.encode(element1);
         elementAggregatorData.oracleData[1] = abi.encode(element2);
@@ -107,6 +107,7 @@ contract FactoryTest is DSTest {
 
         AggregatorData memory notionalAggregatorData;
         notionalAggregatorData.tokenId = 2;
+        notionalAggregatorData.requiredValidValues = 2;
         notionalAggregatorData.oracleData = new bytes[](2);
         notionalAggregatorData.oracleData[0] = abi.encode(notional1);
         notionalAggregatorData.oracleData[1] = abi.encode(notional2);
@@ -117,6 +118,8 @@ contract FactoryTest is DSTest {
 
         deployData.notionalData = new bytes[](1);
         deployData.notionalData[0] = abi.encode(notionalAggregatorData);
+
+        deployData.collybusAddress = address(0x1234);
 
         return deployData;
     }
@@ -303,12 +306,14 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function disabled_test_deployDiscountRate() public {
+    function test_deployNewDiscountRateRelayer() public {
         DiscountRateDeployData
             memory deployData = buildDiscountRateDeployData();
 
         // Deploy the oracle architecture
-        address discountRateRelayer = factory.deployDiscountRate(deployData);
+        address discountRateRelayer = factory.deployDiscountRateArchitecture(
+            deployData
+        );
 
         // Check the creation of the discount rate relayer
         assertTrue(
@@ -334,10 +339,11 @@ contract FactoryTest is DSTest {
             );
         }
 
+        // Verify the notional oracles
         uint256 notionalAggregatorCount = deployData.notionalData.length;
         for (
             uint256 aggIndex = 0;
-            aggIndex < discountRateAggregatorCount;
+            aggIndex < notionalAggregatorCount;
             ++aggIndex
         ) {
             AggregatorData memory aggregatorData = abi.decode(
@@ -355,10 +361,11 @@ contract FactoryTest is DSTest {
             );
         }
 
+        // Verify the element oracles
         uint256 elementAggregatorCount = deployData.elementData.length;
         for (
             uint256 aggIndex = 0;
-            aggIndex < discountRateAggregatorCount;
+            aggIndex < elementAggregatorCount;
             ++aggIndex
         ) {
             AggregatorData memory aggregatorData = abi.decode(
@@ -377,4 +384,6 @@ contract FactoryTest is DSTest {
             );
         }
     }
+
+    function disabled_test_deployAddToExistingDiscountRateRelayer() public {}
 }

@@ -12,11 +12,14 @@ import {ElementFinanceValueProvider} from "src/valueprovider/ElementFinance/Elem
 import {NotionalFinanceValueProvider} from "src/valueprovider/NotionalFinance/NotionalFinanceValueProvider.sol";
 
 // Relayers
+import {ICollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/ICollybusDiscountRateRelayer.sol";
 import {CollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/CollybusDiscountRateRelayer.sol";
 import {CollybusSpotPriceRelayer} from "src/relayer/CollybusSpotPrice/CollybusSpotPriceRelayer.sol";
 
+// @notice Emitter when the collybus address is address(0)
+error Factory__deployDiscountRateArchitecture_invalidCollybusAddress();
+
 struct OracleData {
-    address aggregatorAddress;
     uint256 timeWindow;
     uint256 maxValidTime;
     int256 alpha;
@@ -44,20 +47,23 @@ struct ElementData {
 }
 
 struct NotionalData {
-    NotionalVPData notionalData;
+    NotionalVPData vpData;
     OracleData oracleData;
 }
 
 struct AggregatorData {
     uint256 tokenId;
     bytes[] oracleData;
-    address relayerAddress;
+    uint256 requiredValidValues;
+    uint256 minimumThresholdValue;
+    address aggregatorAddress;
 }
 
 struct DiscountRateDeployData {
     bytes[] notionalData;
     bytes[] elementData;
     address discountRateRelayerAddress;
+    address collybusAddress;
 }
 
 contract Factory {
@@ -150,10 +156,181 @@ contract Factory {
         return address(spotPriceRelayer);
     }
 
-    function deployDiscountRate(DiscountRateDeployData memory deployData)
-        public
-        returns (address)
-    {
-        return address(0);
+    function deployDiscountRateArchitecture(
+        DiscountRateDeployData memory deployData
+    ) public returns (address) {
+        // Check if we need to create the Discount Rate Relayer
+        address discountRateRelayerAddress = deployData
+            .discountRateRelayerAddress;
+        bool createRelayer = discountRateRelayerAddress == address(0);
+        if (createRelayer) {
+            // The Collybus address is needed in order to deploy the Discount Rate Relayer
+            if (deployData.collybusAddress == address(0)) {
+                revert Factory__deployDiscountRateArchitecture_invalidCollybusAddress();
+            }
+
+            // Create the relayer and cache the address
+            discountRateRelayerAddress = deployCollybusDiscountRateRelayer(
+                deployData.collybusAddress
+            );
+        }
+
+        // We check if we have any national aggregators to deploy
+        uint256 notionalAggregatorCount = deployData.notionalData.length;
+        for (
+            uint256 notionalAggIndex = 0;
+            notionalAggIndex < notionalAggregatorCount;
+            notionalAggIndex++
+        ) {
+            // Decode each input notional aggregator structure
+            AggregatorData memory aggData = abi.decode(
+                deployData.notionalData[notionalAggIndex],
+                (AggregatorData)
+            );
+
+            address agregatorAddress = aggData.aggregatorAddress;
+            //Check where we need to create the aggregator
+            bool createTheAggregator = createRelayer ||
+                (agregatorAddress == address(0));
+
+            // For each Notional aggregator we find we will go though the oracles and create each one
+            uint256 notionalOracleCount = aggData.oracleData.length;
+
+            // We will need to store the created oracles in order to deploy the aggregator
+            // This list will not be used if we already have a deployed aggregator
+            address[] memory oracleList;
+
+            if (createTheAggregator) {
+                oracleList = new address[](notionalOracleCount);
+            }
+
+            for (
+                uint256 notionalOracleIndex = 0;
+                notionalOracleIndex < notionalOracleCount;
+                notionalOracleIndex++
+            ) {
+                NotionalData memory notionalData = abi.decode(
+                    aggData.oracleData[notionalOracleIndex],
+                    (NotionalData)
+                );
+
+                address notionalVP = deployNotionalFinanceProvider(
+                    notionalData.vpData.notionalViewAddress,
+                    notionalData.vpData.currencyID,
+                    notionalData.vpData.maturity,
+                    notionalData.vpData.settlementDate
+                );
+
+                address oracleAddress = deployOracle(
+                    notionalVP,
+                    notionalData.oracleData.timeWindow,
+                    notionalData.oracleData.maxValidTime,
+                    notionalData.oracleData.alpha
+                );
+
+                if (createTheAggregator) {
+                    oracleList[notionalOracleIndex] = oracleAddress;
+                } else {
+                    IAggregatorOracle(agregatorAddress).oracleAdd(
+                        oracleAddress
+                    );
+                }
+            }
+
+            if (createTheAggregator) {
+                agregatorAddress = deployAggregator(
+                    oracleList,
+                    aggData.requiredValidValues
+                );
+
+                ICollybusDiscountRateRelayer(discountRateRelayerAddress)
+                    .oracleAdd(
+                        agregatorAddress,
+                        aggData.tokenId,
+                        aggData.minimumThresholdValue
+                    );
+            }
+        }
+
+        // We check if we have any element aggregators to deploy
+        uint256 elementAggregatorCount = deployData.elementData.length;
+        for (
+            uint256 elementAggIndex = 0;
+            elementAggIndex < elementAggregatorCount;
+            elementAggIndex++
+        ) {
+            // Decode each input aggregator structure
+            AggregatorData memory aggData = abi.decode(
+                deployData.elementData[elementAggIndex],
+                (AggregatorData)
+            );
+
+            address agregatorAddress = aggData.aggregatorAddress;
+            //Check where we need to create the aggregator
+            bool createTheAggregator = createRelayer ||
+                (agregatorAddress == address(0));
+
+            // For each aggregator we find we will go though the oracles and create each one
+            uint256 elementOracleCount = aggData.oracleData.length;
+
+            // We will need to store the created oracles in order to deploy the aggregator
+            // This list will not be used if we already have a deployed aggregator
+            address[] memory oracleList;
+
+            if (createTheAggregator) {
+                oracleList = new address[](elementOracleCount);
+            }
+
+            for (
+                uint256 elementOracleIndex = 0;
+                elementOracleIndex < elementOracleCount;
+                elementOracleIndex++
+            ) {
+                ElementData memory elementData = abi.decode(
+                    aggData.oracleData[elementOracleIndex],
+                    (ElementData)
+                );
+
+                address elementVP = deployElementFinanceValueProvider(
+                    elementData.vpData.poolId,
+                    elementData.vpData.balancerVault,
+                    elementData.vpData.underlier,
+                    elementData.vpData.ePTokenBond,
+                    elementData.vpData.timeToMaturity,
+                    elementData.vpData.unitSeconds
+                );
+
+                address oracleAddress = deployOracle(
+                    elementVP,
+                    elementData.oracleData.timeWindow,
+                    elementData.oracleData.maxValidTime,
+                    elementData.oracleData.alpha
+                );
+
+                if (createTheAggregator) {
+                    oracleList[elementOracleIndex] = oracleAddress;
+                } else {
+                    IAggregatorOracle(agregatorAddress).oracleAdd(
+                        oracleAddress
+                    );
+                }
+            }
+
+            if (createTheAggregator) {
+                agregatorAddress = deployAggregator(
+                    oracleList,
+                    aggData.requiredValidValues
+                );
+
+                ICollybusDiscountRateRelayer(discountRateRelayerAddress)
+                    .oracleAdd(
+                        agregatorAddress,
+                        aggData.tokenId,
+                        aggData.minimumThresholdValue
+                    );
+            }
+        }
+
+        return discountRateRelayerAddress;
     }
 }
