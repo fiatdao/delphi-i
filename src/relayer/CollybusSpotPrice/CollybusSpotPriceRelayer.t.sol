@@ -76,6 +76,20 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         );
     }
 
+    function test_check_tokenId() public {
+        assertTrue(cdrr.tokenIds(mockToken1Address));
+    }
+
+    function test_check_oracleData() public {
+        CollybusSpotPriceRelayer.OracleData memory oracleData = cdrr
+            .oraclesData(address(oracle1));
+
+        assertTrue(oracleData.exists);
+        assertEq(oracleData.lastUpdateValue, 0);
+        assertEq(oracleData.tokenAddress, address(mockToken1Address));
+        assertEq(oracleData.minimumThresholdValue, mockToken1MinThreshold);
+    }
+
     function test_AddOracle_CheckItExistsAndIncreasesOracleCount() public {
         // Create a new address that differs from the oracle already added
         address newOracle = address(0x1);

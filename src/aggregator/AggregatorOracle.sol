@@ -34,8 +34,6 @@ error AggregatorOracle__setParam_requiredValidValues_higherThan_oracleCount(
 error AggregatorOracle__setParam_unrecognizedParam(bytes32 param);
 
 contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
-    using EnumerableSet for EnumerableSet.AddressSet;
-
     /// ======== Events ======== ///
 
     event OracleAdded(address oracleAddress);
@@ -49,6 +47,7 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
     /// ======== Storage ======== ///
 
     // List of registered oracles
+    using EnumerableSet for EnumerableSet.AddressSet;
     EnumerableSet.AddressSet private _oracles;
 
     // Current aggregated value

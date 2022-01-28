@@ -45,10 +45,10 @@ contract CollybusSpotPriceRelayer is Guarded, ICollybusSpotPriceRelayer {
     ICollybus public collybus;
 
     // Mapping that will hold all the oracle params needed by the contract
-    mapping(address => OracleData) private _oracles;
+    mapping(address => OracleData) private _oraclesData;
 
     // Mapping used to track used Rate Ids.
-    mapping(address => bool) private _tokenIds;
+    mapping(address => bool) public tokenIds;
 
     // Array used for iterating the oracles.
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -82,6 +82,18 @@ contract CollybusSpotPriceRelayer is Guarded, ICollybusSpotPriceRelayer {
         return _oracleList.at(index_);
     }
 
+    /// @notice         Checks whether an oracle is registered
+    /// @param oracle_  The address of the oracle
+    /// @return         Returns 'true' if the oracle is registered
+    function oracleExists(address oracle_)
+        public
+        view
+        override(ICollybusSpotPriceRelayer)
+        returns (bool)
+    {
+        return _oraclesData[oracle_].exists;
+    }
+
     /// @notice                         Registers an oracle to a token id and set the minimum threshold delta value
     ///                                 calculate the annual rate.
     /// @param oracle_                  The address of the oracle.
@@ -101,7 +113,7 @@ contract CollybusSpotPriceRelayer is Guarded, ICollybusSpotPriceRelayer {
         }
 
         // Make sure there are no existing oracles registered for this rate Id
-        if (_tokenIds[tokenAddress_]) {
+        if (tokenIds[tokenAddress_]) {
             revert CollybusSpotPriceRelayer__addOracle_tokenIdHasOracleRegistered(
                 oracle_,
                 tokenAddress_
@@ -112,10 +124,10 @@ contract CollybusSpotPriceRelayer is Guarded, ICollybusSpotPriceRelayer {
         _oracleList.add(oracle_);
 
         // Mark the token address as used
-        _tokenIds[tokenAddress_] = true;
+        tokenIds[tokenAddress_] = true;
 
         // Update the oracle address => data mapping with the oracle parameters.
-        _oracles[oracle_] = OracleData({
+        _oraclesData[oracle_] = OracleData({
             exists: true,
             lastUpdateValue: 0,
             tokenAddress: tokenAddress_,
@@ -141,28 +153,27 @@ contract CollybusSpotPriceRelayer is Guarded, ICollybusSpotPriceRelayer {
         }
 
         // Reset the token address Mapping
-        _tokenIds[_oracles[oracle_].tokenAddress] = false;
+        tokenIds[_oraclesData[oracle_].tokenAddress] = false;
 
         // Remove the oracle from the list
         // This returns true/false depending on if the oracle was removed
         _oracleList.remove(oracle_);
 
         // Reset struct to default values
-        delete _oracles[oracle_];
+        delete _oraclesData[oracle_];
 
         emit OracleRemoved(oracle_);
     }
 
-    /// @notice         Checks whether an oracle is registered.
-    /// @param oracle_  The address of the oracle.
-    /// @return         Returns 'true' if the oracle is registered.
-    function oracleExists(address oracle_)
+    /// @notice Returns the oracle data for a given oracle address
+    /// @param oracle_ The address of the oracle
+    /// @return Returns the oracle data as `OracleData`
+    function oraclesData(address oracle_)
         public
         view
-        override(ICollybusSpotPriceRelayer)
-        returns (bool)
+        returns (OracleData memory)
     {
-        return _oracles[oracle_].exists;
+        return _oraclesData[oracle_];
     }
 
     /// @notice Iterates and updates each oracle until it finds one that should push data
@@ -185,8 +196,8 @@ contract CollybusSpotPriceRelayer is Guarded, ICollybusSpotPriceRelayer {
             if (!isValid) continue;
 
             if (
-                absDelta(_oracles[localOracle].lastUpdateValue, rate) >=
-                _oracles[localOracle].minimumThresholdValue
+                absDelta(_oraclesData[localOracle].lastUpdateValue, rate) >=
+                _oraclesData[localOracle].minimumThresholdValue
             ) {
                 emit ShouldUpdate(true);
                 return true;
@@ -213,7 +224,7 @@ contract CollybusSpotPriceRelayer is Guarded, ICollybusSpotPriceRelayer {
 
             if (!isValid) continue;
 
-            OracleData storage oracleData = _oracles[localOracle];
+            OracleData storage oracleData = _oraclesData[localOracle];
 
             // If the change in delta rate from the last update is greater or equal than the threshold value
             // push the rates to Collybus

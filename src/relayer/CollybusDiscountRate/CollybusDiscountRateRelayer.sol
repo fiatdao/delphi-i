@@ -45,7 +45,7 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
     ICollybus public immutable collybus;
 
     // Mapping that will hold all the oracle params needed by the contract
-    mapping(address => OracleData) private _oracles;
+    mapping(address => OracleData) private _oraclesData;
 
     // Mapping used tokenId's
     mapping(uint256 => bool) public _tokenIds;
@@ -82,6 +82,18 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
         return _oracleList.at(index_);
     }
 
+    /// @notice         Checks whether an oracle is registered.
+    /// @param oracle_  The address of the oracle.
+    /// @return         Returns 'true' if the oracle is registered.
+    function oracleExists(address oracle_)
+        public
+        view
+        override(ICollybusDiscountRateRelayer)
+        returns (bool)
+    {
+        return _oraclesData[oracle_].exists;
+    }
+
     /// @notice                         Registers an oracle to a token id and set the minimum threshold delta value
     ///                                 calculate the annual rate.
     /// @param oracle_                  The address of the oracle.
@@ -115,7 +127,7 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
         _tokenIds[tokenId_] = true;
 
         // Update the oracle address => data mapping with the oracle parameters.
-        _oracles[oracle_] = OracleData({
+        _oraclesData[oracle_] = OracleData({
             exists: true,
             lastUpdateValue: 0,
             tokenId: tokenId_,
@@ -141,36 +153,30 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
         }
 
         // Reset the tokenId Mapping
-        _tokenIds[_oracles[oracle_].tokenId] = false;
+        _tokenIds[_oraclesData[oracle_].tokenId] = false;
 
         // Remove the oracle from the list
         // This returns true/false depending on if the oracle was removed
         _oracleList.remove(oracle_);
 
         // Reset struct to default values
-        delete _oracles[oracle_];
+        delete _oraclesData[oracle_];
 
         emit OracleRemoved(oracle_);
     }
 
-    /// @notice         Checks whether an oracle is registered.
-    /// @param oracle_  The address of the oracle.
-    /// @return         Returns 'true' if the oracle is registered.
-    function oracleExists(address oracle_)
+    /// @notice Returns the oracle data for a given oracle address
+    /// @param oracle_ The address of the oracle
+    /// @return Returns the oracle data as `OracleData`
+    function oraclesData(address oracle_)
         public
         view
-        override(ICollybusDiscountRateRelayer)
-        returns (bool)
+        returns (OracleData memory)
     {
-        return _oracles[oracle_].exists;
+        return _oraclesData[oracle_];
     }
 
-    function oracleFor(uint256 tokenId)
-        external
-        view
-        override(ICollybusDiscountRateRelayer)
-        returns (address)
-    {}
+    // function oraclesData()
 
     /// @notice Iterates and updates each oracle until it finds one that should push data
     ///         in the Collybus, more exactly, the delta change in value is bigger than the minimum
@@ -192,8 +198,8 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
             if (!isValid) continue;
 
             if (
-                absDelta(_oracles[localOracle].lastUpdateValue, rate) >=
-                _oracles[localOracle].minimumThresholdValue
+                absDelta(_oraclesData[localOracle].lastUpdateValue, rate) >=
+                _oraclesData[localOracle].minimumThresholdValue
             ) {
                 emit ShouldUpdate(true);
                 return true;
@@ -220,7 +226,7 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
 
             if (!isValid) continue;
 
-            OracleData storage oracleData = _oracles[localOracle];
+            OracleData storage oracleData = _oraclesData[localOracle];
 
             // If the change in delta rate from the last update is bigger than the threshold value push
             // the rates to Collybus

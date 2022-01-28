@@ -9,8 +9,6 @@ interface ICollybusDiscountRateRelayer is IRelayer {
 
     function oracleAt(uint256 index) external view returns (address);
 
-    function oracleFor(uint256 tokenId) external view returns (address);
-
     function oracleAdd(
         address oracle_,
         uint256 tokenId_,
