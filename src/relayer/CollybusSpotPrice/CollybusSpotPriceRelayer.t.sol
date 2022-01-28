@@ -69,11 +69,29 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         hevm.warp(oracleTimeUpdateWindow);
     }
 
+    function test_check_Collybus() public {
+        assertEq(cdrr.collybus(), address(collybus));
+    }
+
     function test_Deploy() public {
         assertTrue(
             address(cdrr) != address(0),
             "CollybusSpotPriceRelayer should be deployed"
         );
+    }
+
+    function test_check_tokenId() public {
+        assertTrue(cdrr.tokenIds(mockToken1Address));
+    }
+
+    function test_check_oracleData() public {
+        CollybusSpotPriceRelayer.OracleData memory oracleData = cdrr
+            .oraclesData(address(oracle1));
+
+        assertTrue(oracleData.exists);
+        assertEq(oracleData.lastUpdateValue, 0);
+        assertEq(oracleData.tokenAddress, address(mockToken1Address));
+        assertEq(oracleData.minimumThresholdValue, mockToken1MinThreshold);
     }
 
     function test_AddOracle_CheckItExistsAndIncreasesOracleCount() public {

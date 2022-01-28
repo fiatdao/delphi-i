@@ -17,6 +17,13 @@ contract ElementFinanceValueProviderTest is DSTest {
 
     ElementFinanceValueProvider internal efValueProvider;
 
+    bytes32 internal _poolId =
+        0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090;
+    uint256 internal _timeToMaturity = 1651275535;
+    address internal _underlier = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address internal _ePTokenBond = 0x8a2228705ec979961F0e16df311dEbcf097A2766;
+    uint256 internal _unitSeconds = 1000355378;
+
     function setUp() public {
         mockBalancerVault = new MockProvider();
 
@@ -27,10 +34,8 @@ contract ElementFinanceValueProviderTest is DSTest {
             // Used Parameters are: pool id, underlier address
             abi.encodeWithSelector(
                 IVault.getPoolTokenInfo.selector,
-                bytes32(
-                    0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090
-                ),
-                IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48))
+                _poolId,
+                IERC20(_underlier)
             ),
             MockProvider.ReturnData({
                 success: true,
@@ -49,10 +54,8 @@ contract ElementFinanceValueProviderTest is DSTest {
         mockBalancerVault.givenQueryReturnResponse(
             abi.encodeWithSelector(
                 IVault.getPoolTokenInfo.selector,
-                bytes32(
-                    0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090
-                ),
-                IERC20(address(0x8a2228705ec979961F0e16df311dEbcf097A2766))
+                _poolId,
+                IERC20(address(_ePTokenBond))
             ),
             MockProvider.ReturnData({
                 success: true,
@@ -68,22 +71,46 @@ contract ElementFinanceValueProviderTest is DSTest {
 
         efValueProvider = new ElementFinanceValueProvider(
             // Pool ID
-            0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
+            _poolId,
             // Address of the balancer vault
             address(mockBalancerVault),
             // Underlier token address
-            0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
+            _underlier,
             // Principal bond token address
-            0x8a2228705ec979961F0e16df311dEbcf097A2766,
+            _ePTokenBond,
             // Timestamp to maturity,
-            1651275535,
+            _timeToMaturity,
             // Time scale in seconds
-            1000355378
+            _unitSeconds
         );
     }
 
     function test_deploy() public {
         assertTrue(address(efValueProvider) != address(0));
+    }
+
+    function test_check_poolId() public {
+        assertEq(efValueProvider.poolId(), _poolId);
+    }
+
+    function test_check_balancerVault() public {
+        assertEq(efValueProvider.balancerVault(), address(mockBalancerVault));
+    }
+
+    function test_check_timeToMaturity() public {
+        assertEq(efValueProvider.timeToMaturity(), _timeToMaturity);
+    }
+
+    function test_check_underlier() public {
+        assertEq(efValueProvider.underlier(), _underlier);
+    }
+
+    function test_check_ePTokenBond() public {
+        assertEq(efValueProvider.ePTokenBond(), _ePTokenBond);
+    }
+
+    function test_check_unitSeconds() public {
+        assertEq(efValueProvider.unitSeconds(), _unitSeconds);
     }
 
     function test_GetValue() public {

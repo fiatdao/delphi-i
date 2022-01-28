@@ -7,10 +7,10 @@ import {INotionalView, MarketParameters} from "src/valueprovider/NotionalFinance
 contract NotionalFinanceValueProvider is IValueProvider {
     int256 internal constant RATE_PRECISION_CONVERSION = 1e9;
 
-    INotionalView private immutable _notionalView;
-    uint16 private immutable _currencyID;
-    uint256 private immutable _maturityDate;
-    uint256 private immutable _settlementDate;
+    address public immutable notionalView;
+    uint16 public immutable currencyID;
+    uint256 public immutable maturityDate;
+    uint256 public immutable settlementDate;
 
     /// @notice                         Constructs the Value provider contracts with the needed Notional contract data in order to
     ///                                 calculate the annual rate.
@@ -24,10 +24,10 @@ contract NotionalFinanceValueProvider is IValueProvider {
         uint256 maturity_,
         uint256 settlementDate_
     ) {
-        _notionalView = INotionalView(notionalViewContract_);
-        _currencyID = currencyID_;
-        _maturityDate = maturity_;
-        _settlementDate = settlementDate_;
+        notionalView = notionalViewContract_;
+        currencyID = currencyID_;
+        maturityDate = maturity_;
+        settlementDate = settlementDate_;
     }
 
     /// @notice Calculates the annual rate used by the FIAT DAO contracts
@@ -37,11 +37,8 @@ contract NotionalFinanceValueProvider is IValueProvider {
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function value() external view override(IValueProvider) returns (int256) {
         // The returned annual rate is in 1e9 precision so we need to convert it to 1e18 precision.
-        MarketParameters memory marketParams = _notionalView.getMarket(
-            _currencyID,
-            _maturityDate,
-            _settlementDate
-        );
+        MarketParameters memory marketParams = INotionalView(notionalView)
+            .getMarket(currencyID, maturityDate, settlementDate);
         return int256(marketParams.lastImpliedRate) * RATE_PRECISION_CONVERSION;
     }
 }

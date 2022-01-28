@@ -15,7 +15,7 @@ error ElementFinanceValueProvider__value_timeToMaturityLessThanBlockchainTime(
 contract ElementFinanceValueProvider is IValueProvider {
     int256 public constant CALENDAR_YEAR_SECONDS = 31557600;
 
-    IVault public balancerVault;
+    address public immutable balancerVault;
 
     bytes32 public immutable poolId;
     address public immutable underlier;
@@ -41,7 +41,7 @@ contract ElementFinanceValueProvider is IValueProvider {
     ) {
         poolId = poolId_;
 
-        balancerVault = IVault(balancerVault_);
+        balancerVault = balancerVault_;
 
         timeToMaturity = timeToMaturity_;
         underlier = underlier_;
@@ -58,13 +58,11 @@ contract ElementFinanceValueProvider is IValueProvider {
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function value() external view override(IValueProvider) returns (int256) {
         // Retrieve the underlier from the balancer vault.
-        (uint256 underlierBalance, , , ) = balancerVault.getPoolTokenInfo(
-            poolId,
-            IERC20(underlier)
-        );
+        (uint256 underlierBalance, , , ) = IVault(balancerVault)
+            .getPoolTokenInfo(poolId, IERC20(underlier));
 
         // Retrieve the principal token from the balancer vault.
-        (uint256 ePTokenBalance, , , ) = balancerVault.getPoolTokenInfo(
+        (uint256 ePTokenBalance, , , ) = IVault(balancerVault).getPoolTokenInfo(
             poolId,
             IERC20(ePTokenBond)
         );
