@@ -69,6 +69,10 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         hevm.warp(oracleTimeUpdateWindow);
     }
 
+    function test_check_Collybus() public {
+        assertEq(cdrr.collybus(), address(collybus));
+    }
+
     function test_Deploy() public {
         assertTrue(
             address(cdrr) != address(0),

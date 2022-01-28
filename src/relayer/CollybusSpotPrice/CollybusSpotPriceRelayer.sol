@@ -42,7 +42,7 @@ contract CollybusSpotPriceRelayer is Guarded, ICollybusSpotPriceRelayer {
 
     /// ======== Storage ======== ///
 
-    ICollybus public collybus;
+    address public immutable collybus;
 
     // Mapping that will hold all the oracle params needed by the contract
     mapping(address => OracleData) private _oraclesData;
@@ -55,7 +55,7 @@ contract CollybusSpotPriceRelayer is Guarded, ICollybusSpotPriceRelayer {
     EnumerableSet.AddressSet private _oracleList;
 
     constructor(address collybusAddress_) {
-        collybus = ICollybus(collybusAddress_);
+        collybus = collybusAddress_;
     }
 
     /// @notice Returns the number of registered oracles.
@@ -233,7 +233,7 @@ contract CollybusSpotPriceRelayer is Guarded, ICollybusSpotPriceRelayer {
                 oracleData.minimumThresholdValue
             ) {
                 oracleData.lastUpdateValue = rate;
-                collybus.updateSpot(oracleData.tokenAddress, uint256(rate));
+                ICollybus(collybus).updateSpot(oracleData.tokenAddress, uint256(rate));
 
                 emit UpdatedCollybus(oracleData.tokenAddress, uint256(rate));
             }
