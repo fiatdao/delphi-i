@@ -18,20 +18,14 @@ contract YieldValueProviderTest is DSTest {
 
     function setUp() public {
         mockValueProvider = new MockProvider();
-        yieldVP = new YieldValueProvider(address(mockValueProvider));
+        yieldVP = new YieldValueProvider(
+            address(mockValueProvider),
+            uint256(1650937617),
+            int256(3168808781));
 
         // Set the value returned by the pool contract
         // values taken from a Yield Pool contract deployed at:
         // 0x3771c99c087a81df4633b50d8b149afaa83e3c9e at block 13911954
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IYieldPool.ts.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(int128(58454204609))
-            }),
-            false
-        );
-
         mockValueProvider.givenQueryReturnResponse(
             abi.encodePacked(IYieldPool.getCache.selector),
             MockProvider.ReturnData({
@@ -47,26 +41,21 @@ contract YieldValueProviderTest is DSTest {
     }    
 
     function setUpWithValues(
+        uint256 maturity,
+        int256 timeScale,
         uint112 baseReserve, 
         uint112 fyReserve,
-        uint32 blocktime,
-        int128 timeScale
+        uint32 blocktime
         ) public {
         mockValueProvider = new MockProvider();
-        yieldVP = new YieldValueProvider(address(mockValueProvider));
+        yieldVP = new YieldValueProvider(
+            address(mockValueProvider),
+            uint256(maturity),
+            int256(timeScale));
 
         // Set the value returned by the pool contract
         // values taken from a Yield Pool contract deployed at:
         // 0x3771c99c087a81df4633b50d8b149afaa83e3c9e at block 13911954
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IYieldPool.ts.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(timeScale)
-            }),
-            false
-        );
-
         mockValueProvider.givenQueryReturnResponse(
             abi.encodePacked(IYieldPool.getCache.selector),
             MockProvider.ReturnData({
@@ -89,10 +78,11 @@ contract YieldValueProviderTest is DSTest {
 
         // Test data
         setUpWithValues(
+            uint256(1650937617),
+            int256(3168808781), // 58454204609 (in 64.64 fixed point)
             uint112(68427375273295066088),
             uint112(131617714153224459945),
-            uint32(1640937617),
-            int128(58454204609)
+            uint32(1640937617)
         );
         int256 expectedValue = 2072808605;
         int256 value = yieldVP.value();
