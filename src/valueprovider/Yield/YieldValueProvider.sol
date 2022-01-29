@@ -16,34 +16,36 @@ contract YieldValueProvider is IValueProvider {
     /// @notice Calculates the per second rate used by the FiatDao contracts
     /// based on the token reservers, underlier reserves and time scale from the yield contract
     /// @dev formula documentation:
-    /// https://www.notion.so/fiatdao/FIAT-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
+    /// https://www.notion.so/fiatdao/Delphi-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function value() external view override(IValueProvider) returns (int256) {
-        uint112 fyTokenReserves;
-        uint112 underlierReserves;
-        // The TS returned by the Yield contract is in 64.64 format and we need to convert it to int256
-        // we do that by computing the inverse of the scale which will give us the time window in seconds
-        int256 inverseTS = int256(
+
+        // The timeScale parameter from YieldSpace
+        // This number is in 64.64 format but we need 59.18 for exponentiation. Thus we first compute
+        // the inverse (this is unitSeconds), convert this int to 59.18 and compute inverse again
+        int256 unitSeconds = int256(
             ABDKMath64x64.toInt(ABDKMath64x64.inv(yieldPool.ts()))
         );
-
-        // Using the time scale window , we compute the 1/ts and save it in 59.18 format to be used in the formula
         int256 ts59x18 = PRBMathSD59x18.div(
             PRBMathSD59x18.SCALE,
-            PRBMathSD59x18.fromInt(inverseTS)
+            PRBMathSD59x18.fromInt(unitSeconds)
         );
 
-        (underlierReserves, fyTokenReserves, ) = yieldPool.getCache();
+        // The base token and fyToken reserves from YieldSpace
+        // fyTokenReserves already contains the virtual reserves so no need to add LP totalSupply
+        uint112 fyTokenReserves;
+        uint112 baseReserves;
+        (baseReserves, fyTokenReserves, ) = yieldPool.getCache();
 
-        // We compute the token/underlier ratio and save it in signed 59.18 format
-        int256 tokenToReserveRatio59x18 = PRBMathSD59x18.div(
+        // The reserves ratio in signed 59.18 format
+        int256 reservesRatio59x18 = PRBMathSD59x18.div(
             PRBMathSD59x18.fromInt(int256(uint256(fyTokenReserves))),
-            PRBMathSD59x18.fromInt(int256(uint256(underlierReserves)))
+            PRBMathSD59x18.fromInt(int256(uint256(baseReserves)))
         );
 
-        // Compute the result with the formula provided by the documentation
+        // The implied per-second rate in signed 59.18 format
         int256 ratePerSecond = (PRBMathSD59x18.pow(
-            tokenToReserveRatio59x18,
+            reservesRatio59x18,
             ts59x18
         ) - PRBMathSD59x18.SCALE);
 
