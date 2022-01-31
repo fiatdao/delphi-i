@@ -94,16 +94,16 @@ contract Factory {
         int256 timeScale_
     ) public returns (address) {
         ElementFiValueProvider elementFiValueProvider = new ElementFiValueProvider(
-            poolId_,
-            balancerVault_,
-            poolToken_,
-            poolTokenDecimals_,
-            underlier_,
-            underlierDecimals_,
-            ePTokenBond_,
-            ePTokenBondDecimals_,
-            timeScale_
-        );
+                poolId_,
+                balancerVault_,
+                poolToken_,
+                poolTokenDecimals_,
+                underlier_,
+                underlierDecimals_,
+                ePTokenBond_,
+                ePTokenBondDecimals_,
+                timeScale_
+            );
 
         return address(elementFiValueProvider);
     }
@@ -120,12 +120,12 @@ contract Factory {
         uint256 settlementDate_
     ) public returns (address) {
         NotionalFinanceValueProvider notionalFinanceValueProvider = new NotionalFinanceValueProvider(
-            notionalViewAddress_,
-            currencyId_,
-            lastImpliedRateDecimals_,
-            maturityDate_,
-            settlementDate_
-        );
+                notionalViewAddress_,
+                currencyId_,
+                lastImpliedRateDecimals_,
+                maturityDate_,
+                settlementDate_
+            );
 
         return address(notionalFinanceValueProvider);
     }

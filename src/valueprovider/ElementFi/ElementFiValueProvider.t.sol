@@ -18,9 +18,14 @@ contract ElementFiValueProviderTest is DSTest {
 
     ElementFiValueProvider internal efValueProvider;
 
-    bytes32 internal _poolId = bytes32(0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7);
-    address internal _underlier = address(0xc4AD29ba4B3c580e6D59105FFf484999997675Ff);
-    address internal _ePTokenBond = address(0x285328906D0D33cb757c1E471F5e2176683247c2);
+    bytes32 internal _poolId =
+        bytes32(
+            0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7
+        );
+    address internal _underlier =
+        address(0xc4AD29ba4B3c580e6D59105FFf484999997675Ff);
+    address internal _ePTokenBond =
+        address(0x285328906D0D33cb757c1E471F5e2176683247c2);
     int256 internal _timeScale = 412133793;
 
     function setUp() public {
@@ -107,7 +112,10 @@ contract ElementFiValueProviderTest is DSTest {
     }
 
     function test_check_balancerVault() public {
-        assertEq(efValueProvider.balancerVaultAddress(), address(mockBalancerVault));
+        assertEq(
+            efValueProvider.balancerVaultAddress(),
+            address(mockBalancerVault)
+        );
     }
 
     function test_check_underlier() public {

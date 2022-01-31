@@ -58,9 +58,9 @@ contract FactoryTest is DSTest {
             poolToken: 0x10a2F8bd81Ee2898D7eD18fb8f114034a549FA59,
             poolTokenDecimals: 18,
             underlier: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
-            underlierDecimals:6,
+            underlierDecimals: 6,
             ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
-            ePTokenBondDecimals:6,
+            ePTokenBondDecimals: 6,
             unitSeconds: 1000355378
         });
 
@@ -187,9 +187,9 @@ contract FactoryTest is DSTest {
             poolToken: 0x10a2F8bd81Ee2898D7eD18fb8f114034a549FA59,
             poolTokenDecimals: 18,
             underlier: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
-            underlierDecimals:6,
+            underlierDecimals: 6,
             ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
-            ePTokenBondDecimals:6,
+            ePTokenBondDecimals: 6,
             unitSeconds: 1000355378
         });
 
@@ -246,9 +246,9 @@ contract FactoryTest is DSTest {
             poolToken: 0x10a2F8bd81Ee2898D7eD18fb8f114034a549FA59,
             poolTokenDecimals: 18,
             underlier: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
-            underlierDecimals:6,
+            underlierDecimals: 6,
             ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
-            ePTokenBondDecimals:6,
+            ePTokenBondDecimals: 6,
             unitSeconds: 1000355378
         });
 

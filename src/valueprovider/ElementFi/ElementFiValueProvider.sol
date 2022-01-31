@@ -60,19 +60,15 @@ contract ElementFiValueProvider is IValueProvider, Convert {
     /// https://www.notion.so/fiatdao/Delphi-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
     /// @dev Reverts if the block time exceeds or is equal to pool maturity.
     /// @return result The result as an signed 59.18-decimal fixed-point number.
-function value() external view override(IValueProvider) returns (int256) {
+    function value() external view override(IValueProvider) returns (int256) {
         // The base token reserves from the balancer vault in 18 digits precision
-        (uint256 baseReserves, , , ) = IVault(balancerVaultAddress).getPoolTokenInfo(
-            poolId,
-            IERC20(underlier)
-        );
+        (uint256 baseReserves, , , ) = IVault(balancerVaultAddress)
+            .getPoolTokenInfo(poolId, IERC20(underlier));
         baseReserves = uconvert(baseReserves, underlierDecimals, 18);
 
         // The epToken balance from the balancer vault in 18 digits precision
-        (uint256 ePTokenBalance, , , ) = IVault(balancerVaultAddress).getPoolTokenInfo(
-            poolId,
-            IERC20(ePTokenBond)
-        );
+        (uint256 ePTokenBalance, , , ) = IVault(balancerVaultAddress)
+            .getPoolTokenInfo(poolId, IERC20(ePTokenBond));
         ePTokenBalance = uconvert(ePTokenBalance, ePTokenBondDecimals, 18);
 
         // The number of LP shares in 18 digits precision
