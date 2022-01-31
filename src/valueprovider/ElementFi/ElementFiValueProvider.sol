@@ -9,9 +9,7 @@ import {Convert} from "src/valueprovider/utils/Convert.sol";
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
 // @notice Emitted when trying to add pull a value for an expired pool
-error ElementFiValueProvider__value_maturityLessThanBlocktime(
-    uint256 maturity
-);
+error ElementFiValueProvider__value_maturityLessThanBlocktime(uint256 maturity);
 
 contract ElementFiValueProvider is IValueProvider, Convert {
     bytes32 private immutable _poolId;
@@ -67,7 +65,6 @@ contract ElementFiValueProvider is IValueProvider, Convert {
     /// @dev Reverts if the block time exceeds or is equal to pool maturity.
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function value() external view override(IValueProvider) returns (int256) {
-        
         // No values for matured pools
         if (block.timestamp >= _maturity) {
             revert ElementFiValueProvider__value_maturityLessThanBlocktime(

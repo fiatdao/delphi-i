@@ -66,10 +66,9 @@ contract NotionalFinanceValueProvider is IValueProvider, Convert {
         );
 
         // Convert continuous compounding to discrete compounding rate
-        int256 discreteRateD59x18 = PRBMathSD59x18.exp(
-            ratePerSecondD59x18
-        ) - PRBMathSD59x18.SCALE;
-        
+        int256 discreteRateD59x18 = PRBMathSD59x18.exp(ratePerSecondD59x18) -
+            PRBMathSD59x18.SCALE;
+
         // The result is a 59.18 fixed-point number.
         return discreteRateD59x18;
     }

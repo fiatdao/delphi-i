@@ -21,7 +21,8 @@ contract YieldValueProviderTest is DSTest {
         yieldVP = new YieldValueProvider(
             address(mockValueProvider),
             uint256(1650937617),
-            int256(3168808781));
+            int256(3168808781)
+        );
 
         // Set the value returned by the pool contract
         // values taken from a Yield Pool contract deployed at:
@@ -38,20 +39,21 @@ contract YieldValueProviderTest is DSTest {
             }),
             false
         );
-    }    
+    }
 
     function setUpWithValues(
         uint256 maturity,
         int256 timeScale,
-        uint112 baseReserve, 
+        uint112 baseReserve,
         uint112 fyReserve,
         uint32 blocktime
-        ) public {
+    ) public {
         mockValueProvider = new MockProvider();
         yieldVP = new YieldValueProvider(
             address(mockValueProvider),
             uint256(maturity),
-            int256(timeScale));
+            int256(timeScale)
+        );
 
         // Set the value returned by the pool contract
         // values taken from a Yield Pool contract deployed at:
@@ -60,11 +62,7 @@ contract YieldValueProviderTest is DSTest {
             abi.encodePacked(IYieldPool.getCache.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(
-                    baseReserve,
-                    fyReserve,
-                    blocktime
-                )
+                data: abi.encode(baseReserve, fyReserve, blocktime)
             }),
             false
         );
@@ -75,7 +73,6 @@ contract YieldValueProviderTest is DSTest {
     }
 
     function test_GetValue() public {
-
         // Test data
         setUpWithValues(
             uint256(1650937617),
