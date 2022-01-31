@@ -4,26 +4,35 @@ pragma solidity ^0.8.0;
 import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
 import {INotionalView, MarketParameters} from "src/valueprovider/NotionalFinance/INotionalView.sol";
 
-contract NotionalFinanceValueProvider is IValueProvider {
-    int256 internal constant RATE_PRECISION_CONVERSION = 1e9;
+import {Convert} from "src/valueprovider/utils/Convert.sol";
+import "lib/prb-math/contracts/PRBMathSD59x18.sol";
+
+contract NotionalFinanceValueProvider is IValueProvider, Convert {
+    // Seconds in a 360 days year as used by Notional
+    int256 internal constant SECONDS_PER_YEAR = 31104000 * 1e18;
 
     INotionalView private immutable _notionalView;
     uint16 private immutable _currencyID;
     uint256 private immutable _maturityDate;
     uint256 private immutable _settlementDate;
 
+    uint256 private immutable _lastImpliedRateDecimals;
+
     /// @notice                         Constructs the Value provider contracts with the needed Notional contract data in order to
     ///                                 calculate the annual rate.
     /// @param notionalViewContract_    The address of the deployed notional view contract.
     /// @param currencyID_              Currency ID(eth = 1, dai = 2, usdc = 3, wbtc = 4)
+    /// @param lastImpliedRateDecimals_ Precision of the market rate.
     /// @param maturity_                Maturity date.
     /// @param settlementDate_          Settlement date.
     constructor(
         address notionalViewContract_,
         uint16 currencyID_,
+        uint256 lastImpliedRateDecimals_,
         uint256 maturity_,
         uint256 settlementDate_
     ) {
+        _lastImpliedRateDecimals = lastImpliedRateDecimals_;
         _notionalView = INotionalView(notionalViewContract_);
         _currencyID = currencyID_;
         _maturityDate = maturity_;
@@ -42,6 +51,25 @@ contract NotionalFinanceValueProvider is IValueProvider {
             _maturityDate,
             _settlementDate
         );
-        return int256(marketParams.lastImpliedRate) * RATE_PRECISION_CONVERSION;
+
+        // Convert rate per anum to 18 digits precision.
+        uint256 ratePerAnnum = uconvert(
+            marketParams.lastImpliedRate,
+            _lastImpliedRateDecimals,
+            18
+        );
+
+        // Convert per anum to per second rate
+        int256 ratePerSecondD59x18 = PRBMathSD59x18.div(
+            int256(ratePerAnnum),
+            SECONDS_PER_YEAR
+        );
+
+        // Convert continuous compounding to discrete compounding rate
+        int256 discreteRateD59x18 = PRBMathSD59x18.exp(ratePerSecondD59x18) -
+            PRBMathSD59x18.SCALE;
+
+        // The result is a 59.18 fixed-point number.
+        return discreteRateD59x18;
     }
 }

@@ -1,19 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+import "src/valueprovider/utils/Convert.sol";
 import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
-
 import {IChainlinkAggregatorV3Interface} from "src/valueprovider/SpotPrice/ChainlinkAggregatorV3Interface.sol";
 
-error ChainLinkValueProvider__unsuportedUnderlierDecimalFormat(
-    uint8 underlierDecimals
-);
-
-contract ChainLinkValueProvider is IValueProvider {
-    int256 private immutable _underlierDecimalsConversion;
-
-    address internal _underlierAddress;
-    IChainlinkAggregatorV3Interface internal _chainlinkAggregator;
+contract ChainLinkValueProvider is IValueProvider, Convert {
+    uint256 private immutable _underlierDecimals;
+    address private _underlierAddress;
+    IChainlinkAggregatorV3Interface private _chainlinkAggregator;
 
     /// @notice                             Constructs the Value provider contracts with the needed Chainlink.
     /// @param chainlinkAggregatorAddress_  Address of the deployed chainlink aggregator contract.
@@ -21,13 +16,8 @@ contract ChainLinkValueProvider is IValueProvider {
         _chainlinkAggregator = IChainlinkAggregatorV3Interface(
             chainlinkAggregatorAddress_
         );
-        uint8 underlierDecimals = _chainlinkAggregator.decimals();
-        if (underlierDecimals > 18)
-            revert ChainLinkValueProvider__unsuportedUnderlierDecimalFormat(
-                underlierDecimals
-            );
 
-        _underlierDecimalsConversion = int256(10**(18 - underlierDecimals));
+        _underlierDecimals = uint256(_chainlinkAggregator.decimals());
     }
 
     /// @notice Retrieves the price from the chainlink aggregator
@@ -35,7 +25,8 @@ contract ChainLinkValueProvider is IValueProvider {
     function value() external view override(IValueProvider) returns (int256) {
         // The returned annual rate is in 1e9 precision so we need to convert it to 1e18 precision.
         (, int256 answer, , , ) = _chainlinkAggregator.latestRoundData();
-        return answer * _underlierDecimalsConversion;
+
+        return convert(answer, _underlierDecimals, 18);
     }
 
     /// @notice returns the description of the chainlink aggregator the proxy points to.
