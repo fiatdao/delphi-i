@@ -44,7 +44,7 @@ contract YieldValueProviderTest is DSTest {
     function test_deploy() public {
         createWithValues(
             uint256(1648177200),
-            int256(3168808781),// 58454204609 in 64.64 format
+            int256(3168808781), // 58454204609 in 64.64 format
             uint112(2129533588416199172581255),
             uint112(2303024699021990246792971),
             uint32(1643281604)
@@ -53,12 +53,11 @@ contract YieldValueProviderTest is DSTest {
     }
 
     function test_GetValue() public {
-
         // Compute example 1 from:
         // https://colab.research.google.com/drive/1RYGuGQW3RcRlYkk2JKy6FeEouvr77gFV#scrollTo=ccEQ0z8xF0L4
         createWithValues(
             uint256(1648177200),
-            int256(3168808781),// 58454204609 in 64.64 format
+            int256(3168808781), // 58454204609 in 64.64 format
             uint112(2129533588416199172581255),
             uint112(2303024699021990246792971),
             uint32(1643281604)
