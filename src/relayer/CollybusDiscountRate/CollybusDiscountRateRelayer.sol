@@ -235,7 +235,10 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
                 oracleData.minimumThresholdValue
             ) {
                 oracleData.lastUpdateValue = rate;
-                ICollybus(collybus).updateDiscountRate(oracleData.tokenId, uint256(rate));
+                ICollybus(collybus).updateDiscountRate(
+                    oracleData.tokenId,
+                    uint256(rate)
+                );
 
                 emit UpdatedCollybus(oracleData.tokenId, uint256(rate));
             }
