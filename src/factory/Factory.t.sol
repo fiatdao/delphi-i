@@ -266,6 +266,7 @@ contract FactoryTest is DSTest {
             "Oracle count should be correct"
         );
 
+        // Iterate and check each oracle was deployed
         for (uint256 i = 0; i < elementAggregatorData.oracleData.length; i++) {
             assertTrue(
                 aggregator.oracleAt(i) != address(0),
@@ -335,7 +336,11 @@ contract FactoryTest is DSTest {
             "CollybusDiscountPriceRelayer should be deployed"
         );
 
-        // check counts
+        assertEq(
+            ICollybusDiscountRateRelayer(discountRateRelayer).oracleCount(),
+            deployData.aggregatorData.length,
+            "Discount rate relayer invalid aggregator count"
+        );
     }
 
     function test_deploy_AddAggregator() public {
@@ -376,7 +381,7 @@ contract FactoryTest is DSTest {
 
         notionalAggregator.oracleData[0] = abi.encode(notionalOracleData);
 
-        factory.deployAggregator(
+        address aggregatorAddress = factory.deployAggregator(
             abi.encode(notionalAggregator),
             discountRateRelayer
         );
@@ -387,7 +392,12 @@ contract FactoryTest is DSTest {
             "Replayer should contain the new aggregator"
         );
 
-        // check exists
+        assertTrue(
+            ICollybusDiscountRateRelayer(discountRateRelayer).oracleExists(
+                aggregatorAddress
+            ),
+            "Aggregator should exist"
+        );
     }
 
     function test_deploy_AddOracle() public {
