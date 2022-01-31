@@ -8,8 +8,8 @@ import {Convert} from "src/valueprovider/utils/Convert.sol";
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
 contract NotionalFinanceValueProvider is IValueProvider, Convert {
-    //Julien year, 365.25 days
-    int256 internal constant SECONDS_PER_YEAR = 31557600 * 1e18;
+    // Seconds in a 360 days year as used by Notional
+    int256 internal constant SECONDS_PER_YEAR = 31104000 * 1e18;
 
     INotionalView private immutable _notionalView;
     uint16 private immutable _currencyID;
@@ -59,13 +59,18 @@ contract NotionalFinanceValueProvider is IValueProvider, Convert {
             18
         );
 
-        // Apply rate per second conversion formula
+        // Convert per anum to per second rate
         int256 ratePerSecondD59x18 = PRBMathSD59x18.div(
             int256(ratePerAnnum),
             SECONDS_PER_YEAR
         );
 
+        // Convert continuous compounding to discrete compounding rate
+        int256 discreteRateD59x18 = PRBMathSD59x18.exp(
+            ratePerSecondD59x18
+        ) - PRBMathSD59x18.SCALE;
+        
         // The result is a 59.18 fixed-point number.
-        return ratePerSecondD59x18;
+        return discreteRateD59x18;
     }
 }
