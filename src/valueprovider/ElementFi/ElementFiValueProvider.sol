@@ -20,7 +20,6 @@ contract ElementFiValueProvider is IValueProvider, Convert {
     uint256 private immutable _underlierDecimals;
     address private immutable _ePTokenBond;
     uint256 private immutable _ePTokenBondDecimals;
-    uint256 private immutable _maturity;
     int256 private immutable _timeScale;
 
     /// @notice                     Constructs the Value provider contracts with the needed Element data in order to
@@ -33,7 +32,6 @@ contract ElementFiValueProvider is IValueProvider, Convert {
     /// @param underlierDecimals_   Precision of the underlier
     /// @param ePTokenBond_         Address of the bond IERC20 token.
     /// @param ePTokenBondDecimals_ Precision of the bond.
-    /// @param maturity_            Expiration of the pool
     /// @param timeScale_           Time scale used on this pool (i.e. 1/(timeStretch*secondsPerYear)) in 59x18 fixed point
     constructor(
         bytes32 poolId_,
@@ -44,7 +42,6 @@ contract ElementFiValueProvider is IValueProvider, Convert {
         uint256 underlierDecimals_,
         address ePTokenBond_,
         uint256 ePTokenBondDecimals_,
-        uint256 maturity_,
         int256 timeScale_
     ) {
         _poolId = poolId_;
@@ -55,7 +52,6 @@ contract ElementFiValueProvider is IValueProvider, Convert {
         _underlierDecimals = underlierDecimals_;
         _ePTokenBond = ePTokenBond_;
         _ePTokenBondDecimals = ePTokenBondDecimals_;
-        _maturity = maturity_;
         _timeScale = timeScale_;
     }
 
@@ -65,13 +61,6 @@ contract ElementFiValueProvider is IValueProvider, Convert {
     /// @dev Reverts if the block time exceeds or is equal to pool maturity.
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function value() external view override(IValueProvider) returns (int256) {
-        // No values for matured pools
-        if (block.timestamp >= _maturity) {
-            revert ElementFiValueProvider__value_maturityLessThanBlocktime(
-                _maturity
-            );
-        }
-
         // The base token reserves from the balancer vault in 18 digits precision
         (uint256 baseReserves, , , ) = _balancerVault.getPoolTokenInfo(
             _poolId,

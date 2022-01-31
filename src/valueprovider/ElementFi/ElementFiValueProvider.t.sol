@@ -94,8 +94,6 @@ contract ElementFiValueProviderTest is DSTest {
             0x285328906D0D33cb757c1E471F5e2176683247c2,
             // Principal bond decimal format
             18,
-            // Timestamp to maturity,
-            1651240496,
             // Time scale in seconds
             412133793
         );

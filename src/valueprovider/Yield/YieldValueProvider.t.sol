@@ -16,32 +16,7 @@ contract YieldValueProviderTest is DSTest {
 
     YieldValueProvider internal yieldVP;
 
-    function setUp() public {
-        mockValueProvider = new MockProvider();
-        yieldVP = new YieldValueProvider(
-            address(mockValueProvider),
-            uint256(1650937617),
-            int256(3168808781)
-        );
-
-        // Set the value returned by the pool contract
-        // values taken from a Yield Pool contract deployed at:
-        // 0x3771c99c087a81df4633b50d8b149afaa83e3c9e at block 13911954
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IYieldPool.getCache.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(
-                    uint112(68427375273295066088),
-                    uint112(131617714153224459945),
-                    uint32(1640937617)
-                )
-            }),
-            false
-        );
-    }
-
-    function setUpWithValues(
+    function createWithValues(
         uint256 maturity,
         int256 timeScale,
         uint112 baseReserve,
@@ -56,8 +31,6 @@ contract YieldValueProviderTest is DSTest {
         );
 
         // Set the value returned by the pool contract
-        // values taken from a Yield Pool contract deployed at:
-        // 0x3771c99c087a81df4633b50d8b149afaa83e3c9e at block 13911954
         mockValueProvider.givenQueryReturnResponse(
             abi.encodePacked(IYieldPool.getCache.selector),
             MockProvider.ReturnData({
@@ -69,31 +42,30 @@ contract YieldValueProviderTest is DSTest {
     }
 
     function test_deploy() public {
+        createWithValues(
+            uint256(1648177200),
+            int256(3168808781),// 58454204609 in 64.64 format
+            uint112(2129533588416199172581255),
+            uint112(2303024699021990246792971),
+            uint32(1643281604)
+        );
         assertTrue(address(yieldVP) != address(0));
     }
 
     function test_GetValue() public {
-        // Test data
-        setUpWithValues(
-            uint256(1650937617),
-            int256(3168808781), // 58454204609 (in 64.64 fixed point)
-            uint112(68427375273295066088),
-            uint112(131617714153224459945),
-            uint32(1640937617)
-        );
-        int256 expectedValue = 2072808605;
-        int256 value = yieldVP.value();
-        assertTrue(value == expectedValue);
 
-        // Test data see https://colab.research.google.com/drive/1RYGuGQW3RcRlYkk2JKy6FeEouvr77gFV#scrollTo=ccEQ0z8xF0L4
-        /*setUpWithValues(
+        // Compute example 1 from:
+        // https://colab.research.google.com/drive/1RYGuGQW3RcRlYkk2JKy6FeEouvr77gFV#scrollTo=ccEQ0z8xF0L4
+        createWithValues(
+            uint256(1648177200),
+            int256(3168808781),// 58454204609 in 64.64 format
             uint112(2129533588416199172581255),
             uint112(2303024699021990246792971),
-            uint32(1643281604),
-            int128(58454204609)
+            uint32(1643281604)
         );
-        expectedValue = 248182252;
-        value = yieldVP.value();
-        assertTrue(value == expectedValue);*/
+
+        int256 expectedValue = 248182251;
+        int256 value = yieldVP.value();
+        assertTrue(value == expectedValue);
     }
 }
