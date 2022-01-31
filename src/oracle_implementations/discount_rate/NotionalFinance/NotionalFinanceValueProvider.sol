@@ -23,7 +23,7 @@ contract NotionalFinanceValueProvider is Oracle {
         uint256 timeUpdateWindow_,
         uint256 maxValidTime_,
         int256 alpha_,
-        //        
+        //
         address notionalViewContract_,
         uint16 currencyID_,
         uint256 maturity_,

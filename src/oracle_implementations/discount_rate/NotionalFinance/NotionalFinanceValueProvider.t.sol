@@ -20,7 +20,7 @@ contract NotionalFinanceValueProviderTest is DSTest {
 
     uint256 internal _timeUpdateWindow = 100; // seconds
     uint256 internal _maxValidTime = 300;
-    int256 internal _alpha = 2 * 10**17; // 0.2        
+    int256 internal _alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
         // Values taken from interogating the active markets via the Notional View Contract deployed at
@@ -63,7 +63,6 @@ contract NotionalFinanceValueProviderTest is DSTest {
             _maxValidTime,
             // Alpha
             _alpha,
-
             // Notional Finance arguments
             address(mockNotionalView),
             2,

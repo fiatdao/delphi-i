@@ -19,7 +19,7 @@ contract ChainLinkValueProviderTest is DSTest {
 
     uint256 internal _timeUpdateWindow = 100; // seconds
     uint256 internal _maxValidTime = 300;
-    int256 internal _alpha = 2 * 10**17; // 0.2        
+    int256 internal _alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
         mockChainlinkAggregator = new MockProvider();
@@ -73,8 +73,7 @@ contract ChainLinkValueProviderTest is DSTest {
             _maxValidTime,
             // Alpha
             _alpha,
-
-            // Chainlink arguments            
+            // Chainlink arguments
             address(mockChainlinkAggregator)
         );
     }
@@ -104,7 +103,6 @@ contract ChainLinkValueProviderTest is DSTest {
             _maxValidTime,
             // Alpha
             _alpha,
-
             // Chainlink arguments
             address(unsupportedDecimalsMP)
         );

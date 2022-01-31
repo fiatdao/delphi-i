@@ -20,6 +20,7 @@ contract OracleImplementation is Oracle {
     // Allow the test to change the return value
     // This will not be used in the actual implementation
     int256 internal _returnValue;
+
     function setValue(int256 value_) public {
         _returnValue = value_;
     }
@@ -27,6 +28,7 @@ contract OracleImplementation is Oracle {
     // We want to handle cases where the oracle fails to obtain values
     // Ideally the `getValue()` will never fail, but the current implementation will also handle fails
     bool internal _success = true;
+
     function setSuccess(bool success_) public {
         _success = success_;
     }
@@ -142,9 +144,7 @@ contract OracleTest is DSTest {
     }
 
     function test_update_ShouldNotFailWhenValueProviderFails() public {
-        oracle.setSuccess(            
-            false
-        );
+        oracle.setSuccess(false);
 
         // Update the oracle
         oracle.update();
@@ -156,9 +156,7 @@ contract OracleTest is DSTest {
         // The second update will fail and the value should be invalid because of the flag only.
         // (time check is still corect because maxValidTime >= timeUpdateWindow)
 
-        oracle.setValue(
-                10**18
-        );
+        oracle.setValue(10**18);
 
         // Update the oracle
         oracle.update();

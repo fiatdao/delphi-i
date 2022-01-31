@@ -18,7 +18,7 @@ contract YieldValueProviderTest is DSTest {
 
     uint256 internal _timeUpdateWindow = 100; // seconds
     uint256 internal _maxValidTime = 300;
-    int256 internal _alpha = 2 * 10**17; // 0.2        
+    int256 internal _alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
         mockValueProvider = new MockProvider();
@@ -30,7 +30,6 @@ contract YieldValueProviderTest is DSTest {
             _maxValidTime,
             // Alpha
             _alpha,
-
             // Yield arguments
             address(mockValueProvider)
         );

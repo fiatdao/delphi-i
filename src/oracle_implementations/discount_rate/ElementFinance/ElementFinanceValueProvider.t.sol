@@ -19,7 +19,7 @@ contract ElementFinanceValueProviderTest is DSTest {
 
     uint256 internal _timeUpdateWindow = 100; // seconds
     uint256 internal _maxValidTime = 300;
-    int256 internal _alpha = 2 * 10**17; // 0.2    
+    int256 internal _alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
         mockBalancerVault = new MockProvider();
@@ -78,7 +78,6 @@ contract ElementFinanceValueProviderTest is DSTest {
             _maxValidTime,
             // Alpha
             _alpha,
-
             // Element Finance arguments
             // Pool ID
             0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,

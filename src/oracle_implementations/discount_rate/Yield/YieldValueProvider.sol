@@ -15,7 +15,7 @@ contract YieldValueProvider is Oracle {
         uint256 timeUpdateWindow_,
         uint256 maxValidTime_,
         int256 alpha_,
-        // 
+        //
         address yieldPool_
     ) Oracle(timeUpdateWindow_, maxValidTime_, alpha_) {
         yieldPool = IYieldPool(yieldPool_);
