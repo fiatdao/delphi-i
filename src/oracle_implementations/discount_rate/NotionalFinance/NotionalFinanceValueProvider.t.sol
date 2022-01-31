@@ -66,6 +66,7 @@ contract NotionalFinanceValueProviderTest is DSTest {
             // Notional Finance arguments
             address(mockNotionalView),
             2,
+            9,
             1671840000,
             1648512000
         );
@@ -77,10 +78,10 @@ contract NotionalFinanceValueProviderTest is DSTest {
 
     function test_GetValue() public {
         // Expected value is the lastImpliedRate(1e9 precision) in 1e18 precision
-        int256 expectedValue = 88688026 * 1e9;
+        int256 expectedValue = 2851338287; //2810353955;
+
         // Computed value based on the parameters that are sent via the mock provider
         int256 value = notionalVP.getValue();
-
         assertTrue(value == expectedValue);
     }
 }
