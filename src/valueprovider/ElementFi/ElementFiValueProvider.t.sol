@@ -7,15 +7,16 @@ import "src/test/utils/Caller.sol";
 import {Hevm} from "src/test/utils/Hevm.sol";
 import {MockProvider} from "src/test/utils/MockProvider.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ElementFinanceValueProvider} from "./ElementFinanceValueProvider.sol";
-import {IVault} from "src/valueprovider/ElementFinance/IVault.sol";
+import {ElementFiValueProvider} from "./ElementFiValueProvider.sol";
+import {IVault} from "src/valueprovider/ElementFi/IVault.sol";
 
-contract ElementFinanceValueProviderTest is DSTest {
+contract ElementFiValueProviderTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
 
     MockProvider internal mockBalancerVault;
+    MockProvider internal poolToken;
 
-    ElementFinanceValueProvider internal efValueProvider;
+    ElementFiValueProvider internal efValueProvider;
 
     bytes32 internal _poolId =
         0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090;
@@ -29,18 +30,20 @@ contract ElementFinanceValueProviderTest is DSTest {
 
         // Documentation page:
         // https://www.notion.so/fiatdao/FIAT-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
-        // For extra info about the values used check the second example from the documentation above.
+        // For extra info about the values used check the examples from the documentation above.
         mockBalancerVault.givenQueryReturnResponse(
             // Used Parameters are: pool id, underlier address
             abi.encodeWithSelector(
                 IVault.getPoolTokenInfo.selector,
-                _poolId,
-                IERC20(_underlier)
+                bytes32(
+                    0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7
+                ),
+                IERC20(address(0x285328906D0D33cb757c1E471F5e2176683247c2))
             ),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(
-                    uint256(458783042838683314781124),
+                    uint256(663426072118149531985),
                     uint256(0),
                     uint256(0),
                     address(0)
@@ -54,13 +57,15 @@ contract ElementFinanceValueProviderTest is DSTest {
         mockBalancerVault.givenQueryReturnResponse(
             abi.encodeWithSelector(
                 IVault.getPoolTokenInfo.selector,
-                _poolId,
-                IERC20(address(_ePTokenBond))
+                bytes32(
+                    0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7
+                ),
+                IERC20(address(0xc4AD29ba4B3c580e6D59105FFf484999997675Ff))
             ),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(
-                    uint256(386200838116957287987844),
+                    uint256(232574802191012296969),
                     uint256(0),
                     uint256(0),
                     address(0)
@@ -69,19 +74,35 @@ contract ElementFinanceValueProviderTest is DSTest {
             false
         );
 
-        efValueProvider = new ElementFinanceValueProvider(
+        poolToken = new MockProvider();
+        poolToken.givenQueryReturnResponse(
+            abi.encodeWithSelector(IERC20.totalSupply.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint256(874253869672828123816))
+            }),
+            false
+        );
+
+        efValueProvider = new ElementFiValueProvider(
             // Pool ID
-            _poolId,
+            0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7,
             // Address of the balancer vault
             address(mockBalancerVault),
+            // pool token address
+            address(poolToken),
+            // pool token decimals
+            18,
             // Underlier token address
-            _underlier,
+            0xc4AD29ba4B3c580e6D59105FFf484999997675Ff,
+            // Underlier decimal format
+            18,
             // Principal bond token address
-            _ePTokenBond,
-            // Timestamp to maturity,
-            _timeToMaturity,
+            0x285328906D0D33cb757c1E471F5e2176683247c2,
+            // Principal bond decimal format
+            18,
             // Time scale in seconds
-            _unitSeconds
+            412133793
         );
     }
 
@@ -115,8 +136,7 @@ contract ElementFinanceValueProviderTest is DSTest {
 
     function test_GetValue() public {
         // Computed value based on the parameters that are sent via the mock provider
-        int256 computedExpectedValue = 31000116467775202;
-        hevm.warp(1642067742);
+        int256 computedExpectedValue = 4583021729;
 
         int256 value = efValueProvider.value();
 
