@@ -19,8 +19,10 @@ import {CollybusSpotPriceRelayer} from "src/relayer/CollybusSpotPrice/CollybusSp
 // @notice Emitter when the collybus address is address(0)
 error Factory__deployDiscountRateArchitecture_invalidCollybusAddress();
 
+// @notice Emitted if no value provider is found for given providerType
 error Factory__deployValueProvider_invalidValueProviderType();
 
+/// @notice Data structure that wraps data needed to deploy an Element Value Provider contract
 struct ElementVPData {
     bytes32 poolId;
     address balancerVault;
@@ -30,6 +32,7 @@ struct ElementVPData {
     uint256 unitSeconds;
 }
 
+/// @notice Data structure that wraps data needed to deploy an Notional Value Provider contract
 struct NotionalVPData {
     address notionalViewAddress;
     uint16 currencyID;
@@ -37,6 +40,9 @@ struct NotionalVPData {
     uint256 settlementDate;
 }
 
+/// @notice Data structure that wraps needed data to deploy an Oracle contract
+/// @dev The value provider data field is a abi.encoded struct based on the given providerType
+/// @dev The Factory will revert if the providerType is not found
 struct OracleData {
     bytes valueProviderData;
     uint8 providerType;
@@ -45,6 +51,9 @@ struct OracleData {
     int256 alpha;
 }
 
+/// @notice Data structure that wraps needed data to deploy an Oracle Aggregator contract
+/// @dev The oracleData array field contains abi.encoded OracleData structures
+/// @dev Factory will revert if the requiredValidValues is bigger than the oracleData item count
 struct AggregatorData {
     uint256 tokenId;
     bytes[] oracleData;
@@ -52,6 +61,9 @@ struct AggregatorData {
     uint256 minimumThresholdValue;
 }
 
+/// @notice Data structure that wraps needed data to deploy a full Discount Rate Relayer architecture
+/// @dev The aggregatorData field contains abi.encoded AggregatorData structures
+/// @dev Factory will revert if the aggregators do not contain unique tokenId's
 struct DiscountRateDeployData {
     bytes[] aggregatorData;
 }
@@ -62,109 +74,10 @@ contract Factory {
         Element
     }
 
-    function deployOracle(
-        bytes memory oracleDataEncoded,
-        address aggregatorAddress
-    ) public returns (address) {
-        OracleData memory oracleData = abi.decode(
-            oracleDataEncoded,
-            (OracleData)
-        );
-
-        address valueProviderAddress = deployValueProvider(
-            oracleData.valueProviderData,
-            oracleData.providerType
-        );
-
-        Oracle oracle = new Oracle(
-            valueProviderAddress,
-            oracleData.timeWindow,
-            oracleData.maxValidTime,
-            oracleData.alpha
-        );
-
-        IAggregatorOracle(aggregatorAddress).oracleAdd(address(oracle));
-
-        return address(oracle);
-    }
-
-    function deployValueProvider(
-        bytes memory valueProviderData,
-        uint8 valueProviderType
-    ) public returns (address) {
-        if (valueProviderType == uint8(ValueProviderType.Notional)) {
-            NotionalVPData memory notionalData = abi.decode(
-                valueProviderData,
-                (NotionalVPData)
-            );
-
-            address notionalVP = deployNotionalFinanceProvider(
-                notionalData.notionalViewAddress,
-                notionalData.currencyID,
-                notionalData.maturity,
-                notionalData.settlementDate
-            );
-
-            return notionalVP;
-        }
-
-        if (valueProviderType == uint8(ValueProviderType.Element)) {
-            ElementVPData memory elementData = abi.decode(
-                valueProviderData,
-                (ElementVPData)
-            );
-
-            address elementVP = deployElementFinanceValueProvider(
-                elementData.poolId,
-                elementData.balancerVault,
-                elementData.underlier,
-                elementData.ePTokenBond,
-                elementData.timeToMaturity,
-                elementData.unitSeconds
-            );
-
-            return elementVP;
-        }
-
-        revert Factory__deployValueProvider_invalidValueProviderType();
-    }
-
-    function deployAggregator(
-        bytes memory data,
-        address discountRateRelayerAddress
-    ) public returns (address) {
-        AggregatorOracle aggregatorOracle = new AggregatorOracle();
-
-        // Decode each input notional aggregator structure
-        AggregatorData memory aggData = abi.decode(data, (AggregatorData));
-
-        uint256 oracleCount = aggData.oracleData.length;
-
-        for (
-            uint256 oracleIndex = 0;
-            oracleIndex < oracleCount;
-            oracleIndex++
-        ) {
-            deployOracle(
-                aggData.oracleData[oracleIndex],
-                address(aggregatorOracle)
-            );
-        }
-
-        aggregatorOracle.setParam(
-            "requiredValidValues",
-            aggData.requiredValidValues
-        );
-
-        ICollybusDiscountRateRelayer(discountRateRelayerAddress).oracleAdd(
-            address(aggregatorOracle),
-            aggData.tokenId,
-            aggData.minimumThresholdValue
-        );
-
-        return address(aggregatorOracle);
-    }
-
+    /// @notice Deploys an Element Finance Value Provider
+    /// @dev For more information about the params please check the Value Provider Contract
+    /// todo: add the master github path to contract
+    /// @return Returns the address of the new value provider
     function deployElementFinanceValueProvider(
         bytes32 poolId_,
         address balancerVault_,
@@ -185,6 +98,10 @@ contract Factory {
         return address(elementFinanceValueProvider);
     }
 
+    /// @notice Deploys an Notional Finance Value Provider
+    /// @dev For more information about the params please check the Value Provider Contract
+    /// todo: add the master github path to contract
+    /// @return Returns the address of the new value provider
     function deployNotionalFinanceProvider(
         address notionalViewAddress_,
         uint16 currencyId_,
@@ -201,6 +118,148 @@ contract Factory {
         return address(notionalFinanceValueProvider);
     }
 
+    /// @notice Deploys a new Value Provider contract
+    /// @param valueProviderDataEncoded_ Abi encoded Value Provider data structure
+    /// @param valueProviderType_ Type used to decode the given data structure
+    /// @dev Reverts if valueProviderType_ is not recognized
+    /// @dev Reverts if the encoded struct and type do not match
+    /// @return Returns the address of the new value provider
+    function deployValueProvider(
+        bytes memory valueProviderDataEncoded_,
+        uint8 valueProviderType_
+    ) public returns (address) {
+        if (valueProviderType_ == uint8(ValueProviderType.Notional)) {
+            // Decode the given struct
+            // This will revert if there's a missmatch between the valueProviderType_ and encoded bytes
+            NotionalVPData memory notionalData = abi.decode(
+                valueProviderDataEncoded_,
+                (NotionalVPData)
+            );
+
+            // Create and return the value provider
+            address notionalVP = deployNotionalFinanceProvider(
+                notionalData.notionalViewAddress,
+                notionalData.currencyID,
+                notionalData.maturity,
+                notionalData.settlementDate
+            );
+
+            return notionalVP;
+        }
+
+        if (valueProviderType_ == uint8(ValueProviderType.Element)) {
+            // Decode the given struct
+            // This will revert if there's a missmatch between the valueProviderType_ and encoded bytes
+            ElementVPData memory elementData = abi.decode(
+                valueProviderDataEncoded_,
+                (ElementVPData)
+            );
+
+            // Create and return the value provider
+            address elementVP = deployElementFinanceValueProvider(
+                elementData.poolId,
+                elementData.balancerVault,
+                elementData.underlier,
+                elementData.ePTokenBond,
+                elementData.timeToMaturity,
+                elementData.unitSeconds
+            );
+
+            return elementVP;
+        }
+
+        // Revert if the value provider type is not supported
+        revert Factory__deployValueProvider_invalidValueProviderType();
+    }
+
+    /// @notice Deploys a new Oracle and adds it to an Aggregator
+    /// @param oracleDataEncoded_ Abi encoded Oracle data structure
+    /// @param aggregatorAddress_ The aggregator address that will contain the created Oracle
+    /// @dev Reverts if the encoded struct can not be decoded
+    /// @return Returns the address of the new Oracle
+    function deployOracle(
+        bytes memory oracleDataEncoded_,
+        address aggregatorAddress_
+    ) public returns (address) {
+        // Decode the oracle data
+        OracleData memory oracleData = abi.decode(
+            oracleDataEncoded_,
+            (OracleData)
+        );
+
+        // We deploy the value provider needed by the oracle
+        address valueProviderAddress = deployValueProvider(
+            oracleData.valueProviderData,
+            oracleData.providerType
+        );
+
+        // Deploy the oracle and use the new value provider
+        Oracle oracle = new Oracle(
+            valueProviderAddress,
+            oracleData.timeWindow,
+            oracleData.maxValidTime,
+            oracleData.alpha
+        );
+
+        // Add the oracle to the Aggregator Oracle
+        IAggregatorOracle(aggregatorAddress_).oracleAdd(address(oracle));
+
+        return address(oracle);
+    }
+
+    /// @notice Deploys a new Aggregator and adds it to a Relayer
+    /// @param aggregatorDataEncoded_ Abi encoded Oracle data structure
+    /// @param discountRateRelayerAddress_ The address of the discount rate relayer where we will add the aggregator
+    /// @dev Reverts if the encoded struct can not be decoded
+    /// @return Returns the address of the new Aggregator
+    function deployAggregator(
+        bytes memory aggregatorDataEncoded_,
+        address discountRateRelayerAddress_
+    ) public returns (address) {
+        // Create the aggregator contract
+        AggregatorOracle aggregatorOracle = new AggregatorOracle();
+
+        // Decode each input notional aggregator structure
+        AggregatorData memory aggData = abi.decode(
+            aggregatorDataEncoded_,
+            (AggregatorData)
+        );
+
+        // Iterate and deploy each oracle
+        uint256 oracleCount = aggData.oracleData.length;
+        for (
+            uint256 oracleIndex = 0;
+            oracleIndex < oracleCount;
+            oracleIndex++
+        ) {
+            deployOracle(
+                aggData.oracleData[oracleIndex],
+                address(aggregatorOracle)
+            );
+        }
+
+        // Set the minimim required valid values for the aggregator
+        // Reverts if the requiredValidValues is bigger than the oracleCount
+        aggregatorOracle.setParam(
+            "requiredValidValues",
+            aggData.requiredValidValues
+        );
+
+        // Add the aggregator to the relayer
+        // Reverts if the tokenId is not unique
+        // Revert if the address of the Aggregator is already used
+        ICollybusDiscountRateRelayer(discountRateRelayerAddress_).oracleAdd(
+            address(aggregatorOracle),
+            aggData.tokenId,
+            aggData.minimumThresholdValue
+        );
+
+        return address(aggregatorOracle);
+    }
+
+    /// @notice Deploys a new Discount Rate Relayer
+    /// @param collybus_ Address for the collybus
+    /// @return Returns the address of the Relayer
     function deployCollybusDiscountRateRelayer(address collybus_)
         public
         returns (address)
@@ -211,6 +270,9 @@ contract Factory {
         return address(discountRateRelayer);
     }
 
+    /// @notice Deploys a new Spot Price Relayer
+    /// @param collybus_ Address for the collybus
+    /// @return Returns the address of the Relayer
     function deployCollybusSpotPriceRelayer(address collybus_)
         public
         returns (address)
@@ -221,25 +283,32 @@ contract Factory {
         return address(spotPriceRelayer);
     }
 
+    /// @notice Deploys a full Discount Rate Relayer architecture, can contain Aggregator Oracles and Oracles
+    /// @param discountRateRelayerDataEncoded_ Abi encoded DiscountRateDeployData struct
+    /// @param collybusAddress_ Collybus address.
+    /// @dev Reverts on dependencies checks and conditions.
+    /// @return Returns the address of the Discount Rate Relayer
     function deployDiscountRateArchitecture(
-        DiscountRateDeployData memory deployData,
-        address collybusAddress
+        DiscountRateDeployData memory discountRateRelayerDataEncoded_,
+        address collybusAddress_
     ) public returns (address) {
         // The Collybus address is needed in order to deploy the Discount Rate Relayer
-        if (collybusAddress == address(0)) {
+        if (collybusAddress_ == address(0)) {
             revert Factory__deployDiscountRateArchitecture_invalidCollybusAddress();
         }
 
         // Create the relayer and cache the address
         address discountRateRelayerAddress = deployCollybusDiscountRateRelayer(
-            collybusAddress
+            collybusAddress_
         );
 
-        // We check if we have any national aggregators to deploy
-        uint256 aggCount = deployData.aggregatorData.length;
+        // Iterate and deploy each aggregator
+        uint256 aggCount = discountRateRelayerDataEncoded_
+            .aggregatorData
+            .length;
         for (uint256 aggIndex = 0; aggIndex < aggCount; aggIndex++) {
             deployAggregator(
-                deployData.aggregatorData[aggIndex],
+                discountRateRelayerDataEncoded_.aggregatorData[aggIndex],
                 discountRateRelayerAddress
             );
         }

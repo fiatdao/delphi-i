@@ -157,7 +157,6 @@ contract FactoryTest is DSTest {
     }
 
     function test_deploy_Oracle_createsContract(
-        address valueProvider_,
         uint256 timeUpdateWindow_,
         uint256 maxValidTime_,
         int256 alpha_
@@ -173,9 +172,9 @@ contract FactoryTest is DSTest {
 
         OracleData memory elementDataOracle = OracleData({
             valueProviderData: abi.encode(elementValueProvider),
-            timeWindow: 200,
-            maxValidTime: 600,
-            alpha: 2 * 10**17,
+            timeWindow: timeUpdateWindow_,
+            maxValidTime: maxValidTime_,
+            alpha: alpha_,
             providerType: uint8(Factory.ValueProviderType.Element)
         });
 
