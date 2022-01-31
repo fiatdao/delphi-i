@@ -7,9 +7,8 @@ import "src/test/utils/Caller.sol";
 import {Hevm} from "src/test/utils/Hevm.sol";
 import {MockProvider} from "src/test/utils/MockProvider.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ElementFiValueProvider} from "./ElementFiValueProvider.sol"; 
+import {ElementFiValueProvider} from "./ElementFiValueProvider.sol";
 import {IVault} from "src/oracle_implementations/discount_rate/ElementFi/IVault.sol";
-
 
 contract ElementFiValueProviderTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
@@ -80,7 +79,7 @@ contract ElementFiValueProviderTest is DSTest {
                 data: abi.encode(uint256(874253869672828123816))
             }),
             false
-        );        
+        );
 
         efValueProvider = new ElementFiValueProvider(
             // Oracle arguments
@@ -90,7 +89,6 @@ contract ElementFiValueProviderTest is DSTest {
             _maxValidTime,
             // Alpha
             _alpha,
-
             // Element Finance arguments
             // Pool ID
             0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7,

@@ -8,7 +8,6 @@ import {Convert} from "src/oracle_implementations/discount_rate/utils/Convert.so
 
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
-
 contract ElementFiValueProvider is Oracle, Convert {
     bytes32 private immutable _poolId;
     IVault private immutable _balancerVault;

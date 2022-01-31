@@ -6,9 +6,6 @@ import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 import "lib/abdk-libraries-solidity/ABDKMath64x64.sol";
 import {Oracle} from "src/oracle/Oracle.sol";
 
-
-
-
 contract YieldValueProvider is Oracle {
     // @notice Emitted when trying to add pull a value for an expired pool
     error YieldProtocolValueProvider__value_maturityLessThanBlocktime(
@@ -23,7 +20,7 @@ contract YieldValueProvider is Oracle {
     ///                             calculate the annual rate.
     /// @param timeUpdateWindow_    Minimum time between updates of the value
     /// @param maxValidTime_        Maximum time for which the value is valid
-    /// @param alpha_               Alpha parameter for EMA    
+    /// @param alpha_               Alpha parameter for EMA
     /// @param pool_                Address of the pool
     /// @param maturity_            Expiration of the pool
     /// @param timeScale_           Time scale used on this pool (i.e. 1/(timeStretch*secondsPerYear)) in 59x18 fixed point

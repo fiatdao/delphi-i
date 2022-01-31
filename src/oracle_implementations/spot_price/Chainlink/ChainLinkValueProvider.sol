@@ -5,7 +5,6 @@ import {Convert} from "src/oracle_implementations/discount_rate/utils/Convert.so
 import {IChainlinkAggregatorV3Interface} from "src/oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
 import {Oracle} from "src/oracle/Oracle.sol";
 
-
 contract ChainLinkValueProvider is Oracle, Convert {
     uint256 private immutable _underlierDecimals;
     address private _underlierAddress;

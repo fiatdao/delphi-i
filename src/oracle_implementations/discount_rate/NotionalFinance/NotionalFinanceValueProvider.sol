@@ -21,7 +21,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     ///                                 calculate the annual rate.
     /// @param timeUpdateWindow_        Minimum time between updates of the value
     /// @param maxValidTime_            Maximum time for which the value is valid
-    /// @param alpha_                   Alpha parameter for EMA    
+    /// @param alpha_                   Alpha parameter for EMA
     /// @param notionalViewContract_    The address of the deployed notional view contract.
     /// @param currencyID_              Currency ID(eth = 1, dai = 2, usdc = 3, wbtc = 4)
     /// @param lastImpliedRateDecimals_ Precision of the market rate.
