@@ -14,6 +14,7 @@ contract ElementFiValueProviderTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
 
     MockProvider internal mockBalancerVault;
+    MockProvider internal poolToken;
 
     ElementFiValueProvider internal efValueProvider;
 
@@ -28,14 +29,14 @@ contract ElementFiValueProviderTest is DSTest {
             abi.encodeWithSelector(
                 IVault.getPoolTokenInfo.selector,
                 bytes32(
-                    0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090
+                    0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7
                 ),
-                IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48))
+                IERC20(address(0x285328906D0D33cb757c1E471F5e2176683247c2))
             ),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(
-                    uint256(30217616208648),
+                    uint256(663426072118149531985),
                     uint256(0),
                     uint256(0),
                     address(0)
@@ -50,14 +51,14 @@ contract ElementFiValueProviderTest is DSTest {
             abi.encodeWithSelector(
                 IVault.getPoolTokenInfo.selector,
                 bytes32(
-                    0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090
+                    0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7
                 ),
-                IERC20(address(0x8a2228705ec979961F0e16df311dEbcf097A2766))
+                IERC20(address(0xc4AD29ba4B3c580e6D59105FFf484999997675Ff))
             ),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(
-                    uint256(19501271312513),
+                    uint256(232574802191012296969),
                     uint256(0),
                     uint256(0),
                     address(0)
@@ -66,27 +67,37 @@ contract ElementFiValueProviderTest is DSTest {
             false
         );
 
+        poolToken = new MockProvider();
+        poolToken.givenQueryReturnResponse(
+            abi.encodeWithSelector(IERC20.totalSupply.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint256(874253869672828123816))
+            }),
+            false
+        );
+
         efValueProvider = new ElementFiValueProvider(
             // Pool ID
-            0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
+            0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7,
             // Address of the balancer vault
             address(mockBalancerVault),
             // pool token address
-            0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
+            address(poolToken),
             // pool token decimals
             18,
             // Underlier token address
-            0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
+            0xc4AD29ba4B3c580e6D59105FFf484999997675Ff,
             // Underlier decimal format
-            6,
+            18,
             // Principal bond token address
-            0x8a2228705ec979961F0e16df311dEbcf097A2766,
+            0x285328906D0D33cb757c1E471F5e2176683247c2,
             // Principal bond decimal format
-            6,
+            18,
             // Timestamp to maturity,
-            1643382476,
+            1651240496,
             // Time scale in seconds
-            779456714
+            412133793
         );
     }
 
@@ -94,13 +105,12 @@ contract ElementFiValueProviderTest is DSTest {
         assertTrue(address(efValueProvider) != address(0));
     }
 
-    /*function test_GetValue() public {
+    function test_GetValue() public {
         // Computed value based on the parameters that are sent via the mock provider
-        int256 computedExpectedValue = 1062059964;
-        hevm.warp(1641026803);
+        int256 computedExpectedValue = 4583021729;
 
         int256 value = efValueProvider.value();
 
         assertTrue(value == computedExpectedValue);
-    }*/
+    }
 }
