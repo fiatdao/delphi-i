@@ -16,9 +16,24 @@ contract YieldValueProviderTest is DSTest {
 
     YieldValueProvider internal yieldVP;
 
+    uint256 internal _timeUpdateWindow = 100; // seconds
+    uint256 internal _maxValidTime = 300;
+    int256 internal _alpha = 2 * 10**17; // 0.2        
+
     function setUp() public {
         mockValueProvider = new MockProvider();
-        yieldVP = new YieldValueProvider(address(mockValueProvider));
+        yieldVP = new YieldValueProvider(
+            // Oracle arguments
+            // Time update window
+            _timeUpdateWindow,
+            // Max valid time
+            _maxValidTime,
+            // Alpha
+            _alpha,
+
+            // Yield arguments
+            address(mockValueProvider)
+        );
 
         // Set the value returned by the pool contract
         // values taken from a Yield Pool contract deployed at:
@@ -53,7 +68,7 @@ contract YieldValueProviderTest is DSTest {
     function test_GetValue() public {
         // Computed value based on the parameters that are sent via the mock provider
         int256 computedValue = 65412864833148000;
-        int256 value = yieldVP.value();
+        int256 value = yieldVP.getValue();
 
         assertTrue(value == computedValue);
     }

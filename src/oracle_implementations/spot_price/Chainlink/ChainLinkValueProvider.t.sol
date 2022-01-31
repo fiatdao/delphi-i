@@ -7,8 +7,8 @@ import "src/test/utils/Caller.sol";
 import {Hevm} from "src/test/utils/Hevm.sol";
 import {MockProvider} from "src/test/utils/MockProvider.sol";
 
-import {IChainlinkAggregatorV3Interface} from "src/valueprovider/SpotPrice/ChainlinkAggregatorV3Interface.sol";
-import {ChainLinkValueProvider} from "src/valueprovider/SpotPrice/ChainLinkValueProvider.sol";
+import {IChainlinkAggregatorV3Interface} from "src/oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
+import {ChainLinkValueProvider} from "src/oracle_implementations/spot_price/Chainlink/ChainLinkValueProvider.sol";
 
 contract ChainLinkValueProviderTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
@@ -16,6 +16,10 @@ contract ChainLinkValueProviderTest is DSTest {
     MockProvider internal mockChainlinkAggregator;
 
     ChainLinkValueProvider internal chainlinkVP;
+
+    uint256 internal _timeUpdateWindow = 100; // seconds
+    uint256 internal _maxValidTime = 300;
+    int256 internal _alpha = 2 * 10**17; // 0.2        
 
     function setUp() public {
         mockChainlinkAggregator = new MockProvider();
@@ -62,6 +66,15 @@ contract ChainLinkValueProviderTest is DSTest {
         );
 
         chainlinkVP = new ChainLinkValueProvider(
+            // Oracle arguments
+            // Time update window
+            _timeUpdateWindow,
+            // Max valid time
+            _maxValidTime,
+            // Alpha
+            _alpha,
+
+            // Chainlink arguments            
             address(mockChainlinkAggregator)
         );
     }
@@ -84,6 +97,15 @@ contract ChainLinkValueProviderTest is DSTest {
         );
 
         ChainLinkValueProvider vp = new ChainLinkValueProvider(
+            // Oracle arguments
+            // Time update window
+            _timeUpdateWindow,
+            // Max valid time
+            _maxValidTime,
+            // Alpha
+            _alpha,
+
+            // Chainlink arguments
             address(unsupportedDecimalsMP)
         );
 
@@ -94,7 +116,7 @@ contract ChainLinkValueProviderTest is DSTest {
         // Expected value is the value sent by the mock provider in 10**18 precision
         int256 expectedValue = 100016965 * 1e10;
         // Computed value based on the parameters that are sent via the mock provider
-        int256 value = chainlinkVP.value();
+        int256 value = chainlinkVP.getValue();
 
         assertTrue(value == expectedValue);
     }

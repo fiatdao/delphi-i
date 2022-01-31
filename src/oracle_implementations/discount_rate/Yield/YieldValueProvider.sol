@@ -1,15 +1,23 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {IValueProvider} from "../IValueProvider.sol";
 import {IYieldPool} from "./IYieldPool.sol";
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 import "lib/abdk-libraries-solidity/ABDKMath64x64.sol";
 
-contract YieldValueProvider is IValueProvider {
+import {Oracle} from "src/oracle/Oracle.sol";
+
+contract YieldValueProvider is Oracle {
     IYieldPool public immutable yieldPool;
 
-    constructor(address yieldPool_) {
+    constructor(
+        // Oracle parameters
+        uint256 timeUpdateWindow_,
+        uint256 maxValidTime_,
+        int256 alpha_,
+        // 
+        address yieldPool_
+    ) Oracle(timeUpdateWindow_, maxValidTime_, alpha_) {
         yieldPool = IYieldPool(yieldPool_);
     }
 
@@ -18,7 +26,7 @@ contract YieldValueProvider is IValueProvider {
     /// @dev formula documentation:
     /// https://www.notion.so/fiatdao/FIAT-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
     /// @return result The result as an signed 59.18-decimal fixed-point number.
-    function value() external view override(IValueProvider) returns (int256) {
+    function getValue() external view override(Oracle) returns (int256) {
         uint112 fyTokenReserves;
         uint112 underlierReserves;
         // The TS returned by the Yield contract is in 64.64 format and we need to convert it to int256
