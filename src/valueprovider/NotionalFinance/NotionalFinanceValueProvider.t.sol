@@ -18,7 +18,7 @@ contract NotionalFinanceValueProviderTest is DSTest {
 
     NotionalFinanceValueProvider internal notionalVP;
 
-    uint16 internal _currencyID;
+    uint16 internal _currencyID = 2;
     uint256 internal _maturityDate = 1671840000;
     uint256 internal _settlementDate = 1648512000;
 
@@ -57,10 +57,10 @@ contract NotionalFinanceValueProviderTest is DSTest {
 
         notionalVP = new NotionalFinanceValueProvider(
             address(mockNotionalView),
-            2,
+            _currencyID,
             9,
-            1671840000,
-            1648512000
+            _maturityDate,
+            _settlementDate
         );
     }
 

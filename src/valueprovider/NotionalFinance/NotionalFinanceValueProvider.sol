@@ -16,7 +16,7 @@ contract NotionalFinanceValueProvider is IValueProvider, Convert {
     uint256 public immutable maturityDate;
     uint256 public immutable settlementDate;
 
-    uint256 private immutable _lastImpliedRateDecimals;
+    uint256 private immutable lastImpliedRateDecimals;
 
     /// @notice                         Constructs the Value provider contracts with the needed Notional contract data in order to
     ///                                 calculate the annual rate.
@@ -32,11 +32,11 @@ contract NotionalFinanceValueProvider is IValueProvider, Convert {
         uint256 maturity_,
         uint256 settlementDate_
     ) {
-        _lastImpliedRateDecimals = lastImpliedRateDecimals_;
-        _notionalView = INotionalView(notionalViewContract_);
-        _currencyID = currencyID_;
-        _maturityDate = maturity_;
-        _settlementDate = settlementDate_;
+        lastImpliedRateDecimals = lastImpliedRateDecimals_;
+        notionalView = notionalViewContract_;
+        currencyID = currencyID_;
+        maturityDate = maturity_;
+        settlementDate = settlementDate_;
     }
 
     /// @notice Calculates the annual rate used by the FIAT DAO contracts
@@ -46,16 +46,16 @@ contract NotionalFinanceValueProvider is IValueProvider, Convert {
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function value() external view override(IValueProvider) returns (int256) {
         // The returned annual rate is in 1e9 precision so we need to convert it to 1e18 precision.
-        MarketParameters memory marketParams = _notionalView.getMarket(
-            _currencyID,
-            _maturityDate,
-            _settlementDate
+        MarketParameters memory marketParams = INotionalView(notionalView).getMarket(
+            currencyID,
+            maturityDate,
+            settlementDate
         );
 
         // Convert rate per anum to 18 digits precision.
         uint256 ratePerAnnum = uconvert(
             marketParams.lastImpliedRate,
-            _lastImpliedRateDecimals,
+            lastImpliedRateDecimals,
             18
         );
 

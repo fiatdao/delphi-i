@@ -12,15 +12,15 @@ import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 error ElementFiValueProvider__value_maturityLessThanBlocktime(uint256 maturity);
 
 contract ElementFiValueProvider is IValueProvider, Convert {
-    bytes32 private immutable _poolId;
-    IVault private immutable _balancerVault;
-    address private immutable _poolToken;
-    uint256 private immutable _poolTokenDecimals;
-    address private immutable _underlier;
-    uint256 private immutable _underlierDecimals;
-    address private immutable _ePTokenBond;
-    uint256 private immutable _ePTokenBondDecimals;
-    int256 private immutable _timeScale;
+    bytes32 public immutable poolId;
+    address public immutable balancerVaultAddress;
+    address public immutable poolToken;
+    uint256 public immutable poolTokenDecimals;
+    address public immutable underlier;
+    uint256 public immutable underlierDecimals;
+    address public immutable ePTokenBond;
+    uint256 public immutable ePTokenBondDecimals;
+    int256 public immutable timeScale;
 
     /// @notice                     Constructs the Value provider contracts with the needed Element data in order to
     ///                             calculate the annual rate.
@@ -44,15 +44,15 @@ contract ElementFiValueProvider is IValueProvider, Convert {
         uint256 ePTokenBondDecimals_,
         int256 timeScale_
     ) {
-        _poolId = poolId_;
-        _balancerVault = IVault(balancerVault_);
-        _poolToken = poolToken_;
-        _poolTokenDecimals = poolTokenDecimals_;
-        _underlier = underlier_;
-        _underlierDecimals = underlierDecimals_;
-        _ePTokenBond = ePTokenBond_;
-        _ePTokenBondDecimals = ePTokenBondDecimals_;
-        _timeScale = timeScale_;
+        poolId = poolId_;
+        balancerVaultAddress = balancerVault_;
+        poolToken = poolToken_;
+        poolTokenDecimals = poolTokenDecimals_;
+        underlier = underlier_;
+        underlierDecimals = underlierDecimals_;
+        ePTokenBond = ePTokenBond_;
+        ePTokenBondDecimals = ePTokenBondDecimals_;
+        timeScale = timeScale_;
     }
 
     /// @notice Calculates the implied interest rate based on reserves in the pool
@@ -60,25 +60,25 @@ contract ElementFiValueProvider is IValueProvider, Convert {
     /// https://www.notion.so/fiatdao/Delphi-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
     /// @dev Reverts if the block time exceeds or is equal to pool maturity.
     /// @return result The result as an signed 59.18-decimal fixed-point number.
-    function value() external view override(IValueProvider) returns (int256) {
+function value() external view override(IValueProvider) returns (int256) {
         // The base token reserves from the balancer vault in 18 digits precision
-        (uint256 baseReserves, , , ) = _balancerVault.getPoolTokenInfo(
-            _poolId,
-            IERC20(_underlier)
+        (uint256 baseReserves, , , ) = IVault(balancerVaultAddress).getPoolTokenInfo(
+            poolId,
+            IERC20(underlier)
         );
-        baseReserves = uconvert(baseReserves, _underlierDecimals, 18);
+        baseReserves = uconvert(baseReserves, underlierDecimals, 18);
 
         // The epToken balance from the balancer vault in 18 digits precision
-        (uint256 ePTokenBalance, , , ) = _balancerVault.getPoolTokenInfo(
-            _poolId,
-            IERC20(_ePTokenBond)
+        (uint256 ePTokenBalance, , , ) = IVault(balancerVaultAddress).getPoolTokenInfo(
+            poolId,
+            IERC20(ePTokenBond)
         );
-        ePTokenBalance = uconvert(ePTokenBalance, _ePTokenBondDecimals, 18);
+        ePTokenBalance = uconvert(ePTokenBalance, ePTokenBondDecimals, 18);
 
         // The number of LP shares in 18 digits precision
         // These reflect the virtual reserves of the epToken in the AMM
-        uint256 totalSupply = IERC20(_poolToken).totalSupply();
-        totalSupply = uconvert(totalSupply, _poolTokenDecimals, 18);
+        uint256 totalSupply = IERC20(poolToken).totalSupply();
+        totalSupply = uconvert(totalSupply, poolTokenDecimals, 18);
 
         // The reserves ratio in signed 59.18 format
         int256 reservesRatio59x18 = PRBMathSD59x18.div(
@@ -88,7 +88,7 @@ contract ElementFiValueProvider is IValueProvider, Convert {
 
         int256 timeRatio59x18 = PRBMathSD59x18.div(
             PRBMathSD59x18.SCALE,
-            PRBMathSD59x18.fromInt(_timeScale)
+            PRBMathSD59x18.fromInt(timeScale)
         );
         // The implied per-second rate in signed 59.18 format
         int256 ratePerSecond59x18 = (PRBMathSD59x18.pow(

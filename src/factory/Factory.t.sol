@@ -9,9 +9,6 @@ import {Guarded} from "src/guarded/Guarded.sol";
 import {Oracle} from "src/oracle/Oracle.sol";
 import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
 
-// Value providers
-import {ElementFinanceValueProvider} from "src/valueprovider/ElementFinance/ElementFinanceValueProvider.sol";
-
 // Relayers
 import {ICollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/ICollybusDiscountRateRelayer.sol";
 import {CollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/CollybusDiscountRateRelayer.sol";
@@ -33,6 +30,7 @@ contract FactoryTest is DSTest {
         NotionalVPData memory notionalValueProvider = NotionalVPData({
             notionalViewAddress: 0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
             currencyID: 2,
+            lastImpliedRateDecimals: 9,
             maturity: 1671840000,
             settlementDate: 1648512000
         });
@@ -57,9 +55,12 @@ contract FactoryTest is DSTest {
         ElementVPData memory elementValueProvider = ElementVPData({
             poolId: 0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
             balancerVault: address(0x12345),
+            poolToken: 0x10a2F8bd81Ee2898D7eD18fb8f114034a549FA59,
+            poolTokenDecimals: 18,
             underlier: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
+            underlierDecimals:6,
             ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
-            timeToMaturity: 1651275535,
+            ePTokenBondDecimals:6,
             unitSeconds: 1000355378
         });
 
@@ -92,23 +93,32 @@ contract FactoryTest is DSTest {
         bytes32 poolId = 0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090;
         // Balancer vault
         address balancerVault = 0xBA12222222228d8Ba445958a75a0704d566BF2C8;
+        // Pool Token address
+        address poolTokenAddress = 0x10a2F8bd81Ee2898D7eD18fb8f114034a549FA59;
+        // Pool Token decimals
+        uint256 poolTokenDecimals = 18;
         // Underlier (USDC)
         address underlier = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+        // Underlier decimals
+        uint256 underlierDecimals = 6;
         // Principal bond (Element Principal Token yvUSDC-28JAN22)
         address ePTokenBond = 0x8a2228705ec979961F0e16df311dEbcf097A2766;
-        // Timestamp to maturity,
-        uint256 timeToMaturity = 1651275535;
+        // Principal bond decimals
+        uint256 ePTokenBondDecimals = 6;
         // Time scale in seconds
-        uint256 unitSeconds = 1000355378;
+        int256 unitSeconds = 1000355378;
 
         // Deploy the Element Finance Value Provider
-        ElementFinanceValueProvider elementFinanceValueProvider = ElementFinanceValueProvider(
-                factory.deployElementFinanceValueProvider(
+        ElementFiValueProvider elementFinanceValueProvider = ElementFiValueProvider(
+                factory.deployElementFiValueProvider(
                     poolId,
                     balancerVault,
+                    poolTokenAddress,
+                    poolTokenDecimals,
                     underlier,
+                    underlierDecimals,
                     ePTokenBond,
-                    timeToMaturity,
+                    ePTokenBondDecimals,
                     unitSeconds
                 )
             );
@@ -127,7 +137,7 @@ contract FactoryTest is DSTest {
         // Check the balancer vault
         assertEq(
             balancerVault,
-            address(elementFinanceValueProvider.balancerVault()),
+            elementFinanceValueProvider.balancerVaultAddress(),
             "Balancer vault should be correct"
         );
         // Check the underlier
@@ -136,22 +146,32 @@ contract FactoryTest is DSTest {
             elementFinanceValueProvider.underlier(),
             "Underlier should be correct"
         );
+
+        // Check the underlier
+        assertEq(
+            underlierDecimals,
+            elementFinanceValueProvider.underlierDecimals(),
+            "Underlier decimals should be correct"
+        );
+
         // Check the principal bond
         assertEq(
             ePTokenBond,
             elementFinanceValueProvider.ePTokenBond(),
             "Principal bond should be correct"
         );
-        // Check the time to maturity
+
+        // Check the principal bond decimals
         assertEq(
-            timeToMaturity,
-            elementFinanceValueProvider.timeToMaturity(),
-            "Time to maturity should be correct"
+            ePTokenBondDecimals,
+            elementFinanceValueProvider.ePTokenBondDecimals(),
+            "Principal bond should be correct"
         );
+
         // Check the time scale
         assertEq(
             unitSeconds,
-            elementFinanceValueProvider.unitSeconds(),
+            elementFinanceValueProvider.timeScale(),
             "Time scale should be correct"
         );
     }
@@ -164,9 +184,12 @@ contract FactoryTest is DSTest {
         ElementVPData memory elementValueProvider = ElementVPData({
             poolId: 0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
             balancerVault: address(0x12345),
+            poolToken: 0x10a2F8bd81Ee2898D7eD18fb8f114034a549FA59,
+            poolTokenDecimals: 18,
             underlier: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
+            underlierDecimals:6,
             ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
-            timeToMaturity: 1651275535,
+            ePTokenBondDecimals:6,
             unitSeconds: 1000355378
         });
 
@@ -220,9 +243,12 @@ contract FactoryTest is DSTest {
         ElementVPData memory elementValueProvider = ElementVPData({
             poolId: 0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
             balancerVault: address(0x12345),
+            poolToken: 0x10a2F8bd81Ee2898D7eD18fb8f114034a549FA59,
+            poolTokenDecimals: 18,
             underlier: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
+            underlierDecimals:6,
             ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
-            timeToMaturity: 1651275535,
+            ePTokenBondDecimals:6,
             unitSeconds: 1000355378
         });
 
@@ -360,6 +386,7 @@ contract FactoryTest is DSTest {
         NotionalVPData memory notionalValueProvider = NotionalVPData({
             notionalViewAddress: 0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
             currencyID: 2,
+            lastImpliedRateDecimals: 9,
             maturity: 1671840000,
             settlementDate: 1648512000
         });
@@ -417,6 +444,7 @@ contract FactoryTest is DSTest {
         NotionalVPData memory notionalValueProvider = NotionalVPData({
             notionalViewAddress: 0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
             currencyID: 2,
+            lastImpliedRateDecimals: 9,
             maturity: 1671840000,
             settlementDate: 1648512000
         });

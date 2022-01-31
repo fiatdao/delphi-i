@@ -18,12 +18,10 @@ contract ElementFiValueProviderTest is DSTest {
 
     ElementFiValueProvider internal efValueProvider;
 
-    bytes32 internal _poolId =
-        0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090;
-    uint256 internal _timeToMaturity = 1651275535;
-    address internal _underlier = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-    address internal _ePTokenBond = 0x8a2228705ec979961F0e16df311dEbcf097A2766;
-    uint256 internal _unitSeconds = 1000355378;
+    bytes32 internal _poolId = bytes32(0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7);
+    address internal _underlier = address(0xc4AD29ba4B3c580e6D59105FFf484999997675Ff);
+    address internal _ePTokenBond = address(0x285328906D0D33cb757c1E471F5e2176683247c2);
+    int256 internal _timeScale = 412133793;
 
     function setUp() public {
         mockBalancerVault = new MockProvider();
@@ -32,18 +30,15 @@ contract ElementFiValueProviderTest is DSTest {
         // https://www.notion.so/fiatdao/FIAT-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
         // For extra info about the values used check the examples from the documentation above.
         mockBalancerVault.givenQueryReturnResponse(
-            // Used Parameters are: pool id, underlier address
             abi.encodeWithSelector(
                 IVault.getPoolTokenInfo.selector,
-                bytes32(
-                    0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7
-                ),
-                IERC20(address(0x285328906D0D33cb757c1E471F5e2176683247c2))
+                _poolId,
+                IERC20(_underlier)
             ),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(
-                    uint256(663426072118149531985),
+                    uint256(232574802191012296969),
                     uint256(0),
                     uint256(0),
                     address(0)
@@ -53,19 +48,16 @@ contract ElementFiValueProviderTest is DSTest {
         );
 
         // The used parameters are: uint256 cash, uint256 managed, int256 lastChangeBlock, address assetManager
-        // for more info check the IVault getPoolTokenInfo description
         mockBalancerVault.givenQueryReturnResponse(
             abi.encodeWithSelector(
                 IVault.getPoolTokenInfo.selector,
-                bytes32(
-                    0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7
-                ),
-                IERC20(address(0xc4AD29ba4B3c580e6D59105FFf484999997675Ff))
+                _poolId,
+                IERC20(_ePTokenBond)
             ),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(
-                    uint256(232574802191012296969),
+                    uint256(663426072118149531985),
                     uint256(0),
                     uint256(0),
                     address(0)
@@ -86,7 +78,7 @@ contract ElementFiValueProviderTest is DSTest {
 
         efValueProvider = new ElementFiValueProvider(
             // Pool ID
-            0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7,
+            _poolId,
             // Address of the balancer vault
             address(mockBalancerVault),
             // pool token address
@@ -94,15 +86,15 @@ contract ElementFiValueProviderTest is DSTest {
             // pool token decimals
             18,
             // Underlier token address
-            0xc4AD29ba4B3c580e6D59105FFf484999997675Ff,
+            _underlier,
             // Underlier decimal format
             18,
             // Principal bond token address
-            0x285328906D0D33cb757c1E471F5e2176683247c2,
+            _ePTokenBond,
             // Principal bond decimal format
             18,
             // Time scale in seconds
-            412133793
+            _timeScale
         );
     }
 
@@ -115,11 +107,7 @@ contract ElementFiValueProviderTest is DSTest {
     }
 
     function test_check_balancerVault() public {
-        assertEq(efValueProvider.balancerVault(), address(mockBalancerVault));
-    }
-
-    function test_check_timeToMaturity() public {
-        assertEq(efValueProvider.timeToMaturity(), _timeToMaturity);
+        assertEq(efValueProvider.balancerVaultAddress(), address(mockBalancerVault));
     }
 
     function test_check_underlier() public {
@@ -131,7 +119,7 @@ contract ElementFiValueProviderTest is DSTest {
     }
 
     function test_check_unitSeconds() public {
-        assertEq(efValueProvider.unitSeconds(), _unitSeconds);
+        assertEq(efValueProvider.timeScale(), _timeScale);
     }
 
     function test_GetValue() public {

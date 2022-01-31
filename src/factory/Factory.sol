@@ -8,7 +8,7 @@ import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
 import {IAggregatorOracle} from "src/aggregator/IAggregatorOracle.sol";
 
 // Value providers
-import {ElementFinanceValueProvider} from "src/valueprovider/ElementFinance/ElementFinanceValueProvider.sol";
+import {ElementFiValueProvider} from "src/valueprovider/ElementFi/ElementFiValueProvider.sol";
 import {NotionalFinanceValueProvider} from "src/valueprovider/NotionalFinance/NotionalFinanceValueProvider.sol";
 
 // Relayers
@@ -26,16 +26,20 @@ error Factory__deployValueProvider_invalidValueProviderType();
 struct ElementVPData {
     bytes32 poolId;
     address balancerVault;
+    address poolToken;
+    uint256 poolTokenDecimals;
     address underlier;
+    uint256 underlierDecimals;
     address ePTokenBond;
-    uint256 timeToMaturity;
-    uint256 unitSeconds;
+    uint256 ePTokenBondDecimals;
+    int256 unitSeconds;
 }
 
 /// @notice Data structure that wraps data needed to deploy an Notional Value Provider contract
 struct NotionalVPData {
     address notionalViewAddress;
     uint16 currencyID;
+    uint256 lastImpliedRateDecimals;
     uint256 maturity;
     uint256 settlementDate;
 }
@@ -78,24 +82,30 @@ contract Factory {
     /// @dev For more information about the params please check the Value Provider Contract
     /// todo: add the master github path to contract
     /// @return Returns the address of the new value provider
-    function deployElementFinanceValueProvider(
+    function deployElementFiValueProvider(
         bytes32 poolId_,
         address balancerVault_,
+        address poolToken_,
+        uint256 poolTokenDecimals_,
         address underlier_,
+        uint256 underlierDecimals_,
         address ePTokenBond_,
-        uint256 timeToMaturity_,
-        uint256 unitSeconds_
+        uint256 ePTokenBondDecimals_,
+        int256 timeScale_
     ) public returns (address) {
-        ElementFinanceValueProvider elementFinanceValueProvider = new ElementFinanceValueProvider(
-                poolId_,
-                balancerVault_,
-                underlier_,
-                ePTokenBond_,
-                timeToMaturity_,
-                unitSeconds_
-            );
+        ElementFiValueProvider elementFiValueProvider = new ElementFiValueProvider(
+            poolId_,
+            balancerVault_,
+            poolToken_,
+            poolTokenDecimals_,
+            underlier_,
+            underlierDecimals_,
+            ePTokenBond_,
+            ePTokenBondDecimals_,
+            timeScale_
+        );
 
-        return address(elementFinanceValueProvider);
+        return address(elementFiValueProvider);
     }
 
     /// @notice Deploys an Notional Finance Value Provider
@@ -105,15 +115,17 @@ contract Factory {
     function deployNotionalFinanceProvider(
         address notionalViewAddress_,
         uint16 currencyId_,
+        uint256 lastImpliedRateDecimals_,
         uint256 maturityDate_,
         uint256 settlementDate_
     ) public returns (address) {
         NotionalFinanceValueProvider notionalFinanceValueProvider = new NotionalFinanceValueProvider(
-                notionalViewAddress_,
-                currencyId_,
-                maturityDate_,
-                settlementDate_
-            );
+            notionalViewAddress_,
+            currencyId_,
+            lastImpliedRateDecimals_,
+            maturityDate_,
+            settlementDate_
+        );
 
         return address(notionalFinanceValueProvider);
     }
@@ -140,6 +152,7 @@ contract Factory {
             address notionalVP = deployNotionalFinanceProvider(
                 notionalData.notionalViewAddress,
                 notionalData.currencyID,
+                notionalData.lastImpliedRateDecimals,
                 notionalData.maturity,
                 notionalData.settlementDate
             );
@@ -156,12 +169,15 @@ contract Factory {
             );
 
             // Create and return the value provider
-            address elementVP = deployElementFinanceValueProvider(
+            address elementVP = deployElementFiValueProvider(
                 elementData.poolId,
                 elementData.balancerVault,
+                elementData.poolToken,
+                elementData.poolTokenDecimals,
                 elementData.underlier,
+                elementData.underlierDecimals,
                 elementData.ePTokenBond,
-                elementData.timeToMaturity,
+                elementData.ePTokenBondDecimals,
                 elementData.unitSeconds
             );
 

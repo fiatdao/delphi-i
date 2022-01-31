@@ -78,7 +78,7 @@ contract ChainLinkValueProviderTest is DSTest {
             ),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint8(19))
+                data: abi.encode(uint256(19))
             }),
             false
         );
@@ -109,13 +109,13 @@ contract ChainLinkValueProviderTest is DSTest {
         );
     }
 
-    function test_check_underlierDecimalsConversion() public {
-        assertEq(chainlinkVP.underlierDecimalsConversion(), 1e10);
+    function test_check_underlierDecimals() public {
+        assertEq(chainlinkVP.underlierDecimals(), uint256(8));
     }
 
     function test_check_chainlinkAggregator() public {
         assertEq(
-            chainlinkVP.chainlinkAggregator(),
+            chainlinkVP.chainlinkAggregatorAddress(),
             address(mockChainlinkAggregator)
         );
     }
