@@ -31,51 +31,51 @@ contract FactoryTest is DSTest {
         returns (DiscountRateDeployData memory)
     {
         NotionalVPData memory notionalValueProvider = NotionalVPData({
-            notionalViewAddress:0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
-            currencyID:2,
-            maturity:1671840000,
-            settlementDate:1648512000
+            notionalViewAddress: 0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
+            currencyID: 2,
+            maturity: 1671840000,
+            settlementDate: 1648512000
         });
 
         OracleData memory notionalOracleData = OracleData({
             valueProviderData: abi.encode(notionalValueProvider),
-            timeWindow:200,
-            maxValidTime:600,
-            alpha:2 * 10**17,
-            providerType:uint8(Factory.ValueProviderType.Notional)
+            timeWindow: 200,
+            maxValidTime: 600,
+            alpha: 2 * 10**17,
+            providerType: uint8(Factory.ValueProviderType.Notional)
         });
 
         AggregatorData memory notionalAggregator = AggregatorData({
-            tokenId:1,
-            oracleData:new bytes[](1),
-            requiredValidValues:1,
-            minimumThresholdValue:10**14
+            tokenId: 1,
+            oracleData: new bytes[](1),
+            requiredValidValues: 1,
+            minimumThresholdValue: 10**14
         });
 
         notionalAggregator.oracleData[0] = abi.encode(notionalOracleData);
 
         ElementVPData memory elementValueProvider = ElementVPData({
-            poolId:0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
-            balancerVault:address(0x12345),
-            underlier:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
-            ePTokenBond:0x8a2228705ec979961F0e16df311dEbcf097A2766,
-            timeToMaturity:1651275535,
-            unitSeconds:1000355378
+            poolId: 0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
+            balancerVault: address(0x12345),
+            underlier: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
+            ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
+            timeToMaturity: 1651275535,
+            unitSeconds: 1000355378
         });
 
         OracleData memory elementOracleData = OracleData({
             valueProviderData: abi.encode(elementValueProvider),
-            timeWindow:200,
-            maxValidTime:600,
-            alpha:2 * 10**17,
-            providerType:uint8(Factory.ValueProviderType.Element)
+            timeWindow: 200,
+            maxValidTime: 600,
+            alpha: 2 * 10**17,
+            providerType: uint8(Factory.ValueProviderType.Element)
         });
 
         AggregatorData memory elementAggregator = AggregatorData({
-            tokenId:2,
-            oracleData:new bytes[](1),
-            requiredValidValues:1,
-            minimumThresholdValue:10**14
+            tokenId: 2,
+            oracleData: new bytes[](1),
+            requiredValidValues: 1,
+            minimumThresholdValue: 10**14
         });
 
         elementAggregator.oracleData[0] = abi.encode(elementOracleData);
@@ -162,26 +162,28 @@ contract FactoryTest is DSTest {
         uint256 maxValidTime_,
         int256 alpha_
     ) public {
-        
         ElementVPData memory elementValueProvider = ElementVPData({
-            poolId:0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
-            balancerVault:address(0x12345),
-            underlier:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
-            ePTokenBond:0x8a2228705ec979961F0e16df311dEbcf097A2766,
-            timeToMaturity:1651275535,
-            unitSeconds:1000355378
+            poolId: 0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
+            balancerVault: address(0x12345),
+            underlier: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
+            ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
+            timeToMaturity: 1651275535,
+            unitSeconds: 1000355378
         });
 
         OracleData memory elementDataOracle = OracleData({
             valueProviderData: abi.encode(elementValueProvider),
-            timeWindow:200,
-            maxValidTime:600,
-            alpha:2 * 10**17,
-            providerType:uint8(Factory.ValueProviderType.Element)
+            timeWindow: 200,
+            maxValidTime: 600,
+            alpha: 2 * 10**17,
+            providerType: uint8(Factory.ValueProviderType.Element)
         });
 
         AggregatorOracle aggregatorOracle = new AggregatorOracle();
-        aggregatorOracle.allowCaller(AggregatorOracle.oracleAdd.selector,address(factory));
+        aggregatorOracle.allowCaller(
+            AggregatorOracle.oracleAdd.selector,
+            address(factory)
+        );
 
         Oracle oracle = Oracle(
             factory.deployOracle(
@@ -208,27 +210,30 @@ contract FactoryTest is DSTest {
             Oracle(oracle).maxValidTime(),
             "Max valid time should be correct"
         );
-        assertEq(elementDataOracle.alpha, Oracle(oracle).alpha(), "Alpha should be correct");
+        assertEq(
+            elementDataOracle.alpha,
+            Oracle(oracle).alpha(),
+            "Alpha should be correct"
+        );
     }
 
     function test_deploy_Aggregator_createsContract() public {
         ElementVPData memory elementValueProvider = ElementVPData({
-            poolId:0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
-            balancerVault:address(0x12345),
-            underlier:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
-            ePTokenBond:0x8a2228705ec979961F0e16df311dEbcf097A2766,
-            timeToMaturity:1651275535,
-            unitSeconds:1000355378
+            poolId: 0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
+            balancerVault: address(0x12345),
+            underlier: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
+            ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
+            timeToMaturity: 1651275535,
+            unitSeconds: 1000355378
         });
 
         OracleData memory elementDataOracle = OracleData({
             valueProviderData: abi.encode(elementValueProvider),
-            timeWindow:200,
-            maxValidTime:600,
-            alpha:2 * 10**17,
-            providerType:uint8(Factory.ValueProviderType.Element)
+            timeWindow: 200,
+            maxValidTime: 600,
+            alpha: 2 * 10**17,
+            providerType: uint8(Factory.ValueProviderType.Element)
         });
-
 
         AggregatorData memory elementAggregatorData;
         elementAggregatorData.tokenId = 1;
@@ -236,16 +241,18 @@ contract FactoryTest is DSTest {
         elementAggregatorData.oracleData = new bytes[](1);
         elementAggregatorData.oracleData[0] = abi.encode(elementDataOracle);
 
-        address relayerAddress = factory.deployCollybusDiscountRateRelayer(address(0x1234));
-        
-        // Make sure the Relayer was deployed
-        assertTrue(
-            relayerAddress != address(0),
-            "Relayer should be deployed"
+        address relayerAddress = factory.deployCollybusDiscountRateRelayer(
+            address(0x1234)
         );
 
-        address aggregatorAddress = factory.deployAggregator(abi.encode(elementAggregatorData),relayerAddress);
-        
+        // Make sure the Relayer was deployed
+        assertTrue(relayerAddress != address(0), "Relayer should be deployed");
+
+        address aggregatorAddress = factory.deployAggregator(
+            abi.encode(elementAggregatorData),
+            relayerAddress
+        );
+
         // Make sure the Aggregator was deployed
         assertTrue(
             aggregatorAddress != address(0),
@@ -342,36 +349,41 @@ contract FactoryTest is DSTest {
             address(0x1234)
         );
 
-        uint aggregatorCount = ICollybusDiscountRateRelayer(discountRateRelayer).oracleCount();
+        uint256 aggregatorCount = ICollybusDiscountRateRelayer(
+            discountRateRelayer
+        ).oracleCount();
 
         NotionalVPData memory notionalValueProvider = NotionalVPData({
-            notionalViewAddress:0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
-            currencyID:2,
-            maturity:1671840000,
-            settlementDate:1648512000
+            notionalViewAddress: 0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
+            currencyID: 2,
+            maturity: 1671840000,
+            settlementDate: 1648512000
         });
 
         OracleData memory notionalOracleData = OracleData({
             valueProviderData: abi.encode(notionalValueProvider),
-            timeWindow:200,
-            maxValidTime:600,
-            alpha:2 * 10**17,
-            providerType:uint8(Factory.ValueProviderType.Notional)
+            timeWindow: 200,
+            maxValidTime: 600,
+            alpha: 2 * 10**17,
+            providerType: uint8(Factory.ValueProviderType.Notional)
         });
 
         AggregatorData memory notionalAggregator = AggregatorData({
-            tokenId:3,
-            oracleData:new bytes[](1),
-            requiredValidValues:1,
-            minimumThresholdValue:10**14
+            tokenId: 3,
+            oracleData: new bytes[](1),
+            requiredValidValues: 1,
+            minimumThresholdValue: 10**14
         });
 
         notionalAggregator.oracleData[0] = abi.encode(notionalOracleData);
 
-        factory.deployAggregator(abi.encode(notionalAggregator),discountRateRelayer);
+        factory.deployAggregator(
+            abi.encode(notionalAggregator),
+            discountRateRelayer
+        );
 
         assertEq(
-            aggregatorCount+1,
+            aggregatorCount + 1,
             ICollybusDiscountRateRelayer(discountRateRelayer).oracleCount(),
             "Replayer should contain the new aggregator"
         );
@@ -379,8 +391,7 @@ contract FactoryTest is DSTest {
         // check exists
     }
 
-    function test_deploy_AddOracle() public
-    {
+    function test_deploy_AddOracle() public {
         DiscountRateDeployData
             memory deployData = buildDiscountRateDeployData();
 
@@ -390,28 +401,34 @@ contract FactoryTest is DSTest {
             address(0x1234)
         );
 
-        address firstAggregatorAddress = ICollybusDiscountRateRelayer(discountRateRelayer).oracleAt(0);
+        address firstAggregatorAddress = ICollybusDiscountRateRelayer(
+            discountRateRelayer
+        ).oracleAt(0);
 
         NotionalVPData memory notionalValueProvider = NotionalVPData({
-            notionalViewAddress:0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
-            currencyID:2,
-            maturity:1671840000,
-            settlementDate:1648512000
+            notionalViewAddress: 0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
+            currencyID: 2,
+            maturity: 1671840000,
+            settlementDate: 1648512000
         });
 
         OracleData memory notionalOracleData = OracleData({
             valueProviderData: abi.encode(notionalValueProvider),
-            timeWindow:200,
-            maxValidTime:600,
-            alpha:2 * 10**17,
-            providerType:uint8(Factory.ValueProviderType.Notional)
+            timeWindow: 200,
+            maxValidTime: 600,
+            alpha: 2 * 10**17,
+            providerType: uint8(Factory.ValueProviderType.Notional)
         });
-        
-        uint oracleCount = IAggregatorOracle(firstAggregatorAddress).oracleCount();
-        factory.deployOracle(abi.encode(notionalOracleData), firstAggregatorAddress);
+
+        uint256 oracleCount = IAggregatorOracle(firstAggregatorAddress)
+            .oracleCount();
+        factory.deployOracle(
+            abi.encode(notionalOracleData),
+            firstAggregatorAddress
+        );
 
         assertEq(
-            oracleCount+1,
+            oracleCount + 1,
             IAggregatorOracle(firstAggregatorAddress).oracleCount(),
             "Aggregator should contain the new oracle"
         );

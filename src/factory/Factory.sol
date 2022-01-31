@@ -40,7 +40,6 @@ struct NotionalVPData {
 struct OracleData {
     bytes valueProviderData;
     uint8 providerType;
-
     uint256 timeWindow;
     uint256 maxValidTime;
     int256 alpha;
@@ -48,7 +47,6 @@ struct OracleData {
 
 struct AggregatorData {
     uint256 tokenId;
-    
     bytes[] oracleData;
     uint256 requiredValidValues;
     uint256 minimumThresholdValue;
@@ -59,8 +57,7 @@ struct DiscountRateDeployData {
 }
 
 contract Factory {
-
-    enum ValueProviderType{
+    enum ValueProviderType {
         Notional,
         Element
     }
@@ -69,13 +66,15 @@ contract Factory {
         bytes memory oracleDataEncoded,
         address aggregatorAddress
     ) public returns (address) {
-
         OracleData memory oracleData = abi.decode(
             oracleDataEncoded,
             (OracleData)
         );
 
-        address valueProviderAddress = deployValueProvider(oracleData.valueProviderData, oracleData.providerType);
+        address valueProviderAddress = deployValueProvider(
+            oracleData.valueProviderData,
+            oracleData.providerType
+        );
 
         Oracle oracle = new Oracle(
             valueProviderAddress,
@@ -89,13 +88,14 @@ contract Factory {
         return address(oracle);
     }
 
-    function deployValueProvider(bytes memory valueProviderData, uint8 valueProviderType) public returns (address)
-    {
-        if (valueProviderType == uint8(ValueProviderType.Notional)){
-
+    function deployValueProvider(
+        bytes memory valueProviderData,
+        uint8 valueProviderType
+    ) public returns (address) {
+        if (valueProviderType == uint8(ValueProviderType.Notional)) {
             NotionalVPData memory notionalData = abi.decode(
-            valueProviderData,
-            (NotionalVPData)
+                valueProviderData,
+                (NotionalVPData)
             );
 
             address notionalVP = deployNotionalFinanceProvider(
@@ -108,10 +108,10 @@ contract Factory {
             return notionalVP;
         }
 
-        if (valueProviderType == uint8(ValueProviderType.Element)){
+        if (valueProviderType == uint8(ValueProviderType.Element)) {
             ElementVPData memory elementData = abi.decode(
-            valueProviderData,
-            (ElementVPData)
+                valueProviderData,
+                (ElementVPData)
             );
 
             address elementVP = deployElementFinanceValueProvider(
@@ -129,15 +129,14 @@ contract Factory {
         revert Factory__deployValueProvider_invalidValueProviderType();
     }
 
-    function deployAggregator(bytes memory data, address discountRateRelayerAddress) public returns (address) 
-    {
+    function deployAggregator(
+        bytes memory data,
+        address discountRateRelayerAddress
+    ) public returns (address) {
         AggregatorOracle aggregatorOracle = new AggregatorOracle();
 
         // Decode each input notional aggregator structure
-        AggregatorData memory aggData = abi.decode(
-            data,
-            (AggregatorData)
-        );
+        AggregatorData memory aggData = abi.decode(data, (AggregatorData));
 
         uint256 oracleCount = aggData.oracleData.length;
 
@@ -152,7 +151,10 @@ contract Factory {
             );
         }
 
-        aggregatorOracle.setParam("requiredValidValues", aggData.requiredValidValues);
+        aggregatorOracle.setParam(
+            "requiredValidValues",
+            aggData.requiredValidValues
+        );
 
         ICollybusDiscountRateRelayer(discountRateRelayerAddress).oracleAdd(
             address(aggregatorOracle),
@@ -232,15 +234,14 @@ contract Factory {
         address discountRateRelayerAddress = deployCollybusDiscountRateRelayer(
             collybusAddress
         );
-        
+
         // We check if we have any national aggregators to deploy
         uint256 aggCount = deployData.aggregatorData.length;
-        for (
-            uint256 aggIndex = 0;
-            aggIndex < aggCount;
-            aggIndex++
-        ) {
-            deployAggregator(deployData.aggregatorData[aggIndex],discountRateRelayerAddress);
+        for (uint256 aggIndex = 0; aggIndex < aggCount; aggIndex++) {
+            deployAggregator(
+                deployData.aggregatorData[aggIndex],
+                discountRateRelayerAddress
+            );
         }
 
         return discountRateRelayerAddress;
