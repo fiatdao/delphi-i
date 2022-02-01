@@ -8,7 +8,7 @@ import {Hevm} from "src/test/utils/Hevm.sol";
 import {MockProvider} from "src/test/utils/MockProvider.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ElementFiValueProvider} from "./ElementFiValueProvider.sol";
-import {IVault} from "src/valueprovider/ElementFi/IVault.sol";
+import {IVault} from "src/oracle_implementations/discount_rate/ElementFi/IVault.sol";
 
 contract ElementFiValueProviderTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
@@ -28,6 +28,9 @@ contract ElementFiValueProviderTest is DSTest {
         address(0x285328906D0D33cb757c1E471F5e2176683247c2);
     int256 internal _timeScale = 412133793;
     uint256 internal _maturity = 1651275535;
+    uint256 internal _timeUpdateWindow = 100; // seconds
+    uint256 internal _maxValidTime = 300;
+    int256 internal _alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
         mockBalancerVault = new MockProvider();
@@ -83,6 +86,14 @@ contract ElementFiValueProviderTest is DSTest {
         );
 
         efValueProvider = new ElementFiValueProvider(
+            // Oracle arguments
+            // Time update window
+            _timeUpdateWindow,
+            // Max valid time
+            _maxValidTime,
+            // Alpha
+            _alpha,
+            // Element Finance arguments
             // Pool ID
             _poolId,
             // Address of the balancer vault
@@ -141,7 +152,7 @@ contract ElementFiValueProviderTest is DSTest {
         // Computed value based on the parameters that are sent via the mock provider
         int256 computedExpectedValue = 4583021729;
 
-        int256 value = efValueProvider.value();
+        int256 value = efValueProvider.getValue();
 
         assertTrue(value == computedExpectedValue);
     }

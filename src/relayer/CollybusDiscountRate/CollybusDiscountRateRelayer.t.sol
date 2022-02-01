@@ -9,7 +9,6 @@ import {Caller} from "src/test/utils/Caller.sol";
 import {ICollybus} from "src/relayer/ICollybus.sol";
 import {CollybusDiscountRateRelayer} from "./CollybusDiscountRateRelayer.sol";
 import {IOracle} from "src/oracle/IOracle.sol";
-import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
 
 contract TestCollybus is ICollybus {
     mapping(uint256 => uint256) public rateForTokenId;

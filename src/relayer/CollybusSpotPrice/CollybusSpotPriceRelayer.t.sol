@@ -9,7 +9,6 @@ import {Caller} from "src/test/utils/Caller.sol";
 import {ICollybus} from "src/relayer/ICollybus.sol";
 import {CollybusSpotPriceRelayer} from "./CollybusSpotPriceRelayer.sol";
 import {IOracle} from "src/oracle/IOracle.sol";
-import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
 
 contract TestCollybus is ICollybus {
     mapping(address => uint256) public spotForTokenAddress;

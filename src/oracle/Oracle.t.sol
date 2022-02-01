@@ -5,39 +5,61 @@ import "ds-test/test.sol";
 
 import "src/test/utils/Caller.sol";
 import {Hevm} from "src/test/utils/Hevm.sol";
-import {MockProvider} from "src/test/utils/MockProvider.sol";
-import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
 
 import {Oracle} from "./Oracle.sol";
+
+contract OracleImplementation is Oracle {
+    constructor(
+        uint256 timeUpdateWindow_,
+        uint256 maxValidTime_,
+        int256 alpha_
+    ) Oracle(timeUpdateWindow_, maxValidTime_, alpha_) {
+        this;
+    }
+
+    // Allow the test to change the return value
+    // This will not be used in the actual implementation
+    int256 internal _returnValue;
+
+    function setValue(int256 value_) public {
+        _returnValue = value_;
+    }
+
+    // We want to handle cases where the oracle fails to obtain values
+    // Ideally the `getValue()` will never fail, but the current implementation will also handle fails
+    bool internal _success = true;
+
+    function setSuccess(bool success_) public {
+        _success = success_;
+    }
+
+    // We mock this value provider to return the expected previously set value
+    function getValue() external view override(Oracle) returns (int256) {
+        if (_success) {
+            return _returnValue;
+        } else {
+            revert("Oracle failed");
+        }
+    }
+}
 
 contract OracleTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
 
-    MockProvider internal mockValueProvider;
-
-    Oracle internal oracle;
+    OracleImplementation internal oracle;
     uint256 internal timeUpdateWindow = 100; // seconds
     uint256 internal maxValidTime = 300;
     int256 internal alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
-        mockValueProvider = new MockProvider();
-        oracle = new Oracle(
-            address(mockValueProvider),
+        oracle = new OracleImplementation(
             timeUpdateWindow,
             maxValidTime,
             alpha
         );
 
-        // Set the value returned by Value Provider to 100
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(int256(100 * 10**18))
-            }),
-            false
-        );
+        // Set the value returned to 100
+        oracle.setValue(int256(100 * 10**18));
 
         hevm.warp(timeUpdateWindow * 10);
     }
@@ -94,14 +116,8 @@ contract OracleTest is DSTest {
     }
 
     function test_update_UpdateDoesNotChangeTheValue_InTheSameWindow() public {
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(int256(100 * 10**18))
-            }),
-            false
-        );
+        oracle.setValue(int256(100 * 10**18));
+
         // Update the oracle
         oracle.update();
 
@@ -111,14 +127,7 @@ contract OracleTest is DSTest {
         int256 nextValue1 = oracle.nextValue();
         assertEq(nextValue1, 100 * 10**18);
 
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(int256(150 * 10**18))
-            }),
-            false
-        );
+        oracle.setValue(int256(150 * 10**18));
 
         // Advance time but stay in the same time update window
         hevm.warp(block.timestamp + 1);
@@ -135,33 +144,19 @@ contract OracleTest is DSTest {
     }
 
     function test_update_ShouldNotFailWhenValueProviderFails() public {
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
-            MockProvider.ReturnData({
-                success: false,
-                data: abi.encode(int256(10**18))
-            }),
-            false
-        );
+        oracle.setSuccess(false);
 
         // Update the oracle
         oracle.update();
     }
 
     function test_value_ShouldBeInvalidAfterValueProviderFails() public {
-        // We first succesfully update the value to make sure the lastTimestamp is updated
+        // We first successfully update the value to make sure the lastTimestamp is updated
         // After that, we wait for the required amount of time and try update the value again
         // The second update will fail and the value should be invalid because of the flag only.
         // (time check is still corect because maxValidTime >= timeUpdateWindow)
 
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(int256(10**18))
-            }),
-            false
-        );
+        oracle.setValue(10**18);
 
         // Update the oracle
         oracle.update();
@@ -169,14 +164,7 @@ contract OracleTest is DSTest {
         // Advance time
         hevm.warp(block.timestamp + timeUpdateWindow);
 
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
-            MockProvider.ReturnData({
-                success: false,
-                data: abi.encode(int256(10**18))
-            }),
-            false
-        );
+        oracle.setSuccess(false);
 
         // Update the oracle
         oracle.update();
@@ -186,28 +174,14 @@ contract OracleTest is DSTest {
     }
 
     function test_value_ShouldBecomeValidAfterSuccesfullUpdate() public {
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
-            MockProvider.ReturnData({
-                success: false,
-                data: abi.encode(int256(10**18))
-            }),
-            false
-        );
+        oracle.setSuccess(false);
 
         oracle.update();
 
         (, bool isValid1) = oracle.value();
         assertTrue(isValid1 == false);
 
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(int256(10**18))
-            }),
-            false
-        );
+        oracle.setSuccess(true);
 
         oracle.update();
 
@@ -217,14 +191,7 @@ contract OracleTest is DSTest {
 
     function test_update_Recalculates_MovingAverage() public {
         // Set the value to 100
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(int256(100 * 10**18))
-            }),
-            false
-        );
+        oracle.setValue(100 * 10**18);
         // Update the oracle
         oracle.update();
 
@@ -239,14 +206,7 @@ contract OracleTest is DSTest {
         assertEq(nextValue1, 100 * 10**18);
 
         // Set reported value to 150
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(int256(150 * 10**18))
-            }),
-            false
-        );
+        oracle.setValue(150 * 10**18);
 
         // Advance time
         hevm.warp(block.timestamp + timeUpdateWindow);
@@ -263,14 +223,7 @@ contract OracleTest is DSTest {
         assertEq(nextValue2, 110 * 10**18);
 
         // Set reported value to 100
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(int256(100 * 10**18))
-            }),
-            false
-        );
+        oracle.setValue(100 * 10**18);
 
         // Advance time
         hevm.warp(block.timestamp + timeUpdateWindow);
@@ -295,14 +248,7 @@ contract OracleTest is DSTest {
         public
     {
         // Set the value to 100
-        mockValueProvider.givenQueryReturnResponse(
-            abi.encodePacked(IValueProvider.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(int256(100 * 10**18))
-            }),
-            false
-        );
+        oracle.setValue(100 * 10**18);
         // Update the oracle
         oracle.update();
 

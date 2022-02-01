@@ -1,31 +1,39 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {IValueProvider} from "../IValueProvider.sol";
 import {IYieldPool} from "./IYieldPool.sol";
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 import "lib/abdk-libraries-solidity/ABDKMath64x64.sol";
+import {Oracle} from "src/oracle/Oracle.sol";
 
-// @notice Emitted when trying to add pull a value for an expired pool
-error YieldProtocolValueProvider__value_maturityLessThanBlocktime(
-    uint256 maturity
-);
+contract YieldValueProvider is Oracle {
+    // @notice Emitted when trying to add pull a value for an expired pool
+    error YieldProtocolValueProvider__getValue_maturityLessThanBlocktime(
+        uint256 maturity
+    );
 
-contract YieldValueProvider is IValueProvider {
     address public immutable poolAddress;
     uint256 public immutable maturity;
     int256 public immutable timeScale;
 
-    /// @notice             Constructs the Value provider contracts with the needed Element data in order to
-    ///                     calculate the annual rate.
-    /// @param poolAddress_ Address of the pool
-    /// @param maturity_    Expiration of the pool
-    /// @param timeScale_   Time scale used on this pool (i.e. 1/(timeStretch*secondsPerYear)) in 59x18 fixed point
+    /// @notice                     Constructs the Value provider contracts with the needed Element data in order to
+    ///                             calculate the annual rate.
+    /// @param timeUpdateWindow_    Minimum time between updates of the value
+    /// @param maxValidTime_        Maximum time for which the value is valid
+    /// @param alpha_               Alpha parameter for EMA
+    /// @param poolAddress_                Address of the pool
+    /// @param maturity_            Expiration of the pool
+    /// @param timeScale_           Time scale used on this pool (i.e. 1/(timeStretch*secondsPerYear)) in 59x18 fixed point
     constructor(
+        // Oracle parameters
+        uint256 timeUpdateWindow_,
+        uint256 maxValidTime_,
+        int256 alpha_,
+        //
         address poolAddress_,
         uint256 maturity_,
         int256 timeScale_
-    ) {
+    ) Oracle(timeUpdateWindow_, maxValidTime_, alpha_) {
         poolAddress = poolAddress_;
         maturity = maturity_;
         timeScale = timeScale_;
@@ -36,10 +44,10 @@ contract YieldValueProvider is IValueProvider {
     /// https://www.notion.so/fiatdao/Delphi-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
     /// @dev Reverts if the block time exceeds or is equal to pool maturity.
     /// @return result The result as an signed 59.18-decimal fixed-point number.
-    function value() external view override(IValueProvider) returns (int256) {
+    function getValue() external view override(Oracle) returns (int256) {
         // No values for matured pools
         if (block.timestamp >= maturity) {
-            revert YieldProtocolValueProvider__value_maturityLessThanBlocktime(
+            revert YieldProtocolValueProvider__getValue_maturityLessThanBlocktime(
                 maturity
             );
         }

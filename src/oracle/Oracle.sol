@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
-
 import {IOracle} from "src/oracle/IOracle.sol";
 
 import {Pausable} from "src/pausable/Pausable.sol";
 
-contract Oracle is Pausable, IOracle {
+abstract contract Oracle is Pausable, IOracle {
     /// ======== Events ======== ///
 
     event ValueInvalid();
@@ -15,8 +13,6 @@ contract Oracle is Pausable, IOracle {
     event OracleReset();
 
     /// ======== Storage ======== ///
-
-    IValueProvider public immutable valueProvider;
 
     uint256 public immutable timeUpdateWindow;
 
@@ -37,12 +33,10 @@ contract Oracle is Pausable, IOracle {
     bool private _validReturnedValue;
 
     constructor(
-        address valueProvider_,
         uint256 timeUpdateWindow_,
         uint256 maxValidTime_,
         int256 alpha_
     ) {
-        valueProvider = IValueProvider(valueProvider_);
         timeUpdateWindow = timeUpdateWindow_;
         maxValidTime = maxValidTime_;
         alpha = alpha_;
@@ -66,6 +60,8 @@ contract Oracle is Pausable, IOracle {
         return (_currentValue, valid);
     }
 
+    function getValue() external view virtual returns (int256);
+
     function update() public override(IOracle) {
         // Not enough time has passed since the last update
         if (lastTimestamp + timeUpdateWindow > block.timestamp) {
@@ -74,7 +70,7 @@ contract Oracle is Pausable, IOracle {
         }
 
         // Oracle update should not fail even if the value provider fails to return a value
-        try valueProvider.value() returns (int256 returnedValue) {
+        try this.getValue() returns (int256 returnedValue) {
             // Update the value using an exponential moving average
             if (_currentValue == 0) {
                 // First update takes the current value

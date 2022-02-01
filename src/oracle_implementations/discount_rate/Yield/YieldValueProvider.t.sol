@@ -22,6 +22,10 @@ contract YieldValueProviderTest is DSTest {
     uint112 fyReserve = 2303024699021990246792971;
     uint32 blockTime = 1643281604;
 
+    uint256 internal _timeUpdateWindow = 100; // seconds
+    uint256 internal _maxValidTime = 300;
+    int256 internal _alpha = 2 * 10**17; // 0.2
+
     function setUp() public {
         createWithValues(
             maturity,
@@ -41,6 +45,14 @@ contract YieldValueProviderTest is DSTest {
     ) public {
         mockValueProvider = new MockProvider();
         yieldVP = new YieldValueProvider(
+            // Oracle arguments
+            // Time update window
+            _timeUpdateWindow,
+            // Max valid time
+            _maxValidTime,
+            // Alpha
+            _alpha,
+            // Yield arguments
             address(mockValueProvider),
             uint256(maturity_),
             int256(timeScale_)
@@ -83,7 +95,7 @@ contract YieldValueProviderTest is DSTest {
         // Compute example 1 from:
         // https://colab.research.google.com/drive/1RYGuGQW3RcRlYkk2JKy6FeEouvr77gFV#scrollTo=ccEQ0z8xF0L4
         int256 expectedValue = 248182251;
-        int256 value = yieldVP.value();
+        int256 value = yieldVP.getValue();
         assertTrue(value == expectedValue);
     }
 }
