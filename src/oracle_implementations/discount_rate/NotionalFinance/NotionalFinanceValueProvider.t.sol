@@ -18,7 +18,7 @@ contract NotionalFinanceValueProviderTest is DSTest {
 
     NotionalFinanceValueProvider internal notionalVP;
 
-    uint16 internal _currencyID = 2;
+    uint16 internal _currencyId = 2;
     uint256 internal _maturityDate = 1671840000;
     uint256 internal _settlementDate = 1648512000;
     uint256 internal _timeUpdateWindow = 100; // seconds
@@ -34,7 +34,7 @@ contract NotionalFinanceValueProviderTest is DSTest {
             // Used Parameters are: currency ID, maturity date and settlement date.
             abi.encodeWithSelector(
                 INotionalView.getMarket.selector,
-                _currencyID,
+                _currencyId,
                 uint256(1671840000),
                 uint256(1648512000)
             ),
@@ -68,7 +68,7 @@ contract NotionalFinanceValueProviderTest is DSTest {
             _alpha,
             // Notional Finance arguments
             address(mockNotionalView),
-            _currencyID,
+            _currencyId,
             9,
             _maturityDate,
             _settlementDate
@@ -83,8 +83,8 @@ contract NotionalFinanceValueProviderTest is DSTest {
         assertEq(notionalVP.notionalView(), address(mockNotionalView));
     }
 
-    function test_check_currencyID() public {
-        assertEq(notionalVP.currencyID(), _currencyID);
+    function test_check_currencyId() public {
+        assertEq(notionalVP.currencyId(), _currencyId);
     }
 
     function test_check_maturityDate() public {

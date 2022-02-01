@@ -8,19 +8,13 @@ import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
 import {IAggregatorOracle} from "src/aggregator/IAggregatorOracle.sol";
 
 // Value providers
-import {ElementFiValueProvider} from "src/valueprovider/ElementFi/ElementFiValueProvider.sol";
-import {NotionalFinanceValueProvider} from "src/valueprovider/NotionalFinance/NotionalFinanceValueProvider.sol";
+import {ElementFiValueProvider} from "src/oracle_implementations/discount_rate/ElementFi/ElementFiValueProvider.sol";
+import {NotionalFinanceValueProvider} from "src/oracle_implementations/discount_rate/NotionalFinance/NotionalFinanceValueProvider.sol";
 
 // Relayers
 import {ICollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/ICollybusDiscountRateRelayer.sol";
 import {CollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/CollybusDiscountRateRelayer.sol";
 import {CollybusSpotPriceRelayer} from "src/relayer/CollybusSpotPrice/CollybusSpotPriceRelayer.sol";
-
-// @notice Emitter when the collybus address is address(0)
-error Factory__deployDiscountRateArchitecture_invalidCollybusAddress();
-
-// @notice Emitted if no value provider is found for given providerType
-error Factory__deployValueProvider_invalidValueProviderType();
 
 /// @notice Data structure that wraps data needed to deploy an Element Value Provider contract
 struct ElementVPData {
@@ -32,16 +26,16 @@ struct ElementVPData {
     uint256 underlierDecimals;
     address ePTokenBond;
     uint256 ePTokenBondDecimals;
-    int256 unitSeconds;
+    int256 timeScale;
     uint256 maturity;
 }
 
 /// @notice Data structure that wraps data needed to deploy an Notional Value Provider contract
 struct NotionalVPData {
     address notionalViewAddress;
-    uint16 currencyID;
+    uint16 currencyId;
     uint256 lastImpliedRateDecimals;
-    uint256 maturity;
+    uint256 maturityDate;
     uint256 settlementDate;
 }
 
@@ -50,7 +44,7 @@ struct NotionalVPData {
 /// @dev The Factory will revert if the providerType is not found
 struct OracleData {
     bytes valueProviderData;
-    uint8 providerType;
+    uint8 valueProviderType;
     uint256 timeWindow;
     uint256 maxValidTime;
     int256 alpha;
@@ -74,6 +68,12 @@ struct DiscountRateDeployData {
 }
 
 contract Factory {
+    // @notice Emitter when the collybus address is address(0)
+    error Factory__deployDiscountRateArchitecture_invalidCollybusAddress();
+
+    // @notice Emitted if no value provider is found for given providerType
+    error Factory__deployValueProvider_invalidValueProviderType();
+
     enum ValueProviderType {
         Notional,
         Element
@@ -84,29 +84,27 @@ contract Factory {
     /// todo: add the master github path to contract
     /// @return Returns the address of the new value provider
     function deployElementFiValueProvider(
-        bytes32 poolId_,
-        address balancerVault_,
-        address poolToken_,
-        uint256 poolTokenDecimals_,
-        address underlier_,
-        uint256 underlierDecimals_,
-        address ePTokenBond_,
-        uint256 ePTokenBondDecimals_,
-        int256 timeScale_,
-        uint256 maturity_
+        // Oracle params
+        OracleData memory oracleParams
     ) public returns (address) {
+
+        ElementVPData memory elementParams = abi.decode(oracleParams.valueProviderData,(ElementVPData));
+
         ElementFiValueProvider elementFiValueProvider = new ElementFiValueProvider(
-                poolId_,
-                balancerVault_,
-                poolToken_,
-                poolTokenDecimals_,
-                underlier_,
-                underlierDecimals_,
-                ePTokenBond_,
-                ePTokenBondDecimals_,
-                timeScale_,
-                maturity_
-            );
+            oracleParams.timeWindow,
+            oracleParams.maxValidTime,
+            oracleParams.alpha,
+            elementParams.poolId,
+            elementParams.balancerVault,
+            elementParams.poolToken,
+            elementParams.poolTokenDecimals,
+            elementParams.underlier,
+            elementParams.underlierDecimals,
+            elementParams.ePTokenBond,
+            elementParams.ePTokenBondDecimals,
+            elementParams.timeScale,
+            elementParams.maturity
+        );
 
         return address(elementFiValueProvider);
     }
@@ -115,81 +113,24 @@ contract Factory {
     /// @dev For more information about the params please check the Value Provider Contract
     /// todo: add the master github path to contract
     /// @return Returns the address of the new value provider
-    function deployNotionalFinanceProvider(
-        address notionalViewAddress_,
-        uint16 currencyId_,
-        uint256 lastImpliedRateDecimals_,
-        uint256 maturityDate_,
-        uint256 settlementDate_
+    function deployNotionalFinanceValueProvider(
+        // Oracle params
+        OracleData memory oracleParams
     ) public returns (address) {
+        NotionalVPData memory notionalParams = abi.decode(oracleParams.valueProviderData,(NotionalVPData));
+
         NotionalFinanceValueProvider notionalFinanceValueProvider = new NotionalFinanceValueProvider(
-                notionalViewAddress_,
-                currencyId_,
-                lastImpliedRateDecimals_,
-                maturityDate_,
-                settlementDate_
-            );
+            oracleParams.timeWindow,
+            oracleParams.maxValidTime,
+            oracleParams.alpha,
+            notionalParams.notionalViewAddress,
+            notionalParams.currencyId,
+            notionalParams.lastImpliedRateDecimals,
+            notionalParams.maturityDate,
+            notionalParams.settlementDate
+        );
 
         return address(notionalFinanceValueProvider);
-    }
-
-    /// @notice Deploys a new Value Provider contract
-    /// @param valueProviderDataEncoded_ Abi encoded Value Provider data structure
-    /// @param valueProviderType_ Type used to decode the given data structure
-    /// @dev Reverts if valueProviderType_ is not recognized
-    /// @dev Reverts if the encoded struct and type do not match
-    /// @return Returns the address of the new value provider
-    function deployValueProvider(
-        bytes memory valueProviderDataEncoded_,
-        uint8 valueProviderType_
-    ) public returns (address) {
-        if (valueProviderType_ == uint8(ValueProviderType.Notional)) {
-            // Decode the given struct
-            // This will revert if there's a missmatch between the valueProviderType_ and encoded bytes
-            NotionalVPData memory notionalData = abi.decode(
-                valueProviderDataEncoded_,
-                (NotionalVPData)
-            );
-
-            // Create and return the value provider
-            address notionalVP = deployNotionalFinanceProvider(
-                notionalData.notionalViewAddress,
-                notionalData.currencyID,
-                notionalData.lastImpliedRateDecimals,
-                notionalData.maturity,
-                notionalData.settlementDate
-            );
-
-            return notionalVP;
-        }
-
-        if (valueProviderType_ == uint8(ValueProviderType.Element)) {
-            // Decode the given struct
-            // This will revert if there's a missmatch between the valueProviderType_ and encoded bytes
-            ElementVPData memory elementData = abi.decode(
-                valueProviderDataEncoded_,
-                (ElementVPData)
-            );
-
-            // Create and return the value provider
-            address elementVP = deployElementFiValueProvider(
-                elementData.poolId,
-                elementData.balancerVault,
-                elementData.poolToken,
-                elementData.poolTokenDecimals,
-                elementData.underlier,
-                elementData.underlierDecimals,
-                elementData.ePTokenBond,
-                elementData.ePTokenBondDecimals,
-                elementData.unitSeconds,
-                elementData.maturity
-            );
-
-            return elementVP;
-        }
-
-        // Revert if the value provider type is not supported
-        revert Factory__deployValueProvider_invalidValueProviderType();
     }
 
     /// @notice Deploys a new Oracle and adds it to an Aggregator
@@ -207,24 +148,26 @@ contract Factory {
             (OracleData)
         );
 
-        // We deploy the value provider needed by the oracle
-        address valueProviderAddress = deployValueProvider(
-            oracleData.valueProviderData,
-            oracleData.providerType
-        );
-
-        // Deploy the oracle and use the new value provider
-        Oracle oracle = new Oracle(
-            valueProviderAddress,
-            oracleData.timeWindow,
-            oracleData.maxValidTime,
-            oracleData.alpha
-        );
+        address oracleAddress = address(0);
+        if (oracleData.valueProviderType == uint8(ValueProviderType.Element)) {
+            // Create and return the value provider
+            oracleAddress = deployElementFiValueProvider(
+                oracleData
+            );
+        } else if (oracleData.valueProviderType == uint8(ValueProviderType.Notional)) {
+            // Create and return the value provider
+            oracleAddress = deployNotionalFinanceValueProvider(
+                oracleData
+            );
+        } else {
+            // Revert if the value provider type is not supported
+            revert Factory__deployValueProvider_invalidValueProviderType();
+        }
 
         // Add the oracle to the Aggregator Oracle
-        IAggregatorOracle(aggregatorAddress_).oracleAdd(address(oracle));
+        IAggregatorOracle(aggregatorAddress_).oracleAdd(oracleAddress);
 
-        return address(oracle);
+        return oracleAddress;
     }
 
     /// @notice Deploys a new Aggregator and adds it to a Relayer
@@ -258,7 +201,7 @@ contract Factory {
             );
         }
 
-        // Set the minimim required valid values for the aggregator
+        // Set the minimum required valid values for the aggregator
         // Reverts if the requiredValidValues is bigger than the oracleCount
         aggregatorOracle.setParam(
             "requiredValidValues",

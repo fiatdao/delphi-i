@@ -29,9 +29,9 @@ contract FactoryTest is DSTest {
     {
         NotionalVPData memory notionalValueProvider = NotionalVPData({
             notionalViewAddress: 0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
-            currencyID: 2,
+            currencyId: 2,
             lastImpliedRateDecimals: 9,
-            maturity: 1671840000,
+            maturityDate: 1671840000,
             settlementDate: 1648512000
         });
 
@@ -40,7 +40,7 @@ contract FactoryTest is DSTest {
             timeWindow: 200,
             maxValidTime: 600,
             alpha: 2 * 10**17,
-            providerType: uint8(Factory.ValueProviderType.Notional)
+            valueProviderType: uint8(Factory.ValueProviderType.Notional)
         });
 
         AggregatorData memory notionalAggregator = AggregatorData({
@@ -61,7 +61,7 @@ contract FactoryTest is DSTest {
             underlierDecimals: 6,
             ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
             ePTokenBondDecimals: 6,
-            unitSeconds: 1000355378,
+            timeScale: 1000355378,
             maturity: 1651275535
         });
 
@@ -70,7 +70,7 @@ contract FactoryTest is DSTest {
             timeWindow: 200,
             maxValidTime: 600,
             alpha: 2 * 10**17,
-            providerType: uint8(Factory.ValueProviderType.Element)
+            valueProviderType: uint8(Factory.ValueProviderType.Element)
         });
 
         AggregatorData memory elementAggregator = AggregatorData({
@@ -90,96 +90,6 @@ contract FactoryTest is DSTest {
         return deployData;
     }
 
-    function test_deploy_ElementFinanceValueProvider_createsContract() public {
-        bytes32 poolId = 0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090;
-        // Balancer vault
-        address balancerVault = 0xBA12222222228d8Ba445958a75a0704d566BF2C8;
-        // Pool Token address
-        address poolTokenAddress = 0x10a2F8bd81Ee2898D7eD18fb8f114034a549FA59;
-        // Pool Token decimals
-        uint256 poolTokenDecimals = 18;
-        // Underlier (USDC)
-        address underlier = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-        // Underlier decimals
-        uint256 underlierDecimals = 6;
-        // Principal bond (Element Principal Token yvUSDC-28JAN22)
-        address ePTokenBond = 0x8a2228705ec979961F0e16df311dEbcf097A2766;
-        // Principal bond decimals
-        uint256 ePTokenBondDecimals = 6;
-        // Time scale in seconds
-        int256 unitSeconds = 1000355378;
-        // Maturity timestamp
-        uint256 maturity = 1651275535;
-
-        // Deploy the Element Finance Value Provider
-        ElementFiValueProvider elementFinanceValueProvider = ElementFiValueProvider(
-                factory.deployElementFiValueProvider(
-                    poolId,
-                    balancerVault,
-                    poolTokenAddress,
-                    poolTokenDecimals,
-                    underlier,
-                    underlierDecimals,
-                    ePTokenBond,
-                    ePTokenBondDecimals,
-                    unitSeconds,
-                    maturity
-                )
-            );
-
-        assertTrue(
-            address(elementFinanceValueProvider) != address(0),
-            "Element Finance Value Provider should be deployed"
-        );
-
-        // Check the pool ID
-        assertEq(
-            poolId,
-            elementFinanceValueProvider.poolId(),
-            "Pool ID should be correct"
-        );
-        // Check the balancer vault
-        assertEq(
-            balancerVault,
-            elementFinanceValueProvider.balancerVaultAddress(),
-            "Balancer vault should be correct"
-        );
-        // Check the underlier
-        assertEq(
-            underlier,
-            elementFinanceValueProvider.underlier(),
-            "Underlier should be correct"
-        );
-
-        // Check the underlier
-        assertEq(
-            underlierDecimals,
-            elementFinanceValueProvider.underlierDecimals(),
-            "Underlier decimals should be correct"
-        );
-
-        // Check the principal bond
-        assertEq(
-            ePTokenBond,
-            elementFinanceValueProvider.ePTokenBond(),
-            "Principal bond should be correct"
-        );
-
-        // Check the principal bond decimals
-        assertEq(
-            ePTokenBondDecimals,
-            elementFinanceValueProvider.ePTokenBondDecimals(),
-            "Principal bond should be correct"
-        );
-
-        // Check the time scale
-        assertEq(
-            unitSeconds,
-            elementFinanceValueProvider.timeScale(),
-            "Time scale should be correct"
-        );
-    }
-
     function test_deploy_Oracle_createsContract(
         uint256 timeUpdateWindow_,
         uint256 maxValidTime_,
@@ -194,7 +104,7 @@ contract FactoryTest is DSTest {
             underlierDecimals: 6,
             ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
             ePTokenBondDecimals: 6,
-            unitSeconds: 1000355378,
+            timeScale: 1000355378,
             maturity: 1651275535
         });
 
@@ -203,7 +113,7 @@ contract FactoryTest is DSTest {
             timeWindow: timeUpdateWindow_,
             maxValidTime: maxValidTime_,
             alpha: alpha_,
-            providerType: uint8(Factory.ValueProviderType.Element)
+            valueProviderType: uint8(Factory.ValueProviderType.Element)
         });
 
         AggregatorOracle aggregatorOracle = new AggregatorOracle();
@@ -223,10 +133,6 @@ contract FactoryTest is DSTest {
         assertTrue(address(oracle) != address(0), "Oracle should be deployed");
 
         // Check the Oracle's parameters
-        assertTrue(
-            address(Oracle(oracle).valueProvider()) != address(0),
-            "Value provider should be correct"
-        );
         assertEq(
             elementDataOracle.timeWindow,
             Oracle(oracle).timeUpdateWindow(),
@@ -254,7 +160,7 @@ contract FactoryTest is DSTest {
             underlierDecimals: 6,
             ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
             ePTokenBondDecimals: 6,
-            unitSeconds: 1000355378,
+            timeScale: 1000355378,
             maturity: 1651275535
         });
 
@@ -263,7 +169,7 @@ contract FactoryTest is DSTest {
             timeWindow: 200,
             maxValidTime: 600,
             alpha: 2 * 10**17,
-            providerType: uint8(Factory.ValueProviderType.Element)
+            valueProviderType: uint8(Factory.ValueProviderType.Element)
         });
 
         AggregatorData memory elementAggregatorData;
@@ -391,9 +297,9 @@ contract FactoryTest is DSTest {
 
         NotionalVPData memory notionalValueProvider = NotionalVPData({
             notionalViewAddress: 0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
-            currencyID: 2,
+            currencyId: 2,
             lastImpliedRateDecimals: 9,
-            maturity: 1671840000,
+            maturityDate: 1671840000,
             settlementDate: 1648512000
         });
 
@@ -402,7 +308,7 @@ contract FactoryTest is DSTest {
             timeWindow: 200,
             maxValidTime: 600,
             alpha: 2 * 10**17,
-            providerType: uint8(Factory.ValueProviderType.Notional)
+            valueProviderType: uint8(Factory.ValueProviderType.Notional)
         });
 
         AggregatorData memory notionalAggregator = AggregatorData({
@@ -449,9 +355,9 @@ contract FactoryTest is DSTest {
 
         NotionalVPData memory notionalValueProvider = NotionalVPData({
             notionalViewAddress: 0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
-            currencyID: 2,
+            currencyId: 2,
             lastImpliedRateDecimals: 9,
-            maturity: 1671840000,
+            maturityDate: 1671840000,
             settlementDate: 1648512000
         });
 
@@ -460,7 +366,7 @@ contract FactoryTest is DSTest {
             timeWindow: 200,
             maxValidTime: 600,
             alpha: 2 * 10**17,
-            providerType: uint8(Factory.ValueProviderType.Notional)
+            valueProviderType: uint8(Factory.ValueProviderType.Notional)
         });
 
         uint256 oracleCount = IAggregatorOracle(firstAggregatorAddress)

@@ -17,7 +17,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     int256 internal constant SECONDS_PER_YEAR = 31104000 * 1e18;
 
     address public immutable notionalView;
-    uint16 public immutable currencyID;
+    uint16 public immutable currencyId;
     uint256 public immutable maturityDate;
     uint256 public immutable settlementDate;
 
@@ -29,7 +29,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     /// @param maxValidTime_            Maximum time for which the value is valid
     /// @param alpha_                   Alpha parameter for EMA
     /// @param notionalViewContract_    The address of the deployed notional view contract.
-    /// @param currencyID_              Currency ID(eth = 1, dai = 2, usdc = 3, wbtc = 4)
+    /// @param currencyId_              Currency ID(eth = 1, dai = 2, usdc = 3, wbtc = 4)
     /// @param lastImpliedRateDecimals_ Precision of the market rate.
     /// @param maturity_                Maturity date.
     /// @param settlementDate_          Settlement date.
@@ -40,14 +40,14 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
         int256 alpha_,
         //
         address notionalViewContract_,
-        uint16 currencyID_,
+        uint16 currencyId_,
         uint256 lastImpliedRateDecimals_,
         uint256 maturity_,
         uint256 settlementDate_
     ) Oracle(timeUpdateWindow_, maxValidTime_, alpha_) {
         lastImpliedRateDecimals = lastImpliedRateDecimals_;
         notionalView = notionalViewContract_;
-        currencyID = currencyID_;
+        currencyId = currencyId_;
         maturityDate = maturity_;
         settlementDate = settlementDate_;
     }
@@ -68,7 +68,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
 
         // The returned annual rate is in 1e9 precision so we need to convert it to 1e18 precision.
         MarketParameters memory marketParams = INotionalView(notionalView)
-            .getMarket(currencyID, maturityDate, settlementDate);
+            .getMarket(currencyId, maturityDate, settlementDate);
 
         // Convert rate per anum to 18 digits precision.
         uint256 ratePerAnnum = uconvert(
