@@ -2,16 +2,13 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
-import {IVault} from "src/valueprovider/ElementFi/IVault.sol";
+import {Oracle} from "src/oracle/Oracle.sol";
+import {IVault} from "./IVault.sol";
+import {Convert} from "src/oracle_implementations/discount_rate/utils/Convert.sol";
 
-import {Convert} from "src/valueprovider/utils/Convert.sol";
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
-// @notice Emitted when trying to add pull a value for an expired pool
-error ElementFiValueProvider__value_maturityLessThanBlocktime(uint256 maturity);
-
-contract ElementFiValueProvider is IValueProvider, Convert {
+contract ElementFiValueProvider is Oracle, Convert {
     bytes32 private immutable _poolId;
     IVault private immutable _balancerVault;
     address private immutable _poolToken;
@@ -24,6 +21,9 @@ contract ElementFiValueProvider is IValueProvider, Convert {
 
     /// @notice                     Constructs the Value provider contracts with the needed Element data in order to
     ///                             calculate the annual rate.
+    /// @param timeUpdateWindow_    Minimum time between updates of the value
+    /// @param maxValidTime_        Maximum time for which the value is valid
+    /// @param alpha_               Alpha parameter for EMA
     /// @param poolId_              poolID of the pool
     /// @param balancerVault_       Address of the balancer vault
     /// @param poolToken_           Address of the pool (LP token) contract
@@ -34,6 +34,11 @@ contract ElementFiValueProvider is IValueProvider, Convert {
     /// @param ePTokenBondDecimals_ Precision of the bond.
     /// @param timeScale_           Time scale used on this pool (i.e. 1/(timeStretch*secondsPerYear)) in 59x18 fixed point
     constructor(
+        // Oracle parameters
+        uint256 timeUpdateWindow_,
+        uint256 maxValidTime_,
+        int256 alpha_,
+        //
         bytes32 poolId_,
         address balancerVault_,
         address poolToken_,
@@ -43,7 +48,7 @@ contract ElementFiValueProvider is IValueProvider, Convert {
         address ePTokenBond_,
         uint256 ePTokenBondDecimals_,
         int256 timeScale_
-    ) {
+    ) Oracle(timeUpdateWindow_, maxValidTime_, alpha_) {
         _poolId = poolId_;
         _balancerVault = IVault(balancerVault_);
         _poolToken = poolToken_;
@@ -59,7 +64,7 @@ contract ElementFiValueProvider is IValueProvider, Convert {
     /// @dev Documentation:
     /// https://www.notion.so/fiatdao/Delphi-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
     /// @return result The result as an signed 59.18-decimal fixed-point number.
-    function value() external view override(IValueProvider) returns (int256) {
+    function getValue() external view override(Oracle) returns (int256) {
         // The base token reserves from the balancer vault in 18 digits precision
         (uint256 baseReserves, , , ) = _balancerVault.getPoolTokenInfo(
             _poolId,

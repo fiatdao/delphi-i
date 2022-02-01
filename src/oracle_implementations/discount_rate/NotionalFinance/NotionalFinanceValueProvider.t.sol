@@ -18,6 +18,10 @@ contract NotionalFinanceValueProviderTest is DSTest {
 
     NotionalFinanceValueProvider internal notionalVP;
 
+    uint256 internal _timeUpdateWindow = 100; // seconds
+    uint256 internal _maxValidTime = 300;
+    int256 internal _alpha = 2 * 10**17; // 0.2
+
     function setUp() public {
         // Values taken from interogating the active markets via the Notional View Contract deployed at
         // 0x1344A36A1B56144C3Bc62E7757377D288fDE0369
@@ -52,6 +56,14 @@ contract NotionalFinanceValueProviderTest is DSTest {
         );
 
         notionalVP = new NotionalFinanceValueProvider(
+            // Oracle arguments
+            // Time update window
+            _timeUpdateWindow,
+            // Max valid time
+            _maxValidTime,
+            // Alpha
+            _alpha,
+            // Notional Finance arguments
             address(mockNotionalView),
             2,
             9,
@@ -69,8 +81,7 @@ contract NotionalFinanceValueProviderTest is DSTest {
         int256 expectedValue = 2851338287; //2810353955;
 
         // Computed value based on the parameters that are sent via the mock provider
-        int256 value = notionalVP.value();
-        emit log_int(value);
+        int256 value = notionalVP.getValue();
         assertTrue(value == expectedValue);
     }
 }

@@ -9,7 +9,6 @@ import {Caller} from "src/test/utils/Caller.sol";
 import {ICollybus} from "src/relayer/ICollybus.sol";
 import {CollybusDiscountRateRelayer} from "./CollybusDiscountRateRelayer.sol";
 import {IOracle} from "src/oracle/IOracle.sol";
-import {IValueProvider} from "src/valueprovider/IValueProvider.sol";
 
 contract TestCollybus is ICollybus {
     mapping(uint256 => uint256) public rateForTokenId;
@@ -21,10 +20,10 @@ contract TestCollybus is ICollybus {
         rateForTokenId[tokenId] = rate;
     }
 
-    function updateSpot(address token, uint256 spot)
-        public
-        override(ICollybus)
-    {
+    function updateSpot(
+        address, /*token*/
+        uint256 /*spot*/
+    ) public override(ICollybus) {
         // This should never be called, since this test only updates the discount rate
         assert(false);
     }
