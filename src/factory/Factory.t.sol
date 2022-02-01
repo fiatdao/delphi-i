@@ -346,8 +346,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function createElementVPData() internal returns (ElementVPData memory)
-    {
+    function createElementVPData() internal returns (ElementVPData memory) {
         MockProvider underlierMock = new MockProvider();
         underlierMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
@@ -391,8 +390,7 @@ contract FactoryTest is DSTest {
         return elementValueProvider;
     }
 
-    function createNotionalVPData() public returns (NotionalVPData memory)
-    {
+    function createNotionalVPData() public returns (NotionalVPData memory) {
         NotionalVPData memory notionalValueProvider = NotionalVPData({
             notionalViewAddress: 0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
             currencyId: 2,
