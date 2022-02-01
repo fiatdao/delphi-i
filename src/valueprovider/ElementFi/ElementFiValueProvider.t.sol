@@ -133,7 +133,7 @@ contract ElementFiValueProviderTest is DSTest {
         assertEq(efValueProvider.timeScale(), _timeScale);
     }
 
-    function test_check_maturity() public{
+    function test_check_maturity() public {
         assertEq(efValueProvider.maturity(), _maturity);
     }
 

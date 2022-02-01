@@ -58,7 +58,10 @@ contract YieldValueProviderTest is DSTest {
     }
 
     function test_deploy() public {
-        assertTrue(address(yieldVP) != address(0), "Yield value provider should be deployed");
+        assertTrue(
+            address(yieldVP) != address(0),
+            "Yield value provider should be deployed"
+        );
     }
 
     function test_check_poolId() public {
@@ -68,20 +71,12 @@ contract YieldValueProviderTest is DSTest {
         );
     }
 
-    function test_check_maturity() public{
-        assertEq(
-            yieldVP.maturity(),
-            maturity,
-            "Invalid maturity date"
-        );
+    function test_check_maturity() public {
+        assertEq(yieldVP.maturity(), maturity, "Invalid maturity date");
     }
 
-    function test_check_timeScale() public{
-        assertEq(
-            yieldVP.timeScale(),
-            timeScale,
-            "Invalid time scale value"
-        );
+    function test_check_timeScale() public {
+        assertEq(yieldVP.timeScale(), timeScale, "Invalid time scale value");
     }
 
     function test_GetValue() public {

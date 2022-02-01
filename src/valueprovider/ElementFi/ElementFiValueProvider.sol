@@ -65,7 +65,6 @@ contract ElementFiValueProvider is IValueProvider, Convert {
     /// @dev Reverts if the block time exceeds or is equal to pool maturity.
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function value() external view override(IValueProvider) returns (int256) {
-
         // No values for matured pools
         if (block.timestamp >= maturity) {
             revert ElementFiValueProvider__value_maturityLessThanBlocktime(
