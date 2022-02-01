@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "ds-test/test.sol";
 
 import "src/test/utils/Caller.sol";
+import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 import {Hevm} from "src/test/utils/Hevm.sol";
 import {MockProvider} from "src/test/utils/MockProvider.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -26,7 +27,7 @@ contract ElementFiValueProviderTest is DSTest {
         bytes32(
             0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7
         );
-    int256 internal _timeScale = 412133793;
+    int256 internal _timeStretch = 412133793;
     uint256 internal _maturity = 1651275535;
     uint256 internal _timeUpdateWindow = 100; // seconds
     uint256 internal _maxValidTime = 300;
@@ -114,6 +115,11 @@ contract ElementFiValueProviderTest is DSTest {
             false
         );
 
+        int256 timeScale59x18 = PRBMathSD59x18.div(
+            PRBMathSD59x18.SCALE,
+            PRBMathSD59x18.fromInt(_timeStretch)
+        );
+
         efValueProvider = new ElementFiValueProvider(
             // Oracle arguments
             // Time update window
@@ -134,7 +140,7 @@ contract ElementFiValueProviderTest is DSTest {
             // Principal bond token address
             address(ePTokenBondMock),
             // Time scale in seconds
-            _timeScale,
+            timeScale59x18,
             // Maturity timestamp
             _maturity
         );
@@ -164,7 +170,12 @@ contract ElementFiValueProviderTest is DSTest {
     }
 
     function test_check_unitSeconds() public {
-        assertEq(efValueProvider.timeScale(), _timeScale);
+        int256 timeScale59x18 = PRBMathSD59x18.div(
+            PRBMathSD59x18.SCALE,
+            PRBMathSD59x18.fromInt(_timeStretch)
+        );
+
+        assertEq(efValueProvider.timeScale(), timeScale59x18);
     }
 
     function test_check_maturity() public {

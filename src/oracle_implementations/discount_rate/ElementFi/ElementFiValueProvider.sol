@@ -98,14 +98,10 @@ contract ElementFiValueProvider is Oracle, Convert {
             int256(baseReserves)
         );
 
-        int256 timeRatio59x18 = PRBMathSD59x18.div(
-            PRBMathSD59x18.SCALE,
-            PRBMathSD59x18.fromInt(timeScale)
-        );
         // The implied per-second rate in signed 59.18 format
         int256 ratePerSecond59x18 = (PRBMathSD59x18.pow(
             reservesRatio59x18,
-            timeRatio59x18
+            timeScale
         ) - PRBMathSD59x18.SCALE);
 
         // The result is a 59.18 fixed-point number.
