@@ -21,18 +21,20 @@ contract ElementFiValueProvider is IValueProvider, Convert {
     address public immutable ePTokenBond;
     uint256 public immutable ePTokenBondDecimals;
     int256 public immutable timeScale;
+    uint256 public immutable maturity;
 
     /// @notice                     Constructs the Value provider contracts with the needed Element data in order to
-    ///                             calculate the annual rate.
+    ///                             calculate the annual rate
     /// @param poolId_              poolID of the pool
     /// @param balancerVault_       Address of the balancer vault
     /// @param poolToken_           Address of the pool (LP token) contract
     /// @param poolTokenDecimals_   Precision of the pool LP token
-    /// @param underlier_           Address of the underlier IERC20 token.
+    /// @param underlier_           Address of the underlier IERC20 token
     /// @param underlierDecimals_   Precision of the underlier
-    /// @param ePTokenBond_         Address of the bond IERC20 token.
-    /// @param ePTokenBondDecimals_ Precision of the bond.
+    /// @param ePTokenBond_         Address of the bond IERC20 token
+    /// @param ePTokenBondDecimals_ Precision of the bond
     /// @param timeScale_           Time scale used on this pool (i.e. 1/(timeStretch*secondsPerYear)) in 59x18 fixed point
+    /// @param maturity_            The Maturity timestamp
     constructor(
         bytes32 poolId_,
         address balancerVault_,
@@ -42,7 +44,8 @@ contract ElementFiValueProvider is IValueProvider, Convert {
         uint256 underlierDecimals_,
         address ePTokenBond_,
         uint256 ePTokenBondDecimals_,
-        int256 timeScale_
+        int256 timeScale_,
+        uint256 maturity_
     ) {
         poolId = poolId_;
         balancerVaultAddress = balancerVault_;
@@ -53,6 +56,7 @@ contract ElementFiValueProvider is IValueProvider, Convert {
         ePTokenBond = ePTokenBond_;
         ePTokenBondDecimals = ePTokenBondDecimals_;
         timeScale = timeScale_;
+        maturity = maturity_;
     }
 
     /// @notice Calculates the implied interest rate based on reserves in the pool
@@ -61,6 +65,14 @@ contract ElementFiValueProvider is IValueProvider, Convert {
     /// @dev Reverts if the block time exceeds or is equal to pool maturity.
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function value() external view override(IValueProvider) returns (int256) {
+
+        // No values for matured pools
+        if (block.timestamp >= maturity) {
+            revert ElementFiValueProvider__value_maturityLessThanBlocktime(
+                maturity
+            );
+        }
+
         // The base token reserves from the balancer vault in 18 digits precision
         (uint256 baseReserves, , , ) = IVault(balancerVaultAddress)
             .getPoolTokenInfo(poolId, IERC20(underlier));

@@ -61,7 +61,8 @@ contract FactoryTest is DSTest {
             underlierDecimals: 6,
             ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
             ePTokenBondDecimals: 6,
-            unitSeconds: 1000355378
+            unitSeconds: 1000355378,
+            maturity: 1651275535
         });
 
         OracleData memory elementOracleData = OracleData({
@@ -107,6 +108,8 @@ contract FactoryTest is DSTest {
         uint256 ePTokenBondDecimals = 6;
         // Time scale in seconds
         int256 unitSeconds = 1000355378;
+        // Maturity timestamp
+        uint256 maturity = 1651275535;
 
         // Deploy the Element Finance Value Provider
         ElementFiValueProvider elementFinanceValueProvider = ElementFiValueProvider(
@@ -119,7 +122,8 @@ contract FactoryTest is DSTest {
                     underlierDecimals,
                     ePTokenBond,
                     ePTokenBondDecimals,
-                    unitSeconds
+                    unitSeconds,
+                    maturity
                 )
             );
 
@@ -190,7 +194,8 @@ contract FactoryTest is DSTest {
             underlierDecimals: 6,
             ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
             ePTokenBondDecimals: 6,
-            unitSeconds: 1000355378
+            unitSeconds: 1000355378,
+            maturity: 1651275535
         });
 
         OracleData memory elementDataOracle = OracleData({
@@ -249,7 +254,8 @@ contract FactoryTest is DSTest {
             underlierDecimals: 6,
             ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
             ePTokenBondDecimals: 6,
-            unitSeconds: 1000355378
+            unitSeconds: 1000355378,
+            maturity: 1651275535
         });
 
         OracleData memory elementDataOracle = OracleData({

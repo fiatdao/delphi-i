@@ -33,6 +33,7 @@ struct ElementVPData {
     address ePTokenBond;
     uint256 ePTokenBondDecimals;
     int256 unitSeconds;
+    uint256 maturity;
 }
 
 /// @notice Data structure that wraps data needed to deploy an Notional Value Provider contract
@@ -91,7 +92,8 @@ contract Factory {
         uint256 underlierDecimals_,
         address ePTokenBond_,
         uint256 ePTokenBondDecimals_,
-        int256 timeScale_
+        int256 timeScale_,
+        uint256 maturity_
     ) public returns (address) {
         ElementFiValueProvider elementFiValueProvider = new ElementFiValueProvider(
                 poolId_,
@@ -102,7 +104,8 @@ contract Factory {
                 underlierDecimals_,
                 ePTokenBond_,
                 ePTokenBondDecimals_,
-                timeScale_
+                timeScale_,
+                maturity_
             );
 
         return address(elementFiValueProvider);
@@ -178,7 +181,8 @@ contract Factory {
                 elementData.underlierDecimals,
                 elementData.ePTokenBond,
                 elementData.ePTokenBondDecimals,
-                elementData.unitSeconds
+                elementData.unitSeconds,
+                elementData.maturity
             );
 
             return elementVP;

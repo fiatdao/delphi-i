@@ -27,6 +27,7 @@ contract ElementFiValueProviderTest is DSTest {
     address internal _ePTokenBond =
         address(0x285328906D0D33cb757c1E471F5e2176683247c2);
     int256 internal _timeScale = 412133793;
+    uint256 internal _maturity = 1651275535;
 
     function setUp() public {
         mockBalancerVault = new MockProvider();
@@ -99,7 +100,9 @@ contract ElementFiValueProviderTest is DSTest {
             // Principal bond decimal format
             18,
             // Time scale in seconds
-            _timeScale
+            _timeScale,
+            // Maturity timestamp
+            _maturity
         );
     }
 
@@ -128,6 +131,10 @@ contract ElementFiValueProviderTest is DSTest {
 
     function test_check_unitSeconds() public {
         assertEq(efValueProvider.timeScale(), _timeScale);
+    }
+
+    function test_check_maturity() public{
+        assertEq(efValueProvider.maturity(), _maturity);
     }
 
     function test_GetValue() public {
