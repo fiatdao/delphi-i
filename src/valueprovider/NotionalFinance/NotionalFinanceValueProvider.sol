@@ -7,6 +7,11 @@ import {INotionalView, MarketParameters} from "src/valueprovider/NotionalFinance
 import {Convert} from "src/valueprovider/utils/Convert.sol";
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
+// @notice Emitted when trying to add pull a value for an expired pool
+error NotionalFinanceValueProvider__value_maturityLessThanBlocktime(
+    uint256 maturity
+);
+
 contract NotionalFinanceValueProvider is IValueProvider, Convert {
     // Seconds in a 360 days year as used by Notional
     int256 internal constant SECONDS_PER_YEAR = 31104000 * 1e18;
@@ -45,6 +50,13 @@ contract NotionalFinanceValueProvider is IValueProvider, Convert {
     /// https://github.com/notional-finance/contracts-v2/blob/b8e3792e39486b2719c6153acc270199377cc6b9/contracts/internal/markets/Market.sol#L495
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function value() external view override(IValueProvider) returns (int256) {
+        // No values for matured pools
+        if (block.timestamp >= maturityDate) {
+            revert NotionalFinanceValueProvider__value_maturityLessThanBlocktime(
+                maturityDate
+            );
+        }
+
         // The returned annual rate is in 1e9 precision so we need to convert it to 1e18 precision.
         MarketParameters memory marketParams = INotionalView(notionalView)
             .getMarket(currencyID, maturityDate, settlementDate);
