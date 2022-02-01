@@ -58,14 +58,10 @@ contract ElementFiValueProvider is Oracle, Convert {
         balancerVaultAddress = balancerVaultAddress_;
         poolToken = poolToken_;
         poolTokenDecimals = ERC20(poolToken_).decimals();
-        emit loguint(101);
-        emit loguint(ERC20(poolToken_).decimals());
         underlier = underlier_;
         underlierDecimals = ERC20(underlier_).decimals();
-        emit loguint(102);
         ePTokenBond = ePTokenBond_;
         ePTokenBondDecimals = ERC20(ePTokenBond_).decimals();
-        emit loguint(103);
         timeScale = timeScale_;
         maturity = maturity_;
     }

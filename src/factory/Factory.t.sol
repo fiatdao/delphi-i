@@ -2,6 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "ds-test/test.sol";
+import {MockProvider} from "src/test/utils/MockProvider.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "src/factory/Factory.sol";
 
@@ -27,13 +29,7 @@ contract FactoryTest is DSTest {
         internal
         returns (DiscountRateDeployData memory)
     {
-        NotionalVPData memory notionalValueProvider = NotionalVPData({
-            notionalViewAddress: 0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
-            currencyId: 2,
-            lastImpliedRateDecimals: 9,
-            maturityDate: 1671840000,
-            settlementDate: 1648512000
-        });
+        NotionalVPData memory notionalValueProvider = createNotionalVPData();
 
         OracleData memory notionalOracleData = OracleData({
             valueProviderData: abi.encode(notionalValueProvider),
@@ -52,15 +48,7 @@ contract FactoryTest is DSTest {
 
         notionalAggregator.oracleData[0] = abi.encode(notionalOracleData);
 
-        ElementVPData memory elementValueProvider = ElementVPData({
-            poolId: 0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
-            balancerVault: address(0x12345),
-            poolToken: 0x10a2F8bd81Ee2898D7eD18fb8f114034a549FA59,
-            underlier: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
-            ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
-            timeScale: 1000355378,
-            maturity: 1651275535
-        });
+        ElementVPData memory elementValueProvider = createElementVPData();
 
         OracleData memory elementOracleData = OracleData({
             valueProviderData: abi.encode(elementValueProvider),
@@ -92,15 +80,7 @@ contract FactoryTest is DSTest {
         uint256 maxValidTime_,
         int256 alpha_
     ) public {
-        ElementVPData memory elementValueProvider = ElementVPData({
-            poolId: 0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
-            balancerVault: address(0x12345),
-            poolToken: 0x10a2F8bd81Ee2898D7eD18fb8f114034a549FA59,
-            underlier: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
-            ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
-            timeScale: 1000355378,
-            maturity: 1651275535
-        });
+        ElementVPData memory elementValueProvider = createElementVPData();
 
         OracleData memory elementDataOracle = OracleData({
             valueProviderData: abi.encode(elementValueProvider),
@@ -145,15 +125,7 @@ contract FactoryTest is DSTest {
     }
 
     function test_deploy_Aggregator_createsContract() public {
-        ElementVPData memory elementValueProvider = ElementVPData({
-            poolId: 0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
-            balancerVault: address(0x12345),
-            poolToken: 0x10a2F8bd81Ee2898D7eD18fb8f114034a549FA59,
-            underlier: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
-            ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
-            timeScale: 1000355378,
-            maturity: 1651275535
-        });
+        ElementVPData memory elementValueProvider = createElementVPData();
 
         OracleData memory elementDataOracle = OracleData({
             valueProviderData: abi.encode(elementValueProvider),
@@ -372,7 +344,62 @@ contract FactoryTest is DSTest {
             IAggregatorOracle(firstAggregatorAddress).oracleCount(),
             "Aggregator should contain the new oracle"
         );
+    }
 
-        // check exists
+    function createElementVPData() internal returns (ElementVPData memory)
+    {
+        MockProvider underlierMock = new MockProvider();
+        underlierMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ERC20.decimals.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint8(18))
+            }),
+            false
+        );
+
+        MockProvider ePTokenBondMock = new MockProvider();
+        ePTokenBondMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ERC20.decimals.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint8(18))
+            }),
+            false
+        );
+
+        MockProvider poolToken = new MockProvider();
+        poolToken.givenQueryReturnResponse(
+            abi.encodeWithSelector(ERC20.decimals.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint8(18))
+            }),
+            false
+        );
+
+        ElementVPData memory elementValueProvider = ElementVPData({
+            poolId: 0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
+            balancerVault: address(0x12345),
+            poolToken: address(poolToken),
+            underlier: address(underlierMock),
+            ePTokenBond: address(ePTokenBondMock),
+            timeScale: 1000355378,
+            maturity: 1651275535
+        });
+
+        return elementValueProvider;
+    }
+
+    function createNotionalVPData() public returns (NotionalVPData memory)
+    {
+        NotionalVPData memory notionalValueProvider = NotionalVPData({
+            notionalViewAddress: 0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
+            currencyId: 2,
+            lastImpliedRateDecimals: 9,
+            maturityDate: 1671840000,
+            settlementDate: 1648512000
+        });
+        return notionalValueProvider;
     }
 }
