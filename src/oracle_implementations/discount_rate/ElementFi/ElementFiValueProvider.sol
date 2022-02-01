@@ -63,7 +63,6 @@ contract ElementFiValueProvider is Oracle, Convert {
     /// @notice Calculates the implied interest rate based on reserves in the pool
     /// @dev Documentation:
     /// https://www.notion.so/fiatdao/Delphi-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
-    /// @dev Reverts if the block time exceeds or is equal to pool maturity.
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function getValue() external view override(Oracle) returns (int256) {
         // The base token reserves from the balancer vault in 18 digits precision
