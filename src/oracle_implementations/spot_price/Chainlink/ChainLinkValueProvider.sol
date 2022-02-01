@@ -11,6 +11,9 @@ contract ChainLinkValueProvider is Oracle, Convert {
     IChainlinkAggregatorV3Interface private _chainlinkAggregator;
 
     /// @notice                             Constructs the Value provider contracts with the needed Chainlink.
+    /// @param timeUpdateWindow_            Minimum time between updates of the value
+    /// @param maxValidTime_                Maximum time for which the value is valid
+    /// @param alpha_                       Alpha parameter for EMA    
     /// @param chainlinkAggregatorAddress_  Address of the deployed chainlink aggregator contract.
     constructor(
         // Oracle parameters
