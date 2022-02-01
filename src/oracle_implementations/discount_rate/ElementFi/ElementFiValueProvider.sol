@@ -10,7 +10,9 @@ import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
 contract ElementFiValueProvider is Oracle, Convert {
     // @notice Emitted when trying to add pull a value for an expired pool
-    error ElementFiValueProvider__value_maturityLessThanBlocktime(uint256 maturity);
+    error ElementFiValueProvider__value_maturityLessThanBlocktime(
+        uint256 maturity
+    );
 
     bytes32 public immutable poolId;
     address public immutable balancerVaultAddress;
@@ -73,7 +75,6 @@ contract ElementFiValueProvider is Oracle, Convert {
     /// @dev Returns if called after the maturity date
     /// @return result The result as an signed 59.18-decimal fixed-point number
     function getValue() external view override(Oracle) returns (int256) {
-
         // No values for matured pools
         if (block.timestamp >= maturity) {
             revert ElementFiValueProvider__value_maturityLessThanBlocktime(

@@ -87,24 +87,26 @@ contract Factory {
         // Oracle params
         OracleData memory oracleParams
     ) public returns (address) {
-
-        ElementVPData memory elementParams = abi.decode(oracleParams.valueProviderData,(ElementVPData));
+        ElementVPData memory elementParams = abi.decode(
+            oracleParams.valueProviderData,
+            (ElementVPData)
+        );
 
         ElementFiValueProvider elementFiValueProvider = new ElementFiValueProvider(
-            oracleParams.timeWindow,
-            oracleParams.maxValidTime,
-            oracleParams.alpha,
-            elementParams.poolId,
-            elementParams.balancerVault,
-            elementParams.poolToken,
-            elementParams.poolTokenDecimals,
-            elementParams.underlier,
-            elementParams.underlierDecimals,
-            elementParams.ePTokenBond,
-            elementParams.ePTokenBondDecimals,
-            elementParams.timeScale,
-            elementParams.maturity
-        );
+                oracleParams.timeWindow,
+                oracleParams.maxValidTime,
+                oracleParams.alpha,
+                elementParams.poolId,
+                elementParams.balancerVault,
+                elementParams.poolToken,
+                elementParams.poolTokenDecimals,
+                elementParams.underlier,
+                elementParams.underlierDecimals,
+                elementParams.ePTokenBond,
+                elementParams.ePTokenBondDecimals,
+                elementParams.timeScale,
+                elementParams.maturity
+            );
 
         return address(elementFiValueProvider);
     }
@@ -117,18 +119,21 @@ contract Factory {
         // Oracle params
         OracleData memory oracleParams
     ) public returns (address) {
-        NotionalVPData memory notionalParams = abi.decode(oracleParams.valueProviderData,(NotionalVPData));
+        NotionalVPData memory notionalParams = abi.decode(
+            oracleParams.valueProviderData,
+            (NotionalVPData)
+        );
 
         NotionalFinanceValueProvider notionalFinanceValueProvider = new NotionalFinanceValueProvider(
-            oracleParams.timeWindow,
-            oracleParams.maxValidTime,
-            oracleParams.alpha,
-            notionalParams.notionalViewAddress,
-            notionalParams.currencyId,
-            notionalParams.lastImpliedRateDecimals,
-            notionalParams.maturityDate,
-            notionalParams.settlementDate
-        );
+                oracleParams.timeWindow,
+                oracleParams.maxValidTime,
+                oracleParams.alpha,
+                notionalParams.notionalViewAddress,
+                notionalParams.currencyId,
+                notionalParams.lastImpliedRateDecimals,
+                notionalParams.maturityDate,
+                notionalParams.settlementDate
+            );
 
         return address(notionalFinanceValueProvider);
     }
@@ -151,14 +156,12 @@ contract Factory {
         address oracleAddress = address(0);
         if (oracleData.valueProviderType == uint8(ValueProviderType.Element)) {
             // Create and return the value provider
-            oracleAddress = deployElementFiValueProvider(
-                oracleData
-            );
-        } else if (oracleData.valueProviderType == uint8(ValueProviderType.Notional)) {
+            oracleAddress = deployElementFiValueProvider(oracleData);
+        } else if (
+            oracleData.valueProviderType == uint8(ValueProviderType.Notional)
+        ) {
             // Create and return the value provider
-            oracleAddress = deployNotionalFinanceValueProvider(
-                oracleData
-            );
+            oracleAddress = deployNotionalFinanceValueProvider(oracleData);
         } else {
             // Revert if the value provider type is not supported
             revert Factory__deployValueProvider_invalidValueProviderType();

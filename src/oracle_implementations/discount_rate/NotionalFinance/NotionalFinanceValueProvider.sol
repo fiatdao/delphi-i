@@ -6,7 +6,6 @@ import {INotionalView, MarketParameters} from "src/oracle_implementations/discou
 import {Oracle} from "src/oracle/Oracle.sol";
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
-
 contract NotionalFinanceValueProvider is Oracle, Convert {
     // @notice Emitted when trying to add pull a value for an expired pool
     error NotionalFinanceValueProvider__value_maturityLessThanBlocktime(
@@ -58,7 +57,6 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     /// https://github.com/notional-finance/contracts-v2/blob/b8e3792e39486b2719c6153acc270199377cc6b9/contracts/internal/markets/Market.sol#L495
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function getValue() external view override(Oracle) returns (int256) {
-
         // No values for matured pools
         if (block.timestamp >= maturityDate) {
             revert NotionalFinanceValueProvider__value_maturityLessThanBlocktime(

@@ -24,7 +24,9 @@ contract ChainLinkValueProvider is Oracle, Convert {
         address chainlinkAggregatorAddress_
     ) Oracle(timeUpdateWindow_, maxValidTime_, alpha_) {
         chainlinkAggregatorAddress = chainlinkAggregatorAddress_;
-        underlierDecimals = IChainlinkAggregatorV3Interface(chainlinkAggregatorAddress_).decimals();
+        underlierDecimals = IChainlinkAggregatorV3Interface(
+            chainlinkAggregatorAddress_
+        ).decimals();
     }
 
     /// @notice Retrieves the price from the chainlink aggregator
