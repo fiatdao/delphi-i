@@ -10,8 +10,6 @@ import {Convert} from "src/oracle_implementations/discount_rate/utils/Convert.so
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
 contract ElementFiValueProvider is Oracle, Convert {
-    event loguint(uint256 value);
-
     // @notice Emitted when trying to add pull a value for an expired pool
     error ElementFiValueProvider__value_maturityLessThanBlocktime(
         uint256 maturity

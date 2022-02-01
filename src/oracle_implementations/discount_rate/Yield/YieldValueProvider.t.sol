@@ -16,11 +16,11 @@ contract YieldValueProviderTest is DSTest {
 
     YieldValueProvider internal yieldVP;
 
-    uint256 maturity = 1648177200;
-    int256 timeScale = 3168808781;
-    uint112 baseReserve = 2129533588416199172581255;
-    uint112 fyReserve = 2303024699021990246792971;
-    uint32 blockTime = 1643281604;
+    uint256 internal maturity = 1648177200;
+    int256 internal timeScale = 3168808781;
+    uint112 internal baseReserve = 2129533588416199172581255;
+    uint112 internal fyReserve = 2303024699021990246792971;
+    uint32 internal blockTime = 1643281604;
 
     uint256 internal _timeUpdateWindow = 100; // seconds
     uint256 internal _maxValidTime = 300;
