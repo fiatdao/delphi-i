@@ -422,7 +422,7 @@ contract FactoryTest is DSTest {
         assertEq(
             aggregatorCount + 1,
             ICollybusDiscountRateRelayer(discountRateRelayer).oracleCount(),
-            "Replayer should contain the new aggregator"
+            "Relayer should contain the new aggregator"
         );
 
         assertTrue(
