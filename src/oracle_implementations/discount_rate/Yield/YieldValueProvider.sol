@@ -8,7 +8,7 @@ import {Oracle} from "src/oracle/Oracle.sol";
 
 contract YieldValueProvider is Oracle {
     // @notice Emitted when trying to add pull a value for an expired pool
-    error YieldProtocolValueProvider__value_maturityLessThanBlocktime(
+    error YieldProtocolValueProvider__getValue_maturityLessThanBlocktime(
         uint256 maturity
     );
 
@@ -47,7 +47,7 @@ contract YieldValueProvider is Oracle {
     function getValue() external view override(Oracle) returns (int256) {
         // No values for matured pools
         if (block.timestamp >= _maturity) {
-            revert YieldProtocolValueProvider__value_maturityLessThanBlocktime(
+            revert YieldProtocolValueProvider__getValue_maturityLessThanBlocktime(
                 _maturity
             );
         }
