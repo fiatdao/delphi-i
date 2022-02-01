@@ -56,11 +56,8 @@ contract FactoryTest is DSTest {
             poolId: 0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
             balancerVault: address(0x12345),
             poolToken: 0x10a2F8bd81Ee2898D7eD18fb8f114034a549FA59,
-            poolTokenDecimals: 18,
             underlier: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
-            underlierDecimals: 6,
             ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
-            ePTokenBondDecimals: 6,
             timeScale: 1000355378,
             maturity: 1651275535
         });
@@ -99,11 +96,8 @@ contract FactoryTest is DSTest {
             poolId: 0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
             balancerVault: address(0x12345),
             poolToken: 0x10a2F8bd81Ee2898D7eD18fb8f114034a549FA59,
-            poolTokenDecimals: 18,
             underlier: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
-            underlierDecimals: 6,
             ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
-            ePTokenBondDecimals: 6,
             timeScale: 1000355378,
             maturity: 1651275535
         });
@@ -155,11 +149,8 @@ contract FactoryTest is DSTest {
             poolId: 0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
             balancerVault: address(0x12345),
             poolToken: 0x10a2F8bd81Ee2898D7eD18fb8f114034a549FA59,
-            poolTokenDecimals: 18,
             underlier: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
-            underlierDecimals: 6,
             ePTokenBond: 0x8a2228705ec979961F0e16df311dEbcf097A2766,
-            ePTokenBondDecimals: 6,
             timeScale: 1000355378,
             maturity: 1651275535
         });

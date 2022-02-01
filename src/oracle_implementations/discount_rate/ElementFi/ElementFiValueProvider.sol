@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Oracle} from "src/oracle/Oracle.sol";
 import {IVault} from "./IVault.sol";
 import {Convert} from "src/oracle_implementations/discount_rate/utils/Convert.sol";
@@ -9,6 +10,8 @@ import {Convert} from "src/oracle_implementations/discount_rate/utils/Convert.so
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
 contract ElementFiValueProvider is Oracle, Convert {
+    event loguint(uint256 value);
+
     // @notice Emitted when trying to add pull a value for an expired pool
     error ElementFiValueProvider__value_maturityLessThanBlocktime(
         uint256 maturity
@@ -17,11 +20,11 @@ contract ElementFiValueProvider is Oracle, Convert {
     bytes32 public immutable poolId;
     address public immutable balancerVaultAddress;
     address public immutable poolToken;
-    uint256 public immutable poolTokenDecimals;
+    uint8 public immutable poolTokenDecimals;
     address public immutable underlier;
-    uint256 public immutable underlierDecimals;
+    uint8 public immutable underlierDecimals;
     address public immutable ePTokenBond;
-    uint256 public immutable ePTokenBondDecimals;
+    uint8 public immutable ePTokenBondDecimals;
     int256 public immutable timeScale;
     uint256 public immutable maturity;
 
@@ -33,11 +36,8 @@ contract ElementFiValueProvider is Oracle, Convert {
     /// @param poolId_               poolID of the pool
     /// @param balancerVaultAddress_ Address of the balancer vault
     /// @param poolToken_            Address of the pool (LP token) contract
-    /// @param poolTokenDecimals_    Precision of the pool LP token
     /// @param underlier_            Address of the underlier IERC20 token
-    /// @param underlierDecimals_    Precision of the underlier
     /// @param ePTokenBond_          Address of the bond IERC20 token
-    /// @param ePTokenBondDecimals_  Precision of the bond
     /// @param timeScale_            Time scale used on this pool (i.e. 1/(timeStretch*secondsPerYear)) in 59x18 fixed point
     /// @param maturity_             The Maturity timestamp
     constructor(
@@ -49,22 +49,23 @@ contract ElementFiValueProvider is Oracle, Convert {
         bytes32 poolId_,
         address balancerVaultAddress_,
         address poolToken_,
-        uint256 poolTokenDecimals_,
         address underlier_,
-        uint256 underlierDecimals_,
         address ePTokenBond_,
-        uint256 ePTokenBondDecimals_,
         int256 timeScale_,
         uint256 maturity_
     ) Oracle(timeUpdateWindow_, maxValidTime_, alpha_) {
         poolId = poolId_;
         balancerVaultAddress = balancerVaultAddress_;
         poolToken = poolToken_;
-        poolTokenDecimals = poolTokenDecimals_;
+        poolTokenDecimals = ERC20(poolToken_).decimals();
+        emit loguint(101);
+        emit loguint(ERC20(poolToken_).decimals());
         underlier = underlier_;
-        underlierDecimals = underlierDecimals_;
+        underlierDecimals = ERC20(underlier_).decimals();
+        emit loguint(102);
         ePTokenBond = ePTokenBond_;
-        ePTokenBondDecimals = ePTokenBondDecimals_;
+        ePTokenBondDecimals = ERC20(ePTokenBond_).decimals();
+        emit loguint(103);
         timeScale = timeScale_;
         maturity = maturity_;
     }

@@ -6,6 +6,7 @@ import "ds-test/test.sol";
 import "src/test/utils/Caller.sol";
 import {Hevm} from "src/test/utils/Hevm.sol";
 import {MockProvider} from "src/test/utils/MockProvider.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ElementFiValueProvider} from "./ElementFiValueProvider.sol";
 import {IVault} from "src/oracle_implementations/discount_rate/ElementFi/IVault.sol";
@@ -16,16 +17,15 @@ contract ElementFiValueProviderTest is DSTest {
     MockProvider internal mockBalancerVault;
     MockProvider internal poolToken;
 
+    MockProvider internal underlierMock;
+    MockProvider internal ePTokenBondMock;
+
     ElementFiValueProvider internal efValueProvider;
 
     bytes32 internal _poolId =
         bytes32(
             0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7
         );
-    address internal _underlier =
-        address(0xc4AD29ba4B3c580e6D59105FFf484999997675Ff);
-    address internal _ePTokenBond =
-        address(0x285328906D0D33cb757c1E471F5e2176683247c2);
     int256 internal _timeScale = 412133793;
     uint256 internal _maturity = 1651275535;
     uint256 internal _timeUpdateWindow = 100; // seconds
@@ -34,6 +34,9 @@ contract ElementFiValueProviderTest is DSTest {
 
     function setUp() public {
         mockBalancerVault = new MockProvider();
+        underlierMock = new MockProvider();
+        ePTokenBondMock = new MockProvider();
+        poolToken = new MockProvider();
 
         // Documentation page:
         // https://www.notion.so/fiatdao/FIAT-Interest-Rate-Oracle-System-01092c10abf14e5fb0f1353b3b24a804
@@ -42,7 +45,7 @@ contract ElementFiValueProviderTest is DSTest {
             abi.encodeWithSelector(
                 IVault.getPoolTokenInfo.selector,
                 _poolId,
-                IERC20(_underlier)
+                IERC20(address(underlierMock))
             ),
             MockProvider.ReturnData({
                 success: true,
@@ -61,7 +64,7 @@ contract ElementFiValueProviderTest is DSTest {
             abi.encodeWithSelector(
                 IVault.getPoolTokenInfo.selector,
                 _poolId,
-                IERC20(_ePTokenBond)
+                IERC20(address(ePTokenBondMock))
             ),
             MockProvider.ReturnData({
                 success: true,
@@ -75,7 +78,33 @@ contract ElementFiValueProviderTest is DSTest {
             false
         );
 
-        poolToken = new MockProvider();
+        underlierMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ERC20.decimals.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint8(18))
+            }),
+            false
+        );
+
+        ePTokenBondMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ERC20.decimals.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint8(18))
+            }),
+            false
+        );
+
+        poolToken.givenQueryReturnResponse(
+            abi.encodeWithSelector(ERC20.decimals.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint8(18))
+            }),
+            false
+        );
+
         poolToken.givenQueryReturnResponse(
             abi.encodeWithSelector(IERC20.totalSupply.selector),
             MockProvider.ReturnData({
@@ -100,16 +129,10 @@ contract ElementFiValueProviderTest is DSTest {
             address(mockBalancerVault),
             // pool token address
             address(poolToken),
-            // pool token decimals
-            18,
             // Underlier token address
-            _underlier,
-            // Underlier decimal format
-            18,
+            address(underlierMock),
             // Principal bond token address
-            _ePTokenBond,
-            // Principal bond decimal format
-            18,
+            address(ePTokenBondMock),
             // Time scale in seconds
             _timeScale,
             // Maturity timestamp
@@ -133,11 +156,11 @@ contract ElementFiValueProviderTest is DSTest {
     }
 
     function test_check_underlier() public {
-        assertEq(efValueProvider.underlier(), _underlier);
+        assertEq(efValueProvider.underlier(), address(underlierMock));
     }
 
     function test_check_ePTokenBond() public {
-        assertEq(efValueProvider.ePTokenBond(), _ePTokenBond);
+        assertEq(efValueProvider.ePTokenBond(), address(ePTokenBondMock));
     }
 
     function test_check_unitSeconds() public {

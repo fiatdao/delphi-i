@@ -21,11 +21,8 @@ struct ElementVPData {
     bytes32 poolId;
     address balancerVault;
     address poolToken;
-    uint256 poolTokenDecimals;
     address underlier;
-    uint256 underlierDecimals;
     address ePTokenBond;
-    uint256 ePTokenBondDecimals;
     int256 timeScale;
     uint256 maturity;
 }
@@ -99,11 +96,8 @@ contract Factory {
                 elementParams.poolId,
                 elementParams.balancerVault,
                 elementParams.poolToken,
-                elementParams.poolTokenDecimals,
                 elementParams.underlier,
-                elementParams.underlierDecimals,
                 elementParams.ePTokenBond,
-                elementParams.ePTokenBondDecimals,
                 elementParams.timeScale,
                 elementParams.maturity
             );
