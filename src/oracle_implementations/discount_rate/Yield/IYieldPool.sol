@@ -21,4 +21,6 @@ interface IYieldPool {
     function getBaseBalance() external view returns (uint112);
 
     function getFYTokenBalance() external view returns (uint112);
+
+    function cumulativeBalancesRatio() external view returns (uint256);
 }
