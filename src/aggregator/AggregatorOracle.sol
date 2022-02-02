@@ -9,31 +9,30 @@ import {Pausable} from "src/pausable/Pausable.sol";
 import {IOracle} from "src/oracle/IOracle.sol";
 import {IAggregatorOracle} from "src/aggregator/IAggregatorOracle.sol";
 
-// @notice Emitted when trying to add an oracle that already exists
-error AggregatorOracle__addOracle_oracleAlreadyRegistered(address oracle);
-
-// @notice Emitted when trying to remove an oracle that does not exist
-error AggregatorOracle__removeOracle_oracleNotRegistered(address oracle);
-
-// @notice Emitted when trying to remove an oracle makes a valid value impossible
-error AggregatorOracle__removeOracle_minimumRequiredValidValues_higherThan_oracleCount(
-    uint256 requiredValidValues,
-    uint256 oracleCount
-);
-
-// @notice Emitted when one does not have the right permissions to manage _oracles
-error AggregatorOracle__notAuthorized();
-
-// @notice Emitted when trying to set the minimum number of valid values higher than the oracle count
-error AggregatorOracle__setParam_requiredValidValues_higherThan_oracleCount(
-    uint256 requiredValidValues,
-    uint256 oracleCount
-);
-
-// @notice Emitted when trying to set a parameter that does not exist
-error AggregatorOracle__setParam_unrecognizedParam(bytes32 param);
-
 contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
+    // @notice Emitted when trying to add an oracle that already exists
+    error AggregatorOracle__addOracle_oracleAlreadyRegistered(address oracle);
+
+    // @notice Emitted when trying to remove an oracle that does not exist
+    error AggregatorOracle__removeOracle_oracleNotRegistered(address oracle);
+
+    // @notice Emitted when trying to remove an oracle makes a valid value impossible
+    error AggregatorOracle__removeOracle_minimumRequiredValidValues_higherThan_oracleCount(
+        uint256 requiredValidValues,
+        uint256 oracleCount
+    );
+
+    // @notice Emitted when one does not have the right permissions to manage _oracles
+    error AggregatorOracle__notAuthorized();
+
+    // @notice Emitted when trying to set the minimum number of valid values higher than the oracle count
+    error AggregatorOracle__setParam_requiredValidValues_higherThan_oracleCount(
+        uint256 requiredValidValues,
+        uint256 oracleCount
+    );
+
+    // @notice Emitted when trying to set a parameter that does not exist
+    error AggregatorOracle__setParam_unrecognizedParam(bytes32 param);
     /// ======== Events ======== ///
 
     event OracleAdded(address oracleAddress);

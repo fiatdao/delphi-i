@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
-pragma experimental ABIEncoderV2;
 
 import {IOracle} from "src/oracle/IOracle.sol";
 import {Oracle} from "src/oracle/Oracle.sol";
@@ -17,6 +16,8 @@ import {ICollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/ICo
 import {CollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/CollybusDiscountRateRelayer.sol";
 import {ICollybusSpotPriceRelayer} from "src/relayer/CollybusSpotPrice/ICollybusSpotPriceRelayer.sol";
 import {CollybusSpotPriceRelayer} from "src/relayer/CollybusSpotPrice/CollybusSpotPriceRelayer.sol";
+
+import {Guarded} from "src/guarded/Guarded.sol";
 
 /// @notice Data structure that wraps data needed to deploy an Element Value Provider contract
 struct ElementVPData {
@@ -66,6 +67,7 @@ struct DiscountRateAggregatorData {
 
 /// @notice Data structure that wraps needed data to deploy an Oracle Aggregator contract
 /// @dev The oracleData field contains a abi.encoded OracleData structure
+///      We only have one oracle per aggregator as we trust chainlink as the single source or truth
 /// @dev Factory will revert if the requiredValidValues is bigger than the oracleData item count
 struct SpotPriceAggregatorData {
     address tokenAddress;
@@ -80,7 +82,7 @@ struct RelayerDeployData {
     bytes[] aggregatorData;
 }
 
-contract Factory {
+contract Factory is Guarded {
     // @notice Emitter when the collybus address is address(0)
     error Factory__deployDiscountRateArchitecture_invalidCollybusAddress();
 
@@ -103,7 +105,7 @@ contract Factory {
     function deployElementFiValueProvider(
         // Oracle params
         OracleData memory oracleParams
-    ) public returns (address) {
+    ) public checkCaller returns (address) {
         ElementVPData memory elementParams = abi.decode(
             oracleParams.valueProviderData,
             (ElementVPData)
@@ -132,7 +134,7 @@ contract Factory {
     function deployNotionalFinanceValueProvider(
         // Oracle params
         OracleData memory oracleParams
-    ) public returns (address) {
+    ) public checkCaller returns (address) {
         NotionalVPData memory notionalParams = abi.decode(
             oracleParams.valueProviderData,
             (NotionalVPData)
@@ -155,7 +157,7 @@ contract Factory {
     function deployChainlinkValueProvider(
         // Oracle params
         OracleData memory oracleParams
-    ) public returns (address) {
+    ) public checkCaller returns (address) {
         ChainlinkVPData memory chainlinkParams = abi.decode(
             oracleParams.valueProviderData,
             (ChainlinkVPData)
@@ -179,7 +181,7 @@ contract Factory {
     function deployOracle(
         bytes memory oracleDataEncoded_,
         address aggregatorAddress_
-    ) public returns (address) {
+    ) public checkCaller returns (address) {
         // Decode the oracle data
         OracleData memory oracleData = abi.decode(
             oracleDataEncoded_,
@@ -219,7 +221,7 @@ contract Factory {
     function deployDiscountRateAggregator(
         bytes memory aggregatorDataEncoded_,
         address discountRateRelayerAddress_
-    ) public returns (address) {
+    ) public checkCaller returns (address) {
         // Create the aggregator contract
         AggregatorOracle aggregatorOracle = new AggregatorOracle();
 
@@ -269,7 +271,7 @@ contract Factory {
     function deploySpotPriceAggregator(
         bytes memory aggregatorDataEncoded_,
         address spotPriceRelayerAddress_
-    ) public returns (address) {
+    ) public checkCaller returns (address) {
         // Create the aggregator contract
         AggregatorOracle aggregatorOracle = new AggregatorOracle();
 
@@ -298,6 +300,7 @@ contract Factory {
     /// @return Returns the address of the Relayer
     function deployCollybusDiscountRateRelayer(address collybus_)
         public
+        checkCaller
         returns (address)
     {
         CollybusDiscountRateRelayer discountRateRelayer = new CollybusDiscountRateRelayer(
@@ -311,6 +314,7 @@ contract Factory {
     /// @return Returns the address of the Relayer
     function deployCollybusSpotPriceRelayer(address collybus_)
         public
+        checkCaller
         returns (address)
     {
         CollybusSpotPriceRelayer spotPriceRelayer = new CollybusSpotPriceRelayer(
@@ -327,7 +331,7 @@ contract Factory {
     function deployDiscountRateArchitecture(
         RelayerDeployData memory discountRateRelayerDataEncoded_,
         address collybusAddress_
-    ) public returns (address) {
+    ) public checkCaller returns (address) {
         // The Collybus address is needed in order to deploy the Discount Rate Relayer
         if (collybusAddress_ == address(0)) {
             revert Factory__deployDiscountRateArchitecture_invalidCollybusAddress();
@@ -360,7 +364,7 @@ contract Factory {
     function deploySpotPriceArchitecture(
         RelayerDeployData memory spotPriceRelayerDataEncoded_,
         address collybusAddress_
-    ) public returns (address) {
+    ) public checkCaller returns (address) {
         // The Collybus address is needed in order to deploy the Spot Price Rate Relayer
         if (collybusAddress_ == address(0)) {
             revert Factory__deploySpotPriceArchitecture_invalidCollybusAddress();
