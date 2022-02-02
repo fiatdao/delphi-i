@@ -503,6 +503,16 @@ contract FactoryTest is DSTest {
         return deployData;
     }
 
+    function createYieldVPData() internal returns (YieldVPData memory){
+        YieldVPData memory yieldValueProviderData = YieldVPData({
+            poolAddress: address(0x123),
+            maturity: 1648177200,
+            timeScale: 3168808781
+        });
+
+        return yieldValueProviderData;
+    }
+
     function createChainlinkVPData() internal returns (ChainlinkVPData memory) {
         // Set-up the needed parameters to create the Chainlink Value Provider.
         // We need to mock the decimal getter because it's interrogated when the contract is created.

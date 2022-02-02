@@ -9,6 +9,7 @@ import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
 // Value providers
 import {ElementFiValueProvider} from "src/oracle_implementations/discount_rate/ElementFi/ElementFiValueProvider.sol";
 import {NotionalFinanceValueProvider} from "src/oracle_implementations/discount_rate/NotionalFinance/NotionalFinanceValueProvider.sol";
+import {YieldValueProvider} from "src/oracle_implementations/discount_rate/Yield/YieldValueProvider.sol";
 import {ChainLinkValueProvider} from "src/oracle_implementations/spot_price/Chainlink/ChainLinkValueProvider.sol";
 
 // Relayers
@@ -42,6 +43,13 @@ struct NotionalVPData {
 /// @notice Data structure that wraps data needed to deploy a Chainlink spot price value provider
 struct ChainlinkVPData {
     address chainlinkAggregatorAddress;
+}
+
+/// @notice Data structure that wraps data needed to deploy a Yield value provider
+struct YieldVPData{
+    address poolAddress;
+    uint256 maturity;
+    int256 timeScale;
 }
 
 /// @notice Data structure that wraps needed data to deploy an Oracle contract
@@ -96,6 +104,7 @@ contract Factory is Guarded {
     enum ValueProviderType {
         Notional,
         Element,
+        Yield,
         Chainlink
     }
 
@@ -155,6 +164,35 @@ contract Factory is Guarded {
         return address(notionalFinanceValueProvider);
     }
 
+    /// @notice Deploys an Yield Value Provider
+    /// @dev For more information about the params please check the Value Provider Contract
+    /// todo: add the master github path to contract
+    /// @return Returns the address of the new value provider
+    function deployYieldValueProvider(
+        // Oracle params
+        OracleData memory oracleParams
+    ) public checkCaller returns (address) {
+        YieldVPData memory yieldParams = abi.decode(
+            oracleParams.valueProviderData,
+            (YieldVPData)
+        );
+
+        YieldValueProvider yieldValueProvider = new YieldValueProvider(
+                oracleParams.timeWindow,
+                oracleParams.maxValidTime,
+                oracleParams.alpha,
+                yieldParams.poolAddress,
+                yieldParams.maturity,
+                yieldParams.timeScale
+            );
+
+        return address(yieldValueProvider);
+    }
+
+    /// @notice Deploys an Chainlink Value Provider
+    /// @dev For more information about the params please check the Value Provider Contract
+    /// todo: add the master github path to contract
+    /// @return Returns the address of the new value provider
     function deployChainlinkValueProvider(
         // Oracle params
         OracleData memory oracleParams_

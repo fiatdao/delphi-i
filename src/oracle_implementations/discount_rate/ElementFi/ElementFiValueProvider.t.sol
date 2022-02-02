@@ -27,7 +27,7 @@ contract ElementFiValueProviderTest is DSTest {
         bytes32(
             0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7
         );
-    int256 internal _timeStretch = 2426396518;
+    int256 internal _unitSeconds = 412133793;
     uint256 internal _maturity = 1651275535;
     uint256 internal _timeUpdateWindow = 100; // seconds
     uint256 internal _maxValidTime = 300;
@@ -115,6 +115,11 @@ contract ElementFiValueProviderTest is DSTest {
             false
         );
 
+        int256 timeScale59x18 = PRBMathSD59x18.div(
+            PRBMathSD59x18.SCALE,
+            PRBMathSD59x18.fromInt(_unitSeconds)
+        );
+
         efValueProvider = new ElementFiValueProvider(
             // Oracle arguments
             // Time update window
@@ -135,7 +140,7 @@ contract ElementFiValueProviderTest is DSTest {
             // Principal bond token address
             address(ePTokenBondMock),
             // Time scale in seconds
-            _timeStretch,
+            timeScale59x18,
             // Maturity timestamp
             _maturity
         );
@@ -164,8 +169,13 @@ contract ElementFiValueProviderTest is DSTest {
         assertEq(efValueProvider.ePTokenBond(), address(ePTokenBondMock));
     }
 
-    function test_check_unitSeconds() public {
-        assertEq(efValueProvider.timeScale(), _timeStretch);
+    function test_check_timeScale() public {
+        int256 timeScale59x18 = PRBMathSD59x18.div(
+            PRBMathSD59x18.SCALE,
+            PRBMathSD59x18.fromInt(_unitSeconds)
+        );
+
+        assertEq(efValueProvider.timeScale(), timeScale59x18);
     }
 
     function test_check_maturity() public {
