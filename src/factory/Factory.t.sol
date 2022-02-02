@@ -356,7 +356,9 @@ contract FactoryTest is DSTest {
         );
 
         assertTrue(
-            IAggregatorOracle(firstAggregatorAddress).oracleExists(oracleAddress),
+            IAggregatorOracle(firstAggregatorAddress).oracleExists(
+                oracleAddress
+            ),
             "Aggregator should contain the added Oracle"
         );
     }
