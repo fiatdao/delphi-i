@@ -27,7 +27,7 @@ contract ElementFiValueProviderTest is DSTest {
         bytes32(
             0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7
         );
-    int256 internal _timeStretch = 412133793;
+    int256 internal _timeStretch = 2426396518;
     uint256 internal _maturity = 1651275535;
     uint256 internal _timeUpdateWindow = 100; // seconds
     uint256 internal _maxValidTime = 300;
@@ -115,11 +115,6 @@ contract ElementFiValueProviderTest is DSTest {
             false
         );
 
-        int256 timeScale59x18 = PRBMathSD59x18.div(
-            PRBMathSD59x18.SCALE,
-            PRBMathSD59x18.fromInt(_timeStretch)
-        );
-
         efValueProvider = new ElementFiValueProvider(
             // Oracle arguments
             // Time update window
@@ -140,7 +135,7 @@ contract ElementFiValueProviderTest is DSTest {
             // Principal bond token address
             address(ePTokenBondMock),
             // Time scale in seconds
-            timeScale59x18,
+            _timeStretch,
             // Maturity timestamp
             _maturity
         );
@@ -170,21 +165,16 @@ contract ElementFiValueProviderTest is DSTest {
     }
 
     function test_check_unitSeconds() public {
-        int256 timeScale59x18 = PRBMathSD59x18.div(
-            PRBMathSD59x18.SCALE,
-            PRBMathSD59x18.fromInt(_timeStretch)
-        );
-
-        assertEq(efValueProvider.timeScale(), timeScale59x18);
+        assertEq(efValueProvider.timeScale(), _timeStretch);
     }
 
     function test_check_maturity() public {
         assertEq(efValueProvider.maturity(), _maturity);
     }
 
-    function test_GetValue() public {
+    function test_getValue() public {
         // Computed value based on the parameters that are sent via the mock provider
-        int256 computedExpectedValue = 4583021729;
+        int256 computedExpectedValue = 4583021732;
 
         int256 value = efValueProvider.getValue();
 

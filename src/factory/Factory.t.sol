@@ -75,7 +75,7 @@ contract FactoryTest is DSTest {
         return deployData;
     }
 
-    function test_deploy_Oracle_createsContract(
+    function test_deploy_oracle_createsContract(
         uint256 timeUpdateWindow_,
         uint256 maxValidTime_,
         int256 alpha_
@@ -124,7 +124,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_Aggregator_createsContract() public {
+    function test_deploy_aggregator_createsContract() public {
         ElementVPData memory elementValueProvider = createElementVPData();
 
         OracleData memory elementDataOracle = OracleData({
@@ -183,7 +183,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_CollybusDiscountRateRelayer_createsContract() public {
+    function test_deploy_collybusDiscountRateRelayer_createsContract() public {
         address collybus = address(0xC0111b005);
 
         address relayer = factory.deployCollybusDiscountRateRelayer(collybus);
@@ -202,7 +202,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_CollybusSpotPriceRelayer_createsContract() public {
+    function test_deploy_collybusSpotPriceRelayer_createsContract() public {
         address collybus = address(0xC01115107);
 
         address relayer = factory.deployCollybusSpotPriceRelayer(collybus);
@@ -221,7 +221,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_FullDiscountRateArchitecture() public {
+    function test_deploy_fullDiscountRateArchitecture() public {
         DiscountRateDeployData
             memory deployData = buildDiscountRateDeployData();
 
@@ -244,7 +244,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_AddAggregator() public {
+    function test_deploy_addAggregator() public {
         DiscountRateDeployData
             memory deployData = buildDiscountRateDeployData();
 
@@ -254,10 +254,12 @@ contract FactoryTest is DSTest {
             address(0x1234)
         );
 
+        // Save the current aggregator count in the Relayer
         uint256 aggregatorCount = ICollybusDiscountRateRelayer(
             discountRateRelayer
         ).oracleCount();
 
+        // Create the Aggregator data structure that will contain a Notional Oracle
         NotionalVPData memory notionalValueProvider = NotionalVPData({
             notionalViewAddress: 0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
             currencyId: 2,
@@ -283,17 +285,20 @@ contract FactoryTest is DSTest {
 
         notionalAggregator.oracleData[0] = abi.encode(notionalOracleData);
 
+        // Deploy the new aggregator
         address aggregatorAddress = factory.deployAggregator(
             abi.encode(notionalAggregator),
             discountRateRelayer
         );
 
+        // The Relayer should contain an extra Aggregator/Oracle
         assertEq(
             aggregatorCount + 1,
             ICollybusDiscountRateRelayer(discountRateRelayer).oracleCount(),
             "Relayer should contain the new aggregator"
         );
 
+        // The Relayer should contain the new aggregator
         assertTrue(
             ICollybusDiscountRateRelayer(discountRateRelayer).oracleExists(
                 aggregatorAddress
@@ -302,7 +307,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_AddOracle() public {
+    function test_deploy_addOracle() public {
         DiscountRateDeployData
             memory deployData = buildDiscountRateDeployData();
 
@@ -312,6 +317,7 @@ contract FactoryTest is DSTest {
             address(0x1234)
         );
 
+        // Get the address of the first aggregator
         address firstAggregatorAddress = ICollybusDiscountRateRelayer(
             discountRateRelayer
         ).oracleAt(0);
@@ -332,21 +338,34 @@ contract FactoryTest is DSTest {
             valueProviderType: uint8(Factory.ValueProviderType.Notional)
         });
 
+        // Cache the number of oracles in the aggregator
         uint256 oracleCount = IAggregatorOracle(firstAggregatorAddress)
             .oracleCount();
-        factory.deployOracle(
+
+        // Create and add the oracle to the aggregator
+        address oracleAddress = factory.deployOracle(
             abi.encode(notionalOracleData),
             firstAggregatorAddress
         );
 
+        // The aggregator should contain an extra Oracle
         assertEq(
             oracleCount + 1,
             IAggregatorOracle(firstAggregatorAddress).oracleCount(),
-            "Aggregator should contain the new oracle"
+            "Aggregator should contain an extra Oracle"
+        );
+
+        assertTrue(
+            IAggregatorOracle(firstAggregatorAddress).oracleExists(oracleAddress),
+            "Aggregator should contain the added Oracle"
         );
     }
 
     function createElementVPData() internal returns (ElementVPData memory) {
+        // Set-up the needed parameters to create the ElementFi Value Provider.
+        // Values used are the same as in the ElementFiValueProvider test.
+        // We need to mock the decimal values for the tokens because they are
+        // interrogated when the contract is created.
         MockProvider underlierMock = new MockProvider();
         underlierMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
@@ -378,12 +397,12 @@ contract FactoryTest is DSTest {
         );
 
         ElementVPData memory elementValueProvider = ElementVPData({
-            poolId: 0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090,
+            poolId: 0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7,
             balancerVault: address(0x12345),
             poolToken: address(poolToken),
             underlier: address(underlierMock),
             ePTokenBond: address(ePTokenBondMock),
-            timeScale: 1000355378,
+            timeScale: 2426396518,
             maturity: 1651275535
         });
 

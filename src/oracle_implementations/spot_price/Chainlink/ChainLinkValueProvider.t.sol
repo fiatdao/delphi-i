@@ -82,7 +82,7 @@ contract ChainLinkValueProviderTest is DSTest {
         assertTrue(address(chainlinkVP) != address(0));
     }
 
-    function testFail_Deploy_ShouldFailWithUnsupportedDecimals() public {
+    function testFail_deploy_ShouldFailWithUnsupportedDecimals() public {
         MockProvider unsupportedDecimalsMP = new MockProvider();
         unsupportedDecimalsMP.givenQueryReturnResponse(
             abi.encodeWithSelector(
@@ -110,7 +110,7 @@ contract ChainLinkValueProviderTest is DSTest {
         assertTrue(address(vp) == address(0));
     }
 
-    function test_GetValue() public {
+    function test_getValue() public {
         // Expected value is the value sent by the mock provider in 10**18 precision
         int256 expectedValue = 100016965 * 1e10;
         // Computed value based on the parameters that are sent via the mock provider
@@ -119,9 +119,8 @@ contract ChainLinkValueProviderTest is DSTest {
         assertTrue(value == expectedValue);
     }
 
-    function test_GetDescription() public {
+    function test_description() public {
         string memory expectedDescription = "USDC / USD";
-
         string memory desc = chainlinkVP.description();
         assertTrue(
             keccak256(abi.encodePacked(desc)) ==
@@ -133,7 +132,7 @@ contract ChainLinkValueProviderTest is DSTest {
         assertEq(chainlinkVP.underlierDecimals(), uint256(8));
     }
 
-    function test_check_chainlinkAggregator() public {
+    function test_check_chainlinkAggregatorAddress() public {
         assertEq(
             chainlinkVP.chainlinkAggregatorAddress(),
             address(mockChainlinkAggregator)

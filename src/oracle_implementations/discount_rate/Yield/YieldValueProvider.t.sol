@@ -91,7 +91,7 @@ contract YieldValueProviderTest is DSTest {
         assertEq(yieldVP.timeScale(), timeScale, "Invalid time scale value");
     }
 
-    function test_GetValue() public {
+    function test_getValue() public {
         // Compute example 1 from:
         // https://colab.research.google.com/drive/1RYGuGQW3RcRlYkk2JKy6FeEouvr77gFV#scrollTo=ccEQ0z8xF0L4
         int256 expectedValue = 248182251;

@@ -80,24 +80,28 @@ contract NotionalFinanceValueProviderTest is DSTest {
     }
 
     function test_check_notionalView() public {
+        // Check the address of the notional view contract
         assertEq(notionalVP.notionalView(), address(mockNotionalView));
     }
 
     function test_check_currencyId() public {
+        // Check the currency Id is correctly set
         assertEq(notionalVP.currencyId(), _currencyId);
     }
 
     function test_check_maturityDate() public {
+        // Check the maturity date
         assertEq(notionalVP.maturityDate(), _maturityDate);
     }
 
     function test_check_settlementDate() public {
+        // Check the settlement date
         assertEq(notionalVP.settlementDate(), _settlementDate);
     }
 
-    function test_GetValue() public {
+    function test_getValue() public {
         // Expected value is the lastImpliedRate(1e9 precision) in 1e18 precision
-        int256 expectedValue = 2851338287; //2810353955;
+        int256 expectedValue = 2851338287;
 
         // Computed value based on the parameters that are sent via the mock provider
         int256 value = notionalVP.getValue();
