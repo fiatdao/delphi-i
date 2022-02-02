@@ -46,7 +46,7 @@ struct ChainlinkVPData {
 }
 
 /// @notice Data structure that wraps data needed to deploy a Yield value provider
-struct YieldVPData{
+struct YieldVPData {
     address poolAddress;
     uint256 maturity;
     int256 timeScale;
@@ -178,13 +178,13 @@ contract Factory is Guarded {
         );
 
         YieldValueProvider yieldValueProvider = new YieldValueProvider(
-                oracleParams.timeWindow,
-                oracleParams.maxValidTime,
-                oracleParams.alpha,
-                yieldParams.poolAddress,
-                yieldParams.maturity,
-                yieldParams.timeScale
-            );
+            oracleParams.timeWindow,
+            oracleParams.maxValidTime,
+            oracleParams.alpha,
+            yieldParams.poolAddress,
+            yieldParams.maturity,
+            yieldParams.timeScale
+        );
 
         return address(yieldValueProvider);
     }
@@ -227,7 +227,6 @@ contract Factory is Guarded {
             (OracleData)
         );
 
-
         address oracleAddress;
 
         // Create the value provider based on valueProviderType
@@ -245,12 +244,12 @@ contract Factory is Guarded {
         ) {
             // Create the value provider
             oracleAddress = deployChainlinkValueProvider(oracleData);
-        } else if ( 
+        } else if (
             oracleData.valueProviderType == uint8(ValueProviderType.Yield)
-        ){
+        ) {
             // Create the value provider
             oracleAddress = deployYieldValueProvider(oracleData);
-        }else {
+        } else {
             // Revert if the value provider type is not supported
             revert Factory__deployOracle_invalidValueProviderType(
                 oracleData.valueProviderType

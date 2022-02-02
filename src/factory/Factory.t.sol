@@ -503,7 +503,7 @@ contract FactoryTest is DSTest {
         return deployData;
     }
 
-    function createYieldVPData() internal returns (YieldVPData memory){
+    function createYieldVPData() internal returns (YieldVPData memory) {
         YieldVPData memory yieldValueProviderData = YieldVPData({
             poolAddress: address(0x123),
             maturity: 1648177200,
