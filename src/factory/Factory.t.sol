@@ -18,61 +18,13 @@ import {CollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/Coll
 import {ICollybusSpotPriceRelayer} from "src/relayer/CollybusSpotPrice/ICollybusSpotPriceRelayer.sol";
 import {CollybusSpotPriceRelayer} from "src/relayer/CollybusSpotPrice/CollybusSpotPriceRelayer.sol";
 
+import {IChainlinkAggregatorV3Interface} from "src/oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
+
 contract FactoryTest is DSTest {
     Factory internal factory;
 
     function setUp() public {
         factory = new Factory();
-    }
-
-    function buildDiscountRateDeployData()
-        internal
-        returns (DiscountRateDeployData memory)
-    {
-        NotionalVPData memory notionalValueProvider = createNotionalVPData();
-
-        OracleData memory notionalOracleData = OracleData({
-            valueProviderData: abi.encode(notionalValueProvider),
-            timeWindow: 200,
-            maxValidTime: 600,
-            alpha: 2 * 10**17,
-            valueProviderType: uint8(Factory.ValueProviderType.Notional)
-        });
-
-        AggregatorData memory notionalAggregator = AggregatorData({
-            tokenId: 1,
-            oracleData: new bytes[](1),
-            requiredValidValues: 1,
-            minimumThresholdValue: 10**14
-        });
-
-        notionalAggregator.oracleData[0] = abi.encode(notionalOracleData);
-
-        ElementVPData memory elementValueProvider = createElementVPData();
-
-        OracleData memory elementOracleData = OracleData({
-            valueProviderData: abi.encode(elementValueProvider),
-            timeWindow: 200,
-            maxValidTime: 600,
-            alpha: 2 * 10**17,
-            valueProviderType: uint8(Factory.ValueProviderType.Element)
-        });
-
-        AggregatorData memory elementAggregator = AggregatorData({
-            tokenId: 2,
-            oracleData: new bytes[](1),
-            requiredValidValues: 1,
-            minimumThresholdValue: 10**14
-        });
-
-        elementAggregator.oracleData[0] = abi.encode(elementOracleData);
-
-        DiscountRateDeployData memory deployData;
-        deployData.aggregatorData = new bytes[](2);
-        deployData.aggregatorData[0] = abi.encode(elementAggregator);
-        deployData.aggregatorData[1] = abi.encode(notionalAggregator);
-
-        return deployData;
     }
 
     function test_deploy_oracle_createsContract(
@@ -135,7 +87,7 @@ contract FactoryTest is DSTest {
             valueProviderType: uint8(Factory.ValueProviderType.Element)
         });
 
-        AggregatorData memory elementAggregatorData;
+        DiscountRateAggregatorData memory elementAggregatorData;
         elementAggregatorData.tokenId = 1;
         elementAggregatorData.requiredValidValues = 1;
         elementAggregatorData.oracleData = new bytes[](1);
@@ -148,7 +100,7 @@ contract FactoryTest is DSTest {
         // Make sure the Relayer was deployed
         assertTrue(relayerAddress != address(0), "Relayer should be deployed");
 
-        address aggregatorAddress = factory.deployAggregator(
+        address aggregatorAddress = factory.deployDiscountRateAggregator(
             abi.encode(elementAggregatorData),
             relayerAddress
         );
@@ -222,8 +174,7 @@ contract FactoryTest is DSTest {
     }
 
     function test_deploy_fullDiscountRateArchitecture() public {
-        DiscountRateDeployData
-            memory deployData = buildDiscountRateDeployData();
+        RelayerDeployData memory deployData = createDiscountRateDeployData();
 
         // Deploy the oracle architecture
         address discountRateRelayer = factory.deployDiscountRateArchitecture(
@@ -244,9 +195,8 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_addAggregator() public {
-        DiscountRateDeployData
-            memory deployData = buildDiscountRateDeployData();
+    function test_deploy_discountRate_addAggregator() public {
+        RelayerDeployData memory deployData = createDiscountRateDeployData();
 
         // Deploy the oracle architecture
         address discountRateRelayer = factory.deployDiscountRateArchitecture(
@@ -276,17 +226,18 @@ contract FactoryTest is DSTest {
             valueProviderType: uint8(Factory.ValueProviderType.Notional)
         });
 
-        AggregatorData memory notionalAggregator = AggregatorData({
-            tokenId: 3,
-            oracleData: new bytes[](1),
-            requiredValidValues: 1,
-            minimumThresholdValue: 10**14
-        });
+        DiscountRateAggregatorData
+            memory notionalAggregator = DiscountRateAggregatorData({
+                tokenId: 3,
+                oracleData: new bytes[](1),
+                requiredValidValues: 1,
+                minimumThresholdValue: 10**14
+            });
 
         notionalAggregator.oracleData[0] = abi.encode(notionalOracleData);
 
         // Deploy the new aggregator
-        address aggregatorAddress = factory.deployAggregator(
+        address aggregatorAddress = factory.deployDiscountRateAggregator(
             abi.encode(notionalAggregator),
             discountRateRelayer
         );
@@ -307,9 +258,8 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_addOracle() public {
-        DiscountRateDeployData
-            memory deployData = buildDiscountRateDeployData();
+    function test_deploy_discountRate_addOracle() public {
+        RelayerDeployData memory deployData = createDiscountRateDeployData();
 
         // Deploy the oracle architecture
         address discountRateRelayer = factory.deployDiscountRateArchitecture(
@@ -360,6 +310,82 @@ contract FactoryTest is DSTest {
                 oracleAddress
             ),
             "Aggregator should contain the added Oracle"
+        );
+    }
+
+    function test_deploy_fullSpotPriceArchitecture() public {
+        RelayerDeployData memory deployData = createSpotPriceDeployData();
+
+        // Deploy the oracle architecture
+        address spotPriceRelayer = factory.deploySpotPriceArchitecture(
+            deployData,
+            address(0x1234)
+        );
+
+        // Check the creation of the discount rate relayer
+        assertTrue(
+            spotPriceRelayer != address(0),
+            "CollybusSpotPriceRelayer should be deployed"
+        );
+
+        assertEq(
+            ICollybusSpotPriceRelayer(spotPriceRelayer).oracleCount(),
+            deployData.aggregatorData.length,
+            "CollybusSpotPriceRelayer invalid aggregator count"
+        );
+    }
+
+    function test_deploy_spotPrice_addAggregator() public {
+        RelayerDeployData memory deployData = createSpotPriceDeployData();
+
+        // Deploy the oracle architecture
+        address spotPriceRelayer = factory.deploySpotPriceArchitecture(
+            deployData,
+            address(0x1234)
+        );
+
+        // Save the current aggregator count in the Relayer
+        uint256 aggregatorCount = ICollybusSpotPriceRelayer(spotPriceRelayer)
+            .oracleCount();
+
+        // Define the needed data for the new aggregator
+        ChainlinkVPData memory chainlinkValueProvider = createChainlinkVPData();
+
+        OracleData memory chainlinkOracleData = OracleData({
+            valueProviderData: abi.encode(chainlinkValueProvider),
+            timeWindow: 200,
+            maxValidTime: 600,
+            alpha: 2 * 10**17,
+            valueProviderType: uint8(Factory.ValueProviderType.Chainlink)
+        });
+
+        // The first aggregator is at address 0x1, make the second one use a different address
+        SpotPriceAggregatorData
+            memory chainlinkAggregator = SpotPriceAggregatorData({
+                tokenAddress: address(0x2),
+                oracleData: abi.encode(chainlinkOracleData),
+                minimumThresholdValue: 10**14
+            });
+
+        // Deploy the new aggregator
+        address aggregatorAddress = factory.deploySpotPriceAggregator(
+            abi.encode(chainlinkAggregator),
+            spotPriceRelayer
+        );
+
+        // The Relayer should contain an extra Aggregator/Oracle
+        assertEq(
+            aggregatorCount + 1,
+            ICollybusSpotPriceRelayer(spotPriceRelayer).oracleCount(),
+            "Relayer should contain the new aggregator"
+        );
+
+        // The Relayer should contain the new aggregator
+        assertTrue(
+            ICollybusSpotPriceRelayer(spotPriceRelayer).oracleExists(
+                aggregatorAddress
+            ),
+            "Aggregator should exist"
         );
     }
 
@@ -420,5 +446,106 @@ contract FactoryTest is DSTest {
             settlementDate: 1648512000
         });
         return notionalValueProvider;
+    }
+
+    function createDiscountRateDeployData()
+        internal
+        returns (RelayerDeployData memory)
+    {
+        NotionalVPData memory notionalValueProvider = createNotionalVPData();
+
+        OracleData memory notionalOracleData = OracleData({
+            valueProviderData: abi.encode(notionalValueProvider),
+            timeWindow: 200,
+            maxValidTime: 600,
+            alpha: 2 * 10**17,
+            valueProviderType: uint8(Factory.ValueProviderType.Notional)
+        });
+
+        DiscountRateAggregatorData
+            memory notionalAggregator = DiscountRateAggregatorData({
+                tokenId: 1,
+                oracleData: new bytes[](1),
+                requiredValidValues: 1,
+                minimumThresholdValue: 10**14
+            });
+
+        notionalAggregator.oracleData[0] = abi.encode(notionalOracleData);
+
+        ElementVPData memory elementValueProvider = createElementVPData();
+
+        OracleData memory elementOracleData = OracleData({
+            valueProviderData: abi.encode(elementValueProvider),
+            timeWindow: 200,
+            maxValidTime: 600,
+            alpha: 2 * 10**17,
+            valueProviderType: uint8(Factory.ValueProviderType.Element)
+        });
+
+        DiscountRateAggregatorData
+            memory elementAggregator = DiscountRateAggregatorData({
+                tokenId: 2,
+                oracleData: new bytes[](1),
+                requiredValidValues: 1,
+                minimumThresholdValue: 10**14
+            });
+
+        elementAggregator.oracleData[0] = abi.encode(elementOracleData);
+
+        RelayerDeployData memory deployData;
+        deployData.aggregatorData = new bytes[](2);
+        deployData.aggregatorData[0] = abi.encode(elementAggregator);
+        deployData.aggregatorData[1] = abi.encode(notionalAggregator);
+
+        return deployData;
+    }
+
+    function createChainlinkVPData() internal returns (ChainlinkVPData memory) {
+        // Set-up the needed parameters to create the Chainlink Value Provider.
+        // We need to mock the decimal getter because it's interrogated when the contract is created.
+        MockProvider chainlinkMock = new MockProvider();
+        chainlinkMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(
+                IChainlinkAggregatorV3Interface.decimals.selector
+            ),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint8(8))
+            }),
+            false
+        );
+
+        ChainlinkVPData memory chainlinkValueProvider = ChainlinkVPData({
+            chainlinkAggregatorAddress: address(chainlinkMock)
+        });
+
+        return chainlinkValueProvider;
+    }
+
+    function createSpotPriceDeployData()
+        internal
+        returns (RelayerDeployData memory)
+    {
+        ChainlinkVPData memory chainlinkValueProvider = createChainlinkVPData();
+
+        OracleData memory chainlinkOracleData = OracleData({
+            valueProviderData: abi.encode(chainlinkValueProvider),
+            timeWindow: 200,
+            maxValidTime: 600,
+            alpha: 2 * 10**17,
+            valueProviderType: uint8(Factory.ValueProviderType.Chainlink)
+        });
+
+        SpotPriceAggregatorData
+            memory chainlinkAggregator = SpotPriceAggregatorData({
+                tokenAddress: address(0x1),
+                oracleData: abi.encode(chainlinkOracleData),
+                minimumThresholdValue: 10**14
+            });
+
+        RelayerDeployData memory deployData;
+        deployData.aggregatorData = new bytes[](1);
+        deployData.aggregatorData[0] = abi.encode(chainlinkAggregator);
+        return deployData;
     }
 }

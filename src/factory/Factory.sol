@@ -10,10 +10,12 @@ import {IAggregatorOracle} from "src/aggregator/IAggregatorOracle.sol";
 // Value providers
 import {ElementFiValueProvider} from "src/oracle_implementations/discount_rate/ElementFi/ElementFiValueProvider.sol";
 import {NotionalFinanceValueProvider} from "src/oracle_implementations/discount_rate/NotionalFinance/NotionalFinanceValueProvider.sol";
+import {ChainLinkValueProvider} from "src/oracle_implementations/spot_price/Chainlink/ChainLinkValueProvider.sol";
 
 // Relayers
 import {ICollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/ICollybusDiscountRateRelayer.sol";
 import {CollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/CollybusDiscountRateRelayer.sol";
+import {ICollybusSpotPriceRelayer} from "src/relayer/CollybusSpotPrice/ICollybusSpotPriceRelayer.sol";
 import {CollybusSpotPriceRelayer} from "src/relayer/CollybusSpotPrice/CollybusSpotPriceRelayer.sol";
 
 /// @notice Data structure that wraps data needed to deploy an Element Value Provider contract
@@ -36,6 +38,11 @@ struct NotionalVPData {
     uint256 settlementDate;
 }
 
+/// @notice Data structure that wraps data needed to deploy a Chainlink spot price value provider
+struct ChainlinkVPData {
+    address chainlinkAggregatorAddress;
+}
+
 /// @notice Data structure that wraps needed data to deploy an Oracle contract
 /// @dev The value provider data field is a abi.encoded struct based on the given providerType
 /// @dev The Factory will revert if the providerType is not found
@@ -50,17 +57,26 @@ struct OracleData {
 /// @notice Data structure that wraps needed data to deploy an Oracle Aggregator contract
 /// @dev The oracleData array field contains abi.encoded OracleData structures
 /// @dev Factory will revert if the requiredValidValues is bigger than the oracleData item count
-struct AggregatorData {
+struct DiscountRateAggregatorData {
     uint256 tokenId;
     bytes[] oracleData;
     uint256 requiredValidValues;
     uint256 minimumThresholdValue;
 }
 
-/// @notice Data structure that wraps needed data to deploy a full Discount Rate Relayer architecture
-/// @dev The aggregatorData field contains abi.encoded AggregatorData structures
+/// @notice Data structure that wraps needed data to deploy an Oracle Aggregator contract
+/// @dev The oracleData field contains a abi.encoded OracleData structure
+/// @dev Factory will revert if the requiredValidValues is bigger than the oracleData item count
+struct SpotPriceAggregatorData {
+    address tokenAddress;
+    bytes oracleData;
+    uint256 minimumThresholdValue;
+}
+
+/// @notice Data structure that wraps needed data to deploy a full Relayer architecture
+/// @dev The aggregatorData field contains abi.encoded DiscountRateAggregatorData or SpotPriceAggregatorData structures
 /// @dev Factory will revert if the aggregators do not contain unique tokenId's
-struct DiscountRateDeployData {
+struct RelayerDeployData {
     bytes[] aggregatorData;
 }
 
@@ -68,12 +84,16 @@ contract Factory {
     // @notice Emitter when the collybus address is address(0)
     error Factory__deployDiscountRateArchitecture_invalidCollybusAddress();
 
+    // @notice Emitter when the collybus address is address(0)
+    error Factory__deploySpotPriceArchitecture_invalidCollybusAddress();
+
     // @notice Emitted if no value provider is found for given providerType
     error Factory__deployValueProvider_invalidValueProviderType();
 
     enum ValueProviderType {
         Notional,
-        Element
+        Element,
+        Chainlink
     }
 
     /// @notice Deploys an Element Finance Value Provider
@@ -132,6 +152,25 @@ contract Factory {
         return address(notionalFinanceValueProvider);
     }
 
+    function deployChainlinkValueProvider(
+        // Oracle params
+        OracleData memory oracleParams
+    ) public returns (address) {
+        ChainlinkVPData memory chainlinkParams = abi.decode(
+            oracleParams.valueProviderData,
+            (ChainlinkVPData)
+        );
+
+        ChainLinkValueProvider chainlinkValueProvider = new ChainLinkValueProvider(
+                oracleParams.timeWindow,
+                oracleParams.maxValidTime,
+                oracleParams.alpha,
+                chainlinkParams.chainlinkAggregatorAddress
+            );
+
+        return address(chainlinkValueProvider);
+    }
+
     /// @notice Deploys a new Oracle and adds it to an Aggregator
     /// @param oracleDataEncoded_ Abi encoded Oracle data structure
     /// @param aggregatorAddress_ The aggregator address that will contain the created Oracle
@@ -156,6 +195,11 @@ contract Factory {
         ) {
             // Create and return the value provider
             oracleAddress = deployNotionalFinanceValueProvider(oracleData);
+        } else if (
+            oracleData.valueProviderType == uint8(ValueProviderType.Chainlink)
+        ) {
+            // Create and return the value provider
+            oracleAddress = deployChainlinkValueProvider(oracleData);
         } else {
             // Revert if the value provider type is not supported
             revert Factory__deployValueProvider_invalidValueProviderType();
@@ -172,7 +216,7 @@ contract Factory {
     /// @param discountRateRelayerAddress_ The address of the discount rate relayer where we will add the aggregator
     /// @dev Reverts if the encoded struct can not be decoded
     /// @return Returns the address of the new Aggregator
-    function deployAggregator(
+    function deployDiscountRateAggregator(
         bytes memory aggregatorDataEncoded_,
         address discountRateRelayerAddress_
     ) public returns (address) {
@@ -180,9 +224,9 @@ contract Factory {
         AggregatorOracle aggregatorOracle = new AggregatorOracle();
 
         // Decode each input notional aggregator structure
-        AggregatorData memory aggData = abi.decode(
+        DiscountRateAggregatorData memory aggData = abi.decode(
             aggregatorDataEncoded_,
-            (AggregatorData)
+            (DiscountRateAggregatorData)
         );
 
         // Iterate and deploy each oracle
@@ -217,6 +261,38 @@ contract Factory {
         return address(aggregatorOracle);
     }
 
+    /// @notice Deploys a new Aggregator and adds it to a Relayer
+    /// @param aggregatorDataEncoded_ Abi encoded Oracle data structure
+    /// @param spotPriceRelayerAddress_ The address of the spot price relayer where we will add the aggregator
+    /// @dev Reverts if the encoded struct can not be decoded
+    /// @return Returns the address of the new Aggregator
+    function deploySpotPriceAggregator(
+        bytes memory aggregatorDataEncoded_,
+        address spotPriceRelayerAddress_
+    ) public returns (address) {
+        // Create the aggregator contract
+        AggregatorOracle aggregatorOracle = new AggregatorOracle();
+
+        // Decode each input notional aggregator structure
+        SpotPriceAggregatorData memory aggData = abi.decode(
+            aggregatorDataEncoded_,
+            (SpotPriceAggregatorData)
+        );
+
+        deployOracle(aggData.oracleData, address(aggregatorOracle));
+
+        // Add the aggregator to the relayer
+        // Reverts if the tokenAddress is not unique
+        // Revert if the address of the Aggregator is already used
+        ICollybusSpotPriceRelayer(spotPriceRelayerAddress_).oracleAdd(
+            address(aggregatorOracle),
+            aggData.tokenAddress,
+            aggData.minimumThresholdValue
+        );
+
+        return address(aggregatorOracle);
+    }
+
     /// @notice Deploys a new Discount Rate Relayer
     /// @param collybus_ Address for the collybus
     /// @return Returns the address of the Relayer
@@ -244,12 +320,12 @@ contract Factory {
     }
 
     /// @notice Deploys a full Discount Rate Relayer architecture, can contain Aggregator Oracles and Oracles
-    /// @param discountRateRelayerDataEncoded_ Abi encoded DiscountRateDeployData struct
+    /// @param discountRateRelayerDataEncoded_ Abi encoded RelayerDeployData struct
     /// @param collybusAddress_ Collybus address.
     /// @dev Reverts on dependencies checks and conditions.
     /// @return Returns the address of the Discount Rate Relayer
     function deployDiscountRateArchitecture(
-        DiscountRateDeployData memory discountRateRelayerDataEncoded_,
+        RelayerDeployData memory discountRateRelayerDataEncoded_,
         address collybusAddress_
     ) public returns (address) {
         // The Collybus address is needed in order to deploy the Discount Rate Relayer
@@ -267,12 +343,43 @@ contract Factory {
             .aggregatorData
             .length;
         for (uint256 aggIndex = 0; aggIndex < aggCount; aggIndex++) {
-            deployAggregator(
+            deployDiscountRateAggregator(
                 discountRateRelayerDataEncoded_.aggregatorData[aggIndex],
                 discountRateRelayerAddress
             );
         }
 
         return discountRateRelayerAddress;
+    }
+
+    /// @notice Deploys a full Spot Price Relayer architecture, can contain Aggregator Oracles and Oracles
+    /// @param spotPriceRelayerDataEncoded_ Abi encoded RelayerDeployData struct
+    /// @param collybusAddress_ Collybus address.
+    /// @dev Reverts on dependencies checks and conditions.
+    /// @return Returns the address of the Spot Price Relayer
+    function deploySpotPriceArchitecture(
+        RelayerDeployData memory spotPriceRelayerDataEncoded_,
+        address collybusAddress_
+    ) public returns (address) {
+        // The Collybus address is needed in order to deploy the Spot Price Rate Relayer
+        if (collybusAddress_ == address(0)) {
+            revert Factory__deploySpotPriceArchitecture_invalidCollybusAddress();
+        }
+
+        // Create the relayer and cache the address
+        address spotPriceRelayerAddress = deployCollybusSpotPriceRelayer(
+            collybusAddress_
+        );
+
+        // Iterate and deploy each aggregator
+        uint256 aggCount = spotPriceRelayerDataEncoded_.aggregatorData.length;
+        for (uint256 aggIndex = 0; aggIndex < aggCount; aggIndex++) {
+            deploySpotPriceAggregator(
+                spotPriceRelayerDataEncoded_.aggregatorData[aggIndex],
+                spotPriceRelayerAddress
+            );
+        }
+
+        return spotPriceRelayerAddress;
     }
 }
