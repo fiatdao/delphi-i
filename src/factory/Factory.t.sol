@@ -49,7 +49,7 @@ contract FactoryTest is DSTest {
         );
 
         Oracle oracle = Oracle(
-            factory.deployOracle(
+            factory.deployAggregatorOracle(
                 abi.encode(elementDataOracle),
                 address(aggregatorOracle)
             )
@@ -293,7 +293,7 @@ contract FactoryTest is DSTest {
             .oracleCount();
 
         // Create and add the oracle to the aggregator
-        address oracleAddress = factory.deployOracle(
+        address oracleAddress = factory.deployAggregatorOracle(
             abi.encode(notionalOracleData),
             firstAggregatorAddress
         );
@@ -363,9 +363,12 @@ contract FactoryTest is DSTest {
         SpotPriceAggregatorData
             memory chainlinkAggregator = SpotPriceAggregatorData({
                 tokenAddress: address(0x2),
-                oracleData: abi.encode(chainlinkOracleData),
+                oracleData: new bytes[](1),
+                requiredValidValues: 1,
                 minimumThresholdValue: 10**14
             });
+
+        chainlinkAggregator.oracleData[0] = abi.encode(chainlinkOracleData);
 
         // Deploy the new aggregator
         address aggregatorAddress = factory.deploySpotPriceAggregator(
@@ -539,9 +542,12 @@ contract FactoryTest is DSTest {
         SpotPriceAggregatorData
             memory chainlinkAggregator = SpotPriceAggregatorData({
                 tokenAddress: address(0x1),
-                oracleData: abi.encode(chainlinkOracleData),
+                oracleData: new bytes[](1),
+                requiredValidValues: 1,
                 minimumThresholdValue: 10**14
             });
+
+        chainlinkAggregator.oracleData[0] = abi.encode(chainlinkOracleData);
 
         RelayerDeployData memory deployData;
         deployData.aggregatorData = new bytes[](1);

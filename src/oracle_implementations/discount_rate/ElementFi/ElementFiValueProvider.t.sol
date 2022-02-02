@@ -123,7 +123,7 @@ contract ElementFiValueProviderTest is DSTest {
             _maxValidTime,
             // Alpha
             _alpha,
-            // Element Finance arguments
+            // Element Fi arguments
             // Pool ID
             _poolId,
             // Address of the balancer vault

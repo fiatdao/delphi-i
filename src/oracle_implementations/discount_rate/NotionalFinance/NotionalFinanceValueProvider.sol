@@ -68,14 +68,14 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
         MarketParameters memory marketParams = INotionalView(notionalView)
             .getMarket(currencyId, maturityDate, settlementDate);
 
-        // Convert rate per anum to 18 digits precision.
+        // Convert rate per annum to 18 digits precision.
         uint256 ratePerAnnum = uconvert(
             marketParams.lastImpliedRate,
             lastImpliedRateDecimals,
             18
         );
 
-        // Convert per anum to per second rate
+        // Convert per annum to per second rate
         int256 ratePerSecondD59x18 = PRBMathSD59x18.div(
             int256(ratePerAnnum),
             SECONDS_PER_YEAR
