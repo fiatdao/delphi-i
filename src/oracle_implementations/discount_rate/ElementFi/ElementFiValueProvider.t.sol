@@ -184,7 +184,7 @@ contract ElementFiValueProviderTest is DSTest {
 
     function test_getValue() public {
         // Computed value based on the parameters that are sent via the mock provider
-        int256 computedExpectedValue = 4583021732;
+        int256 computedExpectedValue = 4583021729;
 
         int256 value = efValueProvider.getValue();
 

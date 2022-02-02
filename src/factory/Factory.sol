@@ -227,21 +227,30 @@ contract Factory is Guarded {
             (OracleData)
         );
 
+
         address oracleAddress;
+
+        // Create the value provider based on valueProviderType
+        // Revert if no match match is found
         if (oracleData.valueProviderType == uint8(ValueProviderType.Element)) {
-            // Create and return the value provider
+            // Create the value provider
             oracleAddress = deployElementFiValueProvider(oracleData);
         } else if (
             oracleData.valueProviderType == uint8(ValueProviderType.Notional)
         ) {
-            // Create and return the value provider
+            // Create the value provider
             oracleAddress = deployNotionalFinanceValueProvider(oracleData);
         } else if (
             oracleData.valueProviderType == uint8(ValueProviderType.Chainlink)
         ) {
-            // Create and return the value provider
+            // Create the value provider
             oracleAddress = deployChainlinkValueProvider(oracleData);
-        } else {
+        } else if ( 
+            oracleData.valueProviderType == uint8(ValueProviderType.Yield)
+        ){
+            // Create the value provider
+            oracleAddress = deployYieldValueProvider(oracleData);
+        }else {
             // Revert if the value provider type is not supported
             revert Factory__deployOracle_invalidValueProviderType(
                 oracleData.valueProviderType
