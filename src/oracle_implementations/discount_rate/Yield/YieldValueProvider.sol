@@ -12,16 +12,16 @@ contract YieldValueProvider is Oracle {
         uint256 maturity
     );
 
-    IYieldPool public immutable _pool;
-    uint256 private immutable _maturity;
-    int256 private immutable _timeScale;
+    address public immutable poolAddress;
+    uint256 public immutable maturity;
+    int256 public immutable timeScale;
 
     /// @notice                     Constructs the Value provider contracts with the needed Element data in order to
     ///                             calculate the annual rate.
     /// @param timeUpdateWindow_    Minimum time between updates of the value
     /// @param maxValidTime_        Maximum time for which the value is valid
     /// @param alpha_               Alpha parameter for EMA
-    /// @param pool_                Address of the pool
+    /// @param poolAddress_                Address of the pool
     /// @param maturity_            Expiration of the pool
     /// @param timeScale_           Time scale used on this pool (i.e. 1/(timeStretch*secondsPerYear)) in 59x18 fixed point
     constructor(
@@ -30,13 +30,13 @@ contract YieldValueProvider is Oracle {
         uint256 maxValidTime_,
         int256 alpha_,
         //
-        address pool_,
+        address poolAddress_,
         uint256 maturity_,
         int256 timeScale_
     ) Oracle(timeUpdateWindow_, maxValidTime_, alpha_) {
-        _pool = IYieldPool(pool_);
-        _maturity = maturity_;
-        _timeScale = timeScale_;
+        poolAddress = poolAddress_;
+        maturity = maturity_;
+        timeScale = timeScale_;
     }
 
     /// @notice Calculates the implied interest rate based on reserves in the pool
@@ -46,9 +46,9 @@ contract YieldValueProvider is Oracle {
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function getValue() external view override(Oracle) returns (int256) {
         // No values for matured pools
-        if (block.timestamp >= _maturity) {
+        if (block.timestamp >= maturity) {
             revert YieldProtocolValueProvider__getValue_maturityLessThanBlocktime(
-                _maturity
+                maturity
             );
         }
 
@@ -56,7 +56,7 @@ contract YieldValueProvider is Oracle {
         // fyTokenReserves already contains the virtual reserves so no need to add LP totalSupply
         uint112 fyTokenReserves;
         uint112 baseReserves;
-        (baseReserves, fyTokenReserves, ) = _pool.getCache();
+        (baseReserves, fyTokenReserves, ) = IYieldPool(poolAddress).getCache();
 
         // The reserves ratio in signed 59.18 format
         int256 reservesRatio59x18 = PRBMathSD59x18.div(
@@ -67,7 +67,7 @@ contract YieldValueProvider is Oracle {
         // The implied per-second rate in signed 59.18 format
         int256 ratePerSecond59x18 = (PRBMathSD59x18.pow(
             reservesRatio59x18,
-            _timeScale
+            timeScale
         ) - PRBMathSD59x18.SCALE);
 
         // The result is a 59.18 fixed-point number.

@@ -68,14 +68,32 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         hevm.warp(oracleTimeUpdateWindow);
     }
 
-    function test_Deploy() public {
+    function test_check_Collybus() public {
+        assertEq(cdrr.collybus(), address(collybus));
+    }
+
+    function test_deploy() public {
         assertTrue(
             address(cdrr) != address(0),
             "CollybusSpotPriceRelayer should be deployed"
         );
     }
 
-    function test_AddOracle_CheckItExistsAndIncreasesOracleCount() public {
+    function test_check_tokenId() public {
+        assertTrue(cdrr.tokenIds(mockToken1Address));
+    }
+
+    function test_check_oracleData() public {
+        CollybusSpotPriceRelayer.OracleData memory oracleData = cdrr
+            .oraclesData(address(oracle1));
+
+        assertTrue(oracleData.exists);
+        assertEq(oracleData.lastUpdateValue, 0);
+        assertEq(oracleData.tokenAddress, address(mockToken1Address));
+        assertEq(oracleData.minimumThresholdValue, mockToken1MinThreshold);
+    }
+
+    function test_addOracle_CheckItExistsAndIncreasesOracleCount() public {
         // Create a new address that differs from the oracle already added
         address newOracle = address(0x1);
         // Use a new address for token 2
@@ -98,7 +116,7 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         );
     }
 
-    function testFail_AddOracle_ShouldNotAllowDuplicateOracles() public {
+    function testFail_addOracle_ShouldNotAllowDuplicateOracles() public {
         // Attempt to add the same oracle again but use a different token address
         address mockToken2Address = address(0x2);
         uint256 mockToken2MinThreshold = 1;
@@ -110,7 +128,7 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         );
     }
 
-    function testFail_AddOracle_ShouldNotAllowDuplicateTokenAddress() public {
+    function testFail_addOracle_ShouldNotAllowDuplicateTokenAddress() public {
         // Create a new address that differs from the oracle already added
         address newOracle = address(0x1);
         // Add a new oracle that has the same token id as the previously added oracle
@@ -121,7 +139,7 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         );
     }
 
-    function test_AddOracle_OnlyAuthorizedUserShouldBeAbleToAdd() public {
+    function test_addOracle_OnlyAuthorizedUserShouldBeAbleToAdd() public {
         Caller user = new Caller();
 
         address newOracle = address(0x1);
@@ -145,7 +163,7 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         );
     }
 
-    function test_RemoveOracle_DeletesOracle() public {
+    function test_removeOracle_DeletesOracle() public {
         // Remove the only oracle.
         cdrr.oracleRemove(address(oracle1));
 
@@ -156,14 +174,14 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         );
     }
 
-    function testFail_RemoveOracle_ShouldFailIfOracleDoesNotExist() public {
+    function testFail_removeOracle_ShouldFailIfOracleDoesNotExist() public {
         address newOracle = address(0x1);
 
         // Attempt to remove oracle that does not exist
         cdrr.oracleRemove(newOracle);
     }
 
-    function test_RemoveOracle_OnlyAuthorizedUserShouldBeAbleToRemove() public {
+    function test_removeOracle_OnlyAuthorizedUserShouldBeAbleToRemove() public {
         Caller user = new Caller();
 
         // Add the oracle
@@ -177,12 +195,12 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         );
     }
 
-    function test_checkCalls_returnsTrueWhenUpdateNeeded() public {
+    function test_check_returnsTrueWhenUpdateNeeded() public {
         bool mustUpdate = cdrr.check();
         assertTrue(mustUpdate);
     }
 
-    function test_CheckCallsUpdate_OnlyOnFirstUpdatableOracle() public {
+    function test_checkCallsUpdate_OnlyOnFirstUpdatableOracle() public {
         MockProvider oracle2 = new MockProvider();
         // Set the value returned by the Oracle.
         oracle2.givenQueryReturnResponse(
@@ -219,7 +237,7 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         assertTrue(cd2.functionSelector == bytes4(0));
     }
 
-    function test_Check_ReturnsFalseAfterExecute() public {
+    function test_check_ReturnsFalseAfterExecute() public {
         bool checkBeforeUpdate = cdrr.check();
         assertTrue(checkBeforeUpdate);
 
@@ -229,7 +247,7 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         assertTrue(checkAfterUpdate == false);
     }
 
-    function test_ExecuteCalls_UpdateOnAllOracles() public {
+    function test_executeCalls_UpdateOnAllOracles() public {
         MockProvider oracle2 = new MockProvider();
         // Set the value returned by the Oracle.
         oracle2.givenQueryReturnResponse(
@@ -264,7 +282,7 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         assertTrue(cd2.functionSelector == IOracle.update.selector);
     }
 
-    function test_Execute_UpdatesRatesInCollybus() public {
+    function test_execute_UpdatesRatesInCollybus() public {
         MockProvider oracle2 = new MockProvider();
 
         // Set the value returned by the Oracle.
@@ -305,7 +323,7 @@ contract CollybusSpotPriceRelayerTest is DSTest {
         );
     }
 
-    function test_Execute_DoesNotUpdatesRatesInCollybusWhenDeltaIsBelowThreshold()
+    function test_execute_DoesNotUpdatesRatesInCollybusWhenDeltaIsBelowThreshold()
         public
     {
         MockProvider oracle2 = new MockProvider();

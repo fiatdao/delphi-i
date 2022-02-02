@@ -28,9 +28,8 @@ abstract contract Oracle is Pausable, IOracle {
     // next EMA value
     int256 public nextValue;
 
-    // current EMA value
+    // current EMA value and its validity
     int256 private _currentValue;
-
     bool private _validReturnedValue;
 
     constructor(

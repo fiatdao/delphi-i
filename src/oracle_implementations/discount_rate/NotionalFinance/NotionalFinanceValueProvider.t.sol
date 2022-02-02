@@ -18,12 +18,15 @@ contract NotionalFinanceValueProviderTest is DSTest {
 
     NotionalFinanceValueProvider internal notionalVP;
 
+    uint16 internal _currencyId = 2;
+    uint256 internal _maturityDate = 1671840000;
+    uint256 internal _settlementDate = 1648512000;
     uint256 internal _timeUpdateWindow = 100; // seconds
     uint256 internal _maxValidTime = 300;
     int256 internal _alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
-        // Values taken from interogating the active markets via the Notional View Contract deployed at
+        // Values taken from interrogating the active markets via the Notional View Contract deployed at
         // 0x1344A36A1B56144C3Bc62E7757377D288fDE0369
         // block: 13979660
         mockNotionalView = new MockProvider();
@@ -31,7 +34,7 @@ contract NotionalFinanceValueProviderTest is DSTest {
             // Used Parameters are: currency ID, maturity date and settlement date.
             abi.encodeWithSelector(
                 INotionalView.getMarket.selector,
-                uint16(2),
+                _currencyId,
                 uint256(1671840000),
                 uint256(1648512000)
             ),
@@ -65,10 +68,10 @@ contract NotionalFinanceValueProviderTest is DSTest {
             _alpha,
             // Notional Finance arguments
             address(mockNotionalView),
-            2,
+            _currencyId,
             9,
-            1671840000,
-            1648512000
+            _maturityDate,
+            _settlementDate
         );
     }
 
@@ -76,9 +79,29 @@ contract NotionalFinanceValueProviderTest is DSTest {
         assertTrue(address(notionalVP) != address(0));
     }
 
-    function test_GetValue() public {
+    function test_check_notionalView() public {
+        // Check the address of the notional view contract
+        assertEq(notionalVP.notionalView(), address(mockNotionalView));
+    }
+
+    function test_check_currencyId() public {
+        // Check the currency Id is correctly set
+        assertEq(notionalVP.currencyId(), _currencyId);
+    }
+
+    function test_check_maturityDate() public {
+        // Check the maturity date
+        assertEq(notionalVP.maturityDate(), _maturityDate);
+    }
+
+    function test_check_settlementDate() public {
+        // Check the settlement date
+        assertEq(notionalVP.settlementDate(), _settlementDate);
+    }
+
+    function test_getValue() public {
         // Expected value is the lastImpliedRate(1e9 precision) in 1e18 precision
-        int256 expectedValue = 2851338287; //2810353955;
+        int256 expectedValue = 2851338287;
 
         // Computed value based on the parameters that are sent via the mock provider
         int256 value = notionalVP.getValue();

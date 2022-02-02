@@ -75,6 +75,20 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         );
     }
 
+    function test_check_Collybus() public {
+        assertEq(cdrr.collybus(), address(collybus));
+    }
+
+    function test_check_oracleData() public {
+        CollybusDiscountRateRelayer.OracleData memory oracleData = cdrr
+            .oraclesData(address(oracle1));
+
+        assertTrue(oracleData.exists);
+        assertEq(oracleData.lastUpdateValue, 0);
+        assertEq(oracleData.tokenId, mockTokenId1);
+        assertEq(oracleData.minimumThresholdValue, mockTokenId1MinThreshold);
+    }
+
     function test_CheckExistenceOfOracle() public {
         // Check that oracle was added
         assertTrue(

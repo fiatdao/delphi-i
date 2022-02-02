@@ -6,9 +6,9 @@ import {IChainlinkAggregatorV3Interface} from "src/oracle_implementations/spot_p
 import {Oracle} from "src/oracle/Oracle.sol";
 
 contract ChainLinkValueProvider is Oracle, Convert {
-    uint256 private immutable _underlierDecimals;
-    address private _underlierAddress;
-    IChainlinkAggregatorV3Interface private _chainlinkAggregator;
+    uint8 public immutable underlierDecimals;
+    address public underlierAddress;
+    address public chainlinkAggregatorAddress;
 
     /// @notice                             Constructs the Value provider contracts with the needed Chainlink.
     /// @param timeUpdateWindow_            Minimum time between updates of the value
@@ -23,24 +23,27 @@ contract ChainLinkValueProvider is Oracle, Convert {
         //
         address chainlinkAggregatorAddress_
     ) Oracle(timeUpdateWindow_, maxValidTime_, alpha_) {
-        _chainlinkAggregator = IChainlinkAggregatorV3Interface(
+        chainlinkAggregatorAddress = chainlinkAggregatorAddress_;
+        underlierDecimals = IChainlinkAggregatorV3Interface(
             chainlinkAggregatorAddress_
-        );
-
-        _underlierDecimals = uint256(_chainlinkAggregator.decimals());
+        ).decimals();
     }
 
     /// @notice Retrieves the price from the chainlink aggregator
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function getValue() external view override(Oracle) returns (int256) {
         // The returned annual rate is in 1e9 precision so we need to convert it to 1e18 precision.
-        (, int256 answer, , , ) = _chainlinkAggregator.latestRoundData();
+        (, int256 answer, , , ) = IChainlinkAggregatorV3Interface(
+            chainlinkAggregatorAddress
+        ).latestRoundData();
 
-        return convert(answer, _underlierDecimals, 18);
+        return convert(answer, underlierDecimals, 18);
     }
 
     /// @notice returns the description of the chainlink aggregator the proxy points to.
     function description() external view returns (string memory) {
-        return _chainlinkAggregator.description();
+        return
+            IChainlinkAggregatorV3Interface(chainlinkAggregatorAddress)
+                .description();
     }
 }
