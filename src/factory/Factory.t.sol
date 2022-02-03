@@ -184,7 +184,7 @@ contract FactoryTest is DSTest {
 
         // Deploy the oracle architecture
         address discountRateRelayer = factory.deployDiscountRateArchitecture(
-            deployData,
+            abi.encode(deployData),
             address(0x1234)
         );
 
@@ -206,7 +206,7 @@ contract FactoryTest is DSTest {
 
         // Deploy the oracle architecture
         address discountRateRelayer = factory.deployDiscountRateArchitecture(
-            deployData,
+            abi.encode(deployData),
             address(0x1234)
         );
 
@@ -269,7 +269,7 @@ contract FactoryTest is DSTest {
 
         // Deploy the oracle architecture
         address discountRateRelayer = factory.deployDiscountRateArchitecture(
-            deployData,
+            abi.encode(deployData),
             address(0x1234)
         );
 
@@ -324,7 +324,7 @@ contract FactoryTest is DSTest {
 
         // Deploy the oracle architecture
         address spotPriceRelayer = factory.deploySpotPriceArchitecture(
-            deployData,
+            abi.encode(deployData),
             address(0x1234)
         );
 
@@ -346,7 +346,7 @@ contract FactoryTest is DSTest {
 
         // Deploy the oracle architecture
         address spotPriceRelayer = factory.deploySpotPriceArchitecture(
-            deployData,
+            abi.encode(deployData),
             address(0x1234)
         );
 

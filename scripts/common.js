@@ -11,6 +11,13 @@ function getContractFactory(path, name, deployer) {
   return new ethers.ContractFactory(artifact.abi, artifact.evm.bytecode, deployer);
 }
 
+function getContractAt(address, path, name, deployer)
+{
+  console.log(path + " " + name );
+  const artifact = Artifacts.contracts[path][name];
+  return new ethers.Contract(address, artifact.abi, deployer);
+}
+
 async function deployContract(name, factory, ...args) {
   const contract = await factory.deploy(...args);
   console.log(`${name}: ${contract.address}`);
@@ -22,4 +29,4 @@ async function deployContract(name, factory, ...args) {
   return contract;
 }
 
-module.exports = { getContractFactory, deployContract };
+module.exports = { getContractFactory, deployContract, getContractAt };

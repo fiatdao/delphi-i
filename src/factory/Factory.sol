@@ -8,7 +8,7 @@ import {IAggregatorOracle} from "src/aggregator/IAggregatorOracle.sol";
 import {IFactoryElementFiValueProvider} from "src/factory/FactoryElementFiValueProvider.sol";
 import {IFactoryNotionalFinanceValueProvider} from "src/factory/FactoryNotionalFinanceValueProvider.sol";
 import {IFactoryYieldValueProvider} from "src/factory/FactoryYieldValueProvider.sol";
-import {IFactoryChainLinkValueProvider} from "src/factory/FactoryChainlinkValueProvider.sol";
+import {IFactoryChainlinkValueProvider} from "src/factory/FactoryChainlinkValueProvider.sol";
 import {IFactoryAggregatorOracle} from "src/factory/FactoryAggregatorOracle.sol";
 import {IFactoryCollybusSpotPriceRelayer} from "src/factory/FactoryCollybusSpotPriceRelayer.sol";
 import {IFactoryCollybusDiscountRateRelayer} from "src/factory/FactoryCollybusDiscountRateRelayer.sol";
@@ -91,6 +91,11 @@ struct RelayerDeployData {
 }
 
 contract Factory is Guarded {
+
+    event RelayerDeployed(address relayerAddress, uint relayerType); 
+    event AggregatorDeployed(address aggregatorAddress, uint aggregatorType); 
+    event OracleDeployed(address oracleAddress); 
+
     // @notice Emitted when the collybus address is address(0)
     error Factory__deployCollybusDiscountRateRelayer_invalidCollybusAddress();
 
@@ -220,7 +225,7 @@ contract Factory is Guarded {
             (ChainlinkVPData)
         );
 
-        address chainlinkValueProviderAddress = IFactoryChainLinkValueProvider(chainLinkValueProviderFactory).create(
+        address chainlinkValueProviderAddress = IFactoryChainlinkValueProvider(chainLinkValueProviderFactory).create(
                 oracleParams_.timeWindow,
                 oracleParams_.maxValidTime,
                 oracleParams_.alpha,
@@ -276,6 +281,7 @@ contract Factory is Guarded {
 
         // Add the oracle to the Aggregator Oracle
         IAggregatorOracle(aggregatorAddress_).oracleAdd(oracleAddress);
+        emit OracleDeployed(oracleAddress);
 
         return oracleAddress;
     }
@@ -329,6 +335,8 @@ contract Factory is Guarded {
             aggData.minimumThresholdValue
         );
 
+
+        emit AggregatorDeployed(aggregatorOracleAddress,1);
         return aggregatorOracleAddress;
     }
 
@@ -381,6 +389,7 @@ contract Factory is Guarded {
             aggData.minimumThresholdValue
         );
 
+        emit AggregatorDeployed(aggregatorOracleAddress,2);
         return aggregatorOracleAddress;
     }
 
@@ -401,6 +410,8 @@ contract Factory is Guarded {
         address discountRateRelayerAddress = IFactoryCollybusDiscountRateRelayer(collybusDiscountRateRelayerFactory).create(
                 collybus_
             );
+
+        emit RelayerDeployed(discountRateRelayerAddress, 1);
         return discountRateRelayerAddress;
     }
 
@@ -421,6 +432,8 @@ contract Factory is Guarded {
         address spotPriceRelayerAddress = IFactoryCollybusSpotPriceRelayer(collybusSpotPriceRelayerFactory).create(
                 collybus_
             );
+
+        emit RelayerDeployed(spotPriceRelayerAddress, 2);
         return spotPriceRelayerAddress;
     }
 
@@ -430,21 +443,22 @@ contract Factory is Guarded {
     /// @dev Reverts on dependencies checks and conditions
     /// @return Returns the Discount Rate Relayer
     function deployDiscountRateArchitecture(
-        RelayerDeployData memory discountRateRelayerDataEncoded_,
+        bytes memory discountRateRelayerDataEncoded_,
         address collybus_
     ) public checkCaller returns (address) {
+        RelayerDeployData memory discountRateRelayerData = abi.decode(discountRateRelayerDataEncoded_,(RelayerDeployData));
         // Create the relayer and cache the address
         address discountRateRelayerAddress = deployCollybusDiscountRateRelayer(
             collybus_
         );
 
         // Iterate and deploy each aggregator
-        uint256 aggCount = discountRateRelayerDataEncoded_
+        uint256 aggCount = discountRateRelayerData
             .aggregatorData
             .length;
         for (uint256 aggIndex = 0; aggIndex < aggCount; aggIndex++) {
             deployDiscountRateAggregator(
-                discountRateRelayerDataEncoded_.aggregatorData[aggIndex],
+                discountRateRelayerData.aggregatorData[aggIndex],
                 discountRateRelayerAddress
             );
         }
@@ -458,19 +472,22 @@ contract Factory is Guarded {
     /// @dev Reverts on dependency checks and conditions
     /// @return Returns the Spot Price Relayer
     function deploySpotPriceArchitecture(
-        RelayerDeployData memory spotPriceRelayerDataEncoded_,
+        bytes memory spotPriceRelayerDataEncoded_,
         address collybusAddress_
     ) public checkCaller returns (address) {
+
+        RelayerDeployData memory spotPriceRelayerData = abi.decode(spotPriceRelayerDataEncoded_,(RelayerDeployData));
+
         // Create the relayer and cache the address
         address spotPriceRelayerAddress = deployCollybusSpotPriceRelayer(
             collybusAddress_
         );
 
         // Iterate and deploy each aggregator
-        uint256 aggCount = spotPriceRelayerDataEncoded_.aggregatorData.length;
+        uint256 aggCount = spotPriceRelayerData.aggregatorData.length;
         for (uint256 aggIndex = 0; aggIndex < aggCount; aggIndex++) {
             deploySpotPriceAggregator(
-                spotPriceRelayerDataEncoded_.aggregatorData[aggIndex],
+                spotPriceRelayerData.aggregatorData[aggIndex],
                 spotPriceRelayerAddress
             );
         }

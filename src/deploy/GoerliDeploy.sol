@@ -18,7 +18,7 @@ interface IConvergentCurvePool{
 
 contract GoerliDeploy
 {
-    function createDeployData(address convergentCurvePoolAddress_) external view returns(RelayerDeployData memory){
+    function createDeployData(address convergentCurvePoolAddress_) external view returns(bytes memory){
 
         IConvergentCurvePool pool = IConvergentCurvePool(convergentCurvePoolAddress_);
         int256 unitSeconds = int256(pool.unitSeconds());
@@ -61,7 +61,7 @@ contract GoerliDeploy
         deployData.aggregatorData = new bytes[](1);
         deployData.aggregatorData[0] = abi.encode(elementAggregator);
 
-        return deployData;
+        return abi.encode(deployData);
     }
 
 }
