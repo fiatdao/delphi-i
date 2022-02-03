@@ -11,4 +11,6 @@ interface IAggregatorOracle {
     function oracleCount() external view returns (uint256);
 
     function oracleAt(uint256 index) external view returns (address);
+    
+    function setParam(bytes32 param, uint256 value) external;
 }
