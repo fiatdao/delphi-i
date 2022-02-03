@@ -1,3 +1,12 @@
 {
-  "GoerliDeploy": "0x383170A2A49987CA7D65563cD209550271149Cf5"
+  "GoerliDeploy": "0x383170A2A49987CA7D65563cD209550271149Cf5",
+  "FactoryElementFiValueProvider": "0x40A72B1D4C5D48d42fEcF379eCeF9b604aA41640",
+  "FactoryNotionalFinanceValueProvider": "0x2D728B213C63680FD25154D71531bf0C2Ac7a461",
+  "FactoryYieldValueProvider": "0x186568Ba26EAa43ea2d4E8A2f5903AeC5C7DC699",
+  "FactoryChainlinkValueProvider": "0x450B1aae73DC08f31e720342407aC2AeD729D397",
+  "FactoryAggregatorOracle": "0xAa4850f576e6f3c227aB09EBaa1D4f80e9e4EA09",
+  "FactoryCollybusDiscountRateRelayer": "0x9CD0C7a4eE78B35C5FF8dca6BFB3D49CcC09D33f",
+  "FactoryCollybusSpotPriceRelayer": "0x4338E1654687E085F4A1EC9E53256fF153c6Ee95",
+  "Factory": "0x2C66257771568015bdeBA879C42a86beffFB96a0",
+  "GoerliDeployDataHelper": "0x73D4dB80D7b305BE47d1aac27FbcF459233042a7"
 }
