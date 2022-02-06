@@ -10,7 +10,7 @@ interface IFactoryAggregatorOracle{
 contract FactoryAggregatorOracle is IFactoryAggregatorOracle {
     function create() public override(IFactoryAggregatorOracle) returns(address){
         AggregatorOracle aggOracle = new AggregatorOracle();
-        aggOracle.allowCaller(keccak256("ANY_SIG"),msg.sender);
+        aggOracle.allowCaller(aggOracle.ANY_SIG(),msg.sender);
         return address(aggOracle);
     }
 }

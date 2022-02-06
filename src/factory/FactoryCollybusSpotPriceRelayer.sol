@@ -12,7 +12,7 @@ contract FactoryCollybusSpotPriceRelayer is IFactoryCollybusSpotPriceRelayer{
         CollybusSpotPriceRelayer spotPriceRelayer = new CollybusSpotPriceRelayer(
             collybus_
         );
-        spotPriceRelayer.allowCaller(keccak256("ANY_SIG"),msg.sender);
+        spotPriceRelayer.allowCaller(spotPriceRelayer.ANY_SIG(),msg.sender);
         return address(spotPriceRelayer);
     }
 }
