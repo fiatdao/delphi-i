@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {YieldValueProvider} from "src/oracle_implementations/discount_rate/Yield/YieldValueProvider.sol";
 
-interface IFactoryYieldValueProvider{
+interface IFactoryYieldValueProvider {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
@@ -13,11 +13,10 @@ interface IFactoryYieldValueProvider{
         address poolAddress_,
         uint256 maturity_,
         int256 timeScale_
-    ) external returns(address);
+    ) external returns (address);
 }
 
-contract FactoryYieldValueProvider is IFactoryYieldValueProvider{
-
+contract FactoryYieldValueProvider is IFactoryYieldValueProvider {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
@@ -27,8 +26,7 @@ contract FactoryYieldValueProvider is IFactoryYieldValueProvider{
         address poolAddress_,
         uint256 maturity_,
         int256 timeScale_
-    ) public override(IFactoryYieldValueProvider) returns(address){
-
+    ) public override(IFactoryYieldValueProvider) returns (address) {
         YieldValueProvider yieldValueProvider = new YieldValueProvider(
             timeUpdateWindow_,
             maxValidTime_,
@@ -40,5 +38,4 @@ contract FactoryYieldValueProvider is IFactoryYieldValueProvider{
 
         return address(yieldValueProvider);
     }
-
 }

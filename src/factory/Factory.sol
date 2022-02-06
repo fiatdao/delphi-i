@@ -91,10 +91,9 @@ struct RelayerDeployData {
 }
 
 contract Factory is Guarded {
-
-    event RelayerDeployed(address relayerAddress, uint relayerType); 
-    event AggregatorDeployed(address aggregatorAddress, uint aggregatorType); 
-    event OracleDeployed(address oracleAddress); 
+    event RelayerDeployed(address relayerAddress, uint256 relayerType);
+    event AggregatorDeployed(address aggregatorAddress, uint256 aggregatorType);
+    event OracleDeployed(address oracleAddress);
 
     // @notice Emitted when the collybus address is address(0)
     error Factory__deployCollybusDiscountRateRelayer_invalidCollybusAddress();
@@ -112,16 +111,23 @@ contract Factory is Guarded {
         Chainlink
     }
 
-    address immutable public elementFiValueProviderFactory;
-    address immutable public notionalFiValueProviderFactory;
-    address immutable public yieldValueProviderFactory;
-    address immutable public chainLinkValueProviderFactory;
-    address immutable public aggregatorOracleFactory;
-    address immutable public collybusDiscountRateRelayerFactory;
-    address immutable public collybusSpotPriceRelayerFactory;
+    address public immutable elementFiValueProviderFactory;
+    address public immutable notionalFiValueProviderFactory;
+    address public immutable yieldValueProviderFactory;
+    address public immutable chainLinkValueProviderFactory;
+    address public immutable aggregatorOracleFactory;
+    address public immutable collybusDiscountRateRelayerFactory;
+    address public immutable collybusSpotPriceRelayerFactory;
 
-    constructor(address elementFiValueProviderFactory_, address notionalFiValueProviderFactory_, address yieldValueProviderFactory_, address chainLinkValueProviderFactory_, address aggregatorOracleFactory_,address collybusDiscountRateRelayerFactory_, address collybusSpotPriceRelayerFactory_)
-    {
+    constructor(
+        address elementFiValueProviderFactory_,
+        address notionalFiValueProviderFactory_,
+        address yieldValueProviderFactory_,
+        address chainLinkValueProviderFactory_,
+        address aggregatorOracleFactory_,
+        address collybusDiscountRateRelayerFactory_,
+        address collybusSpotPriceRelayerFactory_
+    ) {
         elementFiValueProviderFactory = elementFiValueProviderFactory_;
         notionalFiValueProviderFactory = notionalFiValueProviderFactory_;
         yieldValueProviderFactory = yieldValueProviderFactory_;
@@ -144,7 +150,9 @@ contract Factory is Guarded {
             (ElementVPData)
         );
 
-        address elementFiValueProviderAddress = IFactoryElementFiValueProvider(elementFiValueProviderFactory).create(
+        address elementFiValueProviderAddress = IFactoryElementFiValueProvider(
+            elementFiValueProviderFactory
+        ).create(
                 oracleParams_.timeWindow,
                 oracleParams_.maxValidTime,
                 oracleParams_.alpha,
@@ -173,16 +181,18 @@ contract Factory is Guarded {
             (NotionalVPData)
         );
 
-        address notionalFinanceValueProviderAddress = IFactoryNotionalFinanceValueProvider(notionalFiValueProviderFactory).create(
-                oracleParams_.timeWindow,
-                oracleParams_.maxValidTime,
-                oracleParams_.alpha,
-                notionalParams.notionalViewAddress,
-                notionalParams.currencyId,
-                notionalParams.lastImpliedRateDecimals,
-                notionalParams.maturityDate,
-                notionalParams.settlementDate
-            );
+        address notionalFinanceValueProviderAddress = IFactoryNotionalFinanceValueProvider(
+                notionalFiValueProviderFactory
+            ).create(
+                    oracleParams_.timeWindow,
+                    oracleParams_.maxValidTime,
+                    oracleParams_.alpha,
+                    notionalParams.notionalViewAddress,
+                    notionalParams.currencyId,
+                    notionalParams.lastImpliedRateDecimals,
+                    notionalParams.maturityDate,
+                    notionalParams.settlementDate
+                );
 
         return notionalFinanceValueProviderAddress;
     }
@@ -200,14 +210,16 @@ contract Factory is Guarded {
             (YieldVPData)
         );
 
-        address yieldValueProviderAddress = IFactoryYieldValueProvider(yieldValueProviderFactory).create(
-            oracleParams.timeWindow,
-            oracleParams.maxValidTime,
-            oracleParams.alpha,
-            yieldParams.poolAddress,
-            yieldParams.maturity,
-            yieldParams.timeScale
-        );
+        address yieldValueProviderAddress = IFactoryYieldValueProvider(
+            yieldValueProviderFactory
+        ).create(
+                oracleParams.timeWindow,
+                oracleParams.maxValidTime,
+                oracleParams.alpha,
+                yieldParams.poolAddress,
+                yieldParams.maturity,
+                yieldParams.timeScale
+            );
 
         return yieldValueProviderAddress;
     }
@@ -225,7 +237,9 @@ contract Factory is Guarded {
             (ChainlinkVPData)
         );
 
-        address chainlinkValueProviderAddress = IFactoryChainlinkValueProvider(chainLinkValueProviderFactory).create(
+        address chainlinkValueProviderAddress = IFactoryChainlinkValueProvider(
+            chainLinkValueProviderFactory
+        ).create(
                 oracleParams_.timeWindow,
                 oracleParams_.maxValidTime,
                 oracleParams_.alpha,
@@ -296,7 +310,9 @@ contract Factory is Guarded {
         address discountRateRelayerAddress_
     ) public checkCaller returns (address) {
         // Create aggregator contract
-        address aggregatorOracleAddress = IFactoryAggregatorOracle(aggregatorOracleFactory).create();
+        address aggregatorOracleAddress = IFactoryAggregatorOracle(
+            aggregatorOracleFactory
+        ).create();
 
         // Decode aggregator structure
         DiscountRateAggregatorData memory aggData = abi.decode(
@@ -335,8 +351,7 @@ contract Factory is Guarded {
             aggData.minimumThresholdValue
         );
 
-
-        emit AggregatorDeployed(aggregatorOracleAddress,1);
+        emit AggregatorDeployed(aggregatorOracleAddress, 1);
         return aggregatorOracleAddress;
     }
 
@@ -350,7 +365,9 @@ contract Factory is Guarded {
         address spotPriceRelayerAddress_
     ) public checkCaller returns (address) {
         // Create aggregator contract
-        address aggregatorOracleAddress = IFactoryAggregatorOracle(aggregatorOracleFactory).create();
+        address aggregatorOracleAddress = IFactoryAggregatorOracle(
+            aggregatorOracleFactory
+        ).create();
 
         // Decode aggregator structure
         SpotPriceAggregatorData memory aggData = abi.decode(
@@ -389,7 +406,7 @@ contract Factory is Guarded {
             aggData.minimumThresholdValue
         );
 
-        emit AggregatorDeployed(aggregatorOracleAddress,2);
+        emit AggregatorDeployed(aggregatorOracleAddress, 2);
         return aggregatorOracleAddress;
     }
 
@@ -407,9 +424,9 @@ contract Factory is Guarded {
             revert Factory__deployCollybusDiscountRateRelayer_invalidCollybusAddress();
         }
 
-        address discountRateRelayerAddress = IFactoryCollybusDiscountRateRelayer(collybusDiscountRateRelayerFactory).create(
-                collybus_
-            );
+        address discountRateRelayerAddress = IFactoryCollybusDiscountRateRelayer(
+                collybusDiscountRateRelayerFactory
+            ).create(collybus_);
 
         emit RelayerDeployed(discountRateRelayerAddress, 1);
         return discountRateRelayerAddress;
@@ -429,9 +446,9 @@ contract Factory is Guarded {
             revert Factory__deployCollybusSpotPriceRelayer_invalidCollybusAddress();
         }
 
-        address spotPriceRelayerAddress = IFactoryCollybusSpotPriceRelayer(collybusSpotPriceRelayerFactory).create(
-                collybus_
-            );
+        address spotPriceRelayerAddress = IFactoryCollybusSpotPriceRelayer(
+            collybusSpotPriceRelayerFactory
+        ).create(collybus_);
 
         emit RelayerDeployed(spotPriceRelayerAddress, 2);
         return spotPriceRelayerAddress;
@@ -446,16 +463,17 @@ contract Factory is Guarded {
         bytes memory discountRateRelayerDataEncoded_,
         address collybus_
     ) public checkCaller returns (address) {
-        RelayerDeployData memory discountRateRelayerData = abi.decode(discountRateRelayerDataEncoded_,(RelayerDeployData));
+        RelayerDeployData memory discountRateRelayerData = abi.decode(
+            discountRateRelayerDataEncoded_,
+            (RelayerDeployData)
+        );
         // Create the relayer and cache the address
         address discountRateRelayerAddress = deployCollybusDiscountRateRelayer(
             collybus_
         );
 
         // Iterate and deploy each aggregator
-        uint256 aggCount = discountRateRelayerData
-            .aggregatorData
-            .length;
+        uint256 aggCount = discountRateRelayerData.aggregatorData.length;
         for (uint256 aggIndex = 0; aggIndex < aggCount; aggIndex++) {
             deployDiscountRateAggregator(
                 discountRateRelayerData.aggregatorData[aggIndex],
@@ -475,8 +493,10 @@ contract Factory is Guarded {
         bytes memory spotPriceRelayerDataEncoded_,
         address collybusAddress_
     ) public checkCaller returns (address) {
-
-        RelayerDeployData memory spotPriceRelayerData = abi.decode(spotPriceRelayerDataEncoded_,(RelayerDeployData));
+        RelayerDeployData memory spotPriceRelayerData = abi.decode(
+            spotPriceRelayerDataEncoded_,
+            (RelayerDeployData)
+        );
 
         // Create the relayer and cache the address
         address spotPriceRelayerAddress = deployCollybusSpotPriceRelayer(

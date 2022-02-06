@@ -1,10 +1,9 @@
-
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
 import {NotionalFinanceValueProvider} from "src/oracle_implementations/discount_rate/NotionalFinance/NotionalFinanceValueProvider.sol";
 
-interface IFactoryNotionalFinanceValueProvider{
+interface IFactoryNotionalFinanceValueProvider {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
@@ -16,11 +15,12 @@ interface IFactoryNotionalFinanceValueProvider{
         uint256 lastImpliedRateDecimals_,
         uint256 maturity_,
         uint256 settlementDate_
-    ) external returns(address);
+    ) external returns (address);
 }
 
-contract FactoryNotionalFinanceValueProvider is IFactoryNotionalFinanceValueProvider{
-
+contract FactoryNotionalFinanceValueProvider is
+    IFactoryNotionalFinanceValueProvider
+{
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
@@ -32,7 +32,10 @@ contract FactoryNotionalFinanceValueProvider is IFactoryNotionalFinanceValueProv
         uint256 lastImpliedRateDecimals_,
         uint256 maturity_,
         uint256 settlementDate_
-    ) external override(IFactoryNotionalFinanceValueProvider) returns(address)
+    )
+        external
+        override(IFactoryNotionalFinanceValueProvider)
+        returns (address)
     {
         NotionalFinanceValueProvider notionalFinanceValueProvider = new NotionalFinanceValueProvider(
                 timeUpdateWindow_,

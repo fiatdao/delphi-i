@@ -24,13 +24,15 @@ contract FactoryTest is DSTest {
     Factory internal factory;
 
     function setUp() public {
-        factory = new Factory(address(0x1),
-        address(0x2),
-        address(0x3),
-        address(0x4),
-        address(0x5),
-        address(0x6),
-        address(0x7));
+        factory = new Factory(
+            address(0x1),
+            address(0x2),
+            address(0x3),
+            address(0x4),
+            address(0x5),
+            address(0x6),
+            address(0x7)
+        );
     }
 
     function test_deploy_oracle_createsContract(

@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {ChainLinkValueProvider} from "src/oracle_implementations/spot_price/Chainlink/ChainLinkValueProvider.sol";
 
-interface IFactoryChainlinkValueProvider{
+interface IFactoryChainlinkValueProvider {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
@@ -11,10 +11,10 @@ interface IFactoryChainlinkValueProvider{
         int256 alpha_,
         //
         address chainlinkAggregatorAddress_
-    ) external returns(address);
+    ) external returns (address);
 }
 
-contract FactoryChainlinkValueProvider is IFactoryChainlinkValueProvider{
+contract FactoryChainlinkValueProvider is IFactoryChainlinkValueProvider {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
@@ -22,14 +22,13 @@ contract FactoryChainlinkValueProvider is IFactoryChainlinkValueProvider{
         int256 alpha_,
         //
         address chainlinkAggregatorAddress_
-    ) public override(IFactoryChainlinkValueProvider) returns(address){
-
+    ) public override(IFactoryChainlinkValueProvider) returns (address) {
         ChainLinkValueProvider chainlinkValueProvider = new ChainLinkValueProvider(
-            timeUpdateWindow_,
-            maxValidTime_,
-            alpha_,
-            chainlinkAggregatorAddress_
-        );
+                timeUpdateWindow_,
+                maxValidTime_,
+                alpha_,
+                chainlinkAggregatorAddress_
+            );
 
         return address(chainlinkValueProvider);
     }
