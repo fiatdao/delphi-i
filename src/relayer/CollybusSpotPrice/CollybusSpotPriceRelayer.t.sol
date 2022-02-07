@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {Hevm} from "src/test/utils/Hevm.sol";
 import {DSTest} from "lib/ds-test/src/test.sol";
-import {MockProvider} from "src/test/utils/MockProvider.sol";
+import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {Caller} from "src/test/utils/Caller.sol";
 
 import {ICollybus} from "src/relayer/ICollybus.sol";

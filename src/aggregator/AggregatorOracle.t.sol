@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "ds-test/test.sol";
 
 import {Hevm} from "src/test/utils/Hevm.sol";
-import {MockProvider} from "src/test/utils/MockProvider.sol";
+import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {Caller} from "src/test/utils/Caller.sol";
 
 import {Oracle} from "src/oracle/Oracle.sol";
