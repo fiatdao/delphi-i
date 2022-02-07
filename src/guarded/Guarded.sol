@@ -14,7 +14,8 @@ abstract contract Guarded {
     /// @notice Wildcard for granting a caller to call every guarded method
     bytes32 public constant ANY_SIG = keccak256("ANY_SIG");
     /// @notice Wildcard for granting a caller to call every guarded method
-    address public constant ANY_CALLER = address(uint160(uint256(bytes32(keccak256("ANY_CALLER")))));
+    address public constant ANY_CALLER =
+        address(uint160(uint256(bytes32(keccak256("ANY_CALLER")))));
 
     /// @notice Mapping storing who is granted to which method
     /// @dev Method Signature => Caller => Bool
@@ -66,7 +67,9 @@ abstract contract Guarded {
     /// @param sig Method signature (4Byte)
     /// @param who Address of who should be able to call `sig`
     function canCall(bytes32 sig, address who) public view returns (bool) {
-        return (_canCall[sig][who] || _canCall[ANY_SIG][who] || _canCall[sig][ANY_CALLER]);
+        return (_canCall[sig][who] ||
+            _canCall[ANY_SIG][who] ||
+            _canCall[sig][ANY_CALLER]);
     }
 
     /// @notice Sets the root user (granted `ANY_SIG`)
