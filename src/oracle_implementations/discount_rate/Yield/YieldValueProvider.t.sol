@@ -5,7 +5,7 @@ import "ds-test/test.sol";
 
 import "src/test/utils/Caller.sol";
 import {Hevm} from "src/test/utils/Hevm.sol";
-import {MockProvider} from "src/test/utils/MockProvider.sol";
+import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {YieldValueProvider} from "./YieldValueProvider.sol";
 import {IYieldPool} from "./IYieldPool.sol";
 

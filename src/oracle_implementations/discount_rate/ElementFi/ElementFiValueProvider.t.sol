@@ -6,7 +6,7 @@ import "ds-test/test.sol";
 import "src/test/utils/Caller.sol";
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 import {Hevm} from "src/test/utils/Hevm.sol";
-import {MockProvider} from "src/test/utils/MockProvider.sol";
+import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ElementFiValueProvider} from "./ElementFiValueProvider.sol";

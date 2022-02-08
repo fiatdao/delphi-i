@@ -1,4 +1,5 @@
 @openzeppelin/=lib/openzeppelin-contracts/
+@cleanunicorn/mockprovider=lib/mockprovider/
 ds-auth/=lib/ds-auth/src/
 ds-math/=lib/ds-math/src/
 ds-note/=lib/ds-note/src/

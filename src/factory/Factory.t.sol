@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "ds-test/test.sol";
-import {MockProvider} from "src/test/utils/MockProvider.sol";
+import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "src/factory/Factory.sol";
