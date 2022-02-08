@@ -12,7 +12,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
         uint256 maturity
     );
 
-    // Seconds in a 360 days year as used by Notional
+    // Seconds in a 360 days year as used by Notional in 18 digits precision
     int256 internal constant SECONDS_PER_YEAR = 31104000 * 1e18;
 
     address public immutable notionalView;
@@ -20,7 +20,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     uint256 public immutable maturityDate;
     uint256 public immutable settlementDate;
 
-    uint256 private immutable lastImpliedRateDecimals;
+    uint256 private immutable oracleRateDecimals;
 
     /// @notice                         Constructs the Value provider contracts with the needed Notional contract data in order to
     ///                                 calculate the annual rate.
@@ -29,7 +29,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     /// @param alpha_                   Alpha parameter for EMA
     /// @param notionalViewContract_    The address of the deployed notional view contract.
     /// @param currencyId_              Currency ID(eth = 1, dai = 2, usdc = 3, wbtc = 4)
-    /// @param lastImpliedRateDecimals_ Precision of the market rate.
+    /// @param oracleRateDecimals_      Precision of the Notional Market rate.
     /// @param maturity_                Maturity date.
     /// @param settlementDate_          Settlement date.
     constructor(
@@ -40,11 +40,11 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
         //
         address notionalViewContract_,
         uint16 currencyId_,
-        uint256 lastImpliedRateDecimals_,
+        uint256 oracleRateDecimals_,
         uint256 maturity_,
         uint256 settlementDate_
     ) Oracle(timeUpdateWindow_, maxValidTime_, alpha_) {
-        lastImpliedRateDecimals = lastImpliedRateDecimals_;
+        oracleRateDecimals = oracleRateDecimals_;
         notionalView = notionalViewContract_;
         currencyId = currencyId_;
         maturityDate = maturity_;
@@ -70,8 +70,8 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
 
         // Convert rate per annum to 18 digits precision.
         uint256 ratePerAnnum = uconvert(
-            marketParams.lastImpliedRate,
-            lastImpliedRateDecimals,
+            marketParams.oracleRate,
+            oracleRateDecimals,
             18
         );
 
