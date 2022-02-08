@@ -23,16 +23,120 @@ import {IChainlinkAggregatorV3Interface} from "src/oracle_implementations/spot_p
 contract FactoryTest is DSTest {
     Factory internal factory;
 
+    MockProvider internal elementFiValueProviderFactoryMock;
+    MockProvider internal notionalFiValueProviderFactoryMock;
+    MockProvider internal yieldValueProviderFactoryMock;
+    MockProvider internal chainLinkValueProviderFactoryMock;
+    MockProvider internal aggregatorOracleFactoryMock;
+    MockProvider internal collybusDiscountRateRelayerFactoryMock;
+    MockProvider internal collybusSpotPriceRelayerFactoryMock;
+
     function setUp() public {
+        elementFiValueProviderFactoryMock = new MockProvider();
+        notionalFiValueProviderFactoryMock = new MockProvider();
+        yieldValueProviderFactoryMock = new MockProvider();
+        chainLinkValueProviderFactoryMock = new MockProvider();
+        aggregatorOracleFactoryMock = new MockProvider();
+        collybusDiscountRateRelayerFactoryMock = new MockProvider();
+        collybusSpotPriceRelayerFactoryMock = new MockProvider();
         factory = new Factory(
-            address(0x1),
-            address(0x2),
-            address(0x3),
-            address(0x4),
-            address(0x5),
-            address(0x6),
-            address(0x7)
+            address(elementFiValueProviderFactoryMock),
+            address(notionalFiValueProviderFactoryMock),
+            address(yieldValueProviderFactoryMock),
+            address(chainLinkValueProviderFactoryMock),
+            address(aggregatorOracleFactoryMock),
+            address(collybusDiscountRateRelayerFactoryMock),
+            address(collybusSpotPriceRelayerFactoryMock)
         );
+    }
+
+    function test_deploy() public
+    {
+        // Check the factory addresses are properly set
+        assertEq(
+            factory.elementFiValueProviderFactory(),
+            address(elementFiValueProviderFactoryMock),
+            "Invalid elementFiValueProviderFactory"
+        );
+
+        assertEq(
+            factory.notionalFiValueProviderFactory(),
+            address(notionalFiValueProviderFactoryMock),
+            "Invalid notionalFiValueProviderFactory"
+        );
+
+        assertEq(
+            factory.yieldValueProviderFactory(),
+            address(yieldValueProviderFactoryMock),
+            "Invalid yieldValueProviderFactory"
+        );
+
+        assertEq(
+            factory.chainLinkValueProviderFactory(),
+            address(chainLinkValueProviderFactoryMock),
+            "Invalid chainLinkValueProviderFactory"
+        );
+
+        assertEq(
+            factory.aggregatorOracleFactory(),
+            address(aggregatorOracleFactoryMock),
+            "Invalid aggregatorOracleFactory"
+        );
+
+        assertEq(
+            factory.collybusDiscountRateRelayerFactory(),
+            address(collybusDiscountRateRelayerFactoryMock),
+            "Invalid collybusDiscountRateRelayerFactory"
+        );
+
+        assertEq(
+            factory.collybusSpotPriceRelayerFactory(),
+            address(collybusSpotPriceRelayerFactoryMock),
+            "Invalid collybusSpotPriceRelayerFactory"
+        );
+    }
+
+    function test_deploy_ElementFiValueProvider() public
+    {
+        // Create the oracle data structure
+        ElementVPData memory elementValueProvider = createElementVPData();
+        OracleData memory elementDataOracle = OracleData({
+            valueProviderData: abi.encode(elementValueProvider),
+            timeWindow: 100,
+            maxValidTime: 300,
+            alpha: 2 * 10**17,
+            valueProviderType: uint8(Factory.ValueProviderType.Element)
+        });
+        // Set-up the mock providers
+        address mockOracleAddress = address(0x110C0);
+        elementFiValueProviderFactoryMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(IFactoryElementFiValueProvider.create.selector,
+                elementDataOracle.timeWindow,
+                elementDataOracle.maxValidTime,
+                elementDataOracle.alpha,
+                elementValueProvider.poolId,
+                elementValueProvider.balancerVault,
+                elementValueProvider.poolToken,
+                elementValueProvider.underlier,
+                elementValueProvider.ePTokenBond,
+                elementValueProvider.timeScale,
+                elementValueProvider.maturity),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(mockOracleAddress)
+            }),
+            true
+        );
+
+        address oracleAddress = factory.deployElementFiValueProvider(elementDataOracle);
+
+        // Make sure the Oracle was deployed
+        assertTrue(oracleAddress == mockOracleAddress, "Element Oracle should be correctly deployed");
+
+        // Check if the correct method was called
+        MockProvider.CallData memory cd1 = elementFiValueProviderFactoryMock.getCallData(0);
+        assertEq(cd1.caller, address(factory));
+        assertEq(cd1.functionSelector, IFactoryElementFiValueProvider.create.selector);
     }
 
     function test_deploy_oracle_createsContract(
