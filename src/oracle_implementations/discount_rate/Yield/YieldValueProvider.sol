@@ -13,7 +13,7 @@ contract YieldValueProvider is Oracle, Convert {
         uint256 maturity
     );
 
-    // The cumulative Balance Ration in 18 digit precision
+    // The cumulative Balance Ratio in 18 digit precision
     uint256 public cumulativeBalanceRatioLast;
     uint32 public blockTimestampLast;
 
