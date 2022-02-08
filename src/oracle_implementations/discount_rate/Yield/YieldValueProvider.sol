@@ -26,7 +26,7 @@ contract YieldValueProvider is Oracle, Convert {
     /// @param timeUpdateWindow_    Minimum time between updates of the value
     /// @param maxValidTime_        Maximum time for which the value is valid
     /// @param alpha_               Alpha parameter for EMA
-    /// @param poolAddress_                Address of the pool
+    /// @param poolAddress_         Address of the pool
     /// @param maturity_            Expiration of the pool
     /// @param timeScale_           Time scale used on this pool (i.e. 1/(timeStretch*secondsPerYear)) in 59x18 fixed point
     constructor(
