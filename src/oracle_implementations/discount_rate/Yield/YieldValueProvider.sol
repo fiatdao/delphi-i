@@ -13,8 +13,9 @@ contract YieldValueProvider is Oracle, Convert {
         uint256 maturity
     );
 
-    uint256 cumulativeBalanceRatioLast;
-    uint32 blockTimestampLast;
+    // The cumulative Balance Ration in 18 digit precision
+    uint256 public cumulativeBalanceRatioLast;
+    uint32 public blockTimestampLast;
 
     address public immutable poolAddress;
     uint256 public immutable maturity;
@@ -77,9 +78,9 @@ contract YieldValueProvider is Oracle, Convert {
             18
         );
 
-        // Compute the scaled cumulative balance ratio
-        // Reverting here if timeElapsed is 0 is accepted
-        int256 scaledCumulativeBalance59x18 = PRBMathSD59x18.div(
+        // Compute the scaled cumulative balance delta
+        // Reverting here if timeElapsed is 0 is wanted
+        int256 cumulativeScaledBalanceDelta59x18 = PRBMathSD59x18.div(
             int256(cumulativeBalanceRatio - cumulativeBalanceRatioLast),
             PRBMathSD59x18.fromInt(int256(uint256(timeElapsed)))
         );
@@ -90,7 +91,7 @@ contract YieldValueProvider is Oracle, Convert {
 
         // Compute the per-second rate in signed 59.18 format
         int256 ratePerSecond59x18 = (PRBMathSD59x18.pow(
-            scaledCumulativeBalance59x18,
+            cumulativeScaledBalanceDelta59x18,
             timeScale
         ) - PRBMathSD59x18.SCALE);
 
