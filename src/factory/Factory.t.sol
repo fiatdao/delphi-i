@@ -518,6 +518,44 @@ contract FactoryTest is DSTest {
         }
     }
 
+    function test_deploy_AggregatorOracle_OnlyAuthrorizedUsers() public {
+
+        address mockOracleAddress = address(0x1234);
+        // We will test just one Value Provider, if the test passes
+        // for one it will pass for all value providers
+        // Define fallback methods for each value provider factory
+        elementFiValueProviderFactoryMock.setDefaultResponse(
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(mockOracleAddress)
+            })
+        );
+
+        OracleData memory oracleData = createElementOracleData();
+
+        Caller user = new Caller();
+        AggregatorOracle aggregatorOracle = new AggregatorOracle();
+            aggregatorOracle.allowCaller(
+                aggregatorOracle.ANY_SIG(),
+                address(factory)
+            );
+
+        // Deploy the oracle
+        (bool ok, ) = user.externalCall(
+            address(factory),
+            abi.encodeWithSelector(
+                factory.deployAggregatorOracle.selector,
+                abi.encode(oracleData),
+                address(aggregatorOracle)
+            )
+        );
+
+        assertTrue(
+            ok == false,
+            "Only authorized users should be able to call deployAggregatorOracle"
+        );
+    }
+
     function test_deploy_collybusDiscountRateRelayer_createsContract() public {
         address collybus = address(0xC0111b005);
 
