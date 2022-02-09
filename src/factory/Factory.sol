@@ -459,4 +459,25 @@ contract Factory is Guarded {
 
         return spotPriceRelayerAddress;
     }
+
+    /// @notice Sets permission on the destination contract
+    /// @param where_ What contract to set permission on. This contract needs to implement `Guarded.allowCaller(sig, who)`
+    /// @param sig_ Method signature [4byte]
+    /// @param who_ Address of who should be able to call `sig_`
+    /// @dev Reverts if the current contract can't call `.allowCaller`
+    function setPermission(
+        address where_,
+        bytes32 sig_,
+        address who_
+    ) public checkCaller {
+        Guarded(where_).allowCaller(sig_, who_);
+    }
+
+    function removePermission(
+        address where_,
+        bytes32 sig_,
+        address who_
+    ) public checkCaller {
+        Guarded(where_).blockCaller(sig_, who_);
+    }
 }
