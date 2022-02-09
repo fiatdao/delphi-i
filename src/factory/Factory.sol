@@ -112,26 +112,26 @@ contract Factory is Guarded {
     }
 
     address public immutable elementFiValueProviderFactory;
-    address public immutable notionalFiValueProviderFactory;
+    address public immutable notionalValueProviderFactory;
     address public immutable yieldValueProviderFactory;
-    address public immutable chainLinkValueProviderFactory;
+    address public immutable chainlinkValueProviderFactory;
     address public immutable aggregatorOracleFactory;
     address public immutable collybusDiscountRateRelayerFactory;
     address public immutable collybusSpotPriceRelayerFactory;
 
     constructor(
         address elementFiValueProviderFactory_,
-        address notionalFiValueProviderFactory_,
+        address notionalValueProviderFactory_,
         address yieldValueProviderFactory_,
-        address chainLinkValueProviderFactory_,
+        address chainlinkValueProviderFactory_,
         address aggregatorOracleFactory_,
         address collybusDiscountRateRelayerFactory_,
         address collybusSpotPriceRelayerFactory_
     ) {
         elementFiValueProviderFactory = elementFiValueProviderFactory_;
-        notionalFiValueProviderFactory = notionalFiValueProviderFactory_;
+        notionalValueProviderFactory = notionalValueProviderFactory_;
         yieldValueProviderFactory = yieldValueProviderFactory_;
-        chainLinkValueProviderFactory = chainLinkValueProviderFactory_;
+        chainlinkValueProviderFactory = chainlinkValueProviderFactory_;
         aggregatorOracleFactory = aggregatorOracleFactory_;
         collybusDiscountRateRelayerFactory = collybusDiscountRateRelayerFactory_;
         collybusSpotPriceRelayerFactory = collybusSpotPriceRelayerFactory_;
@@ -182,7 +182,7 @@ contract Factory is Guarded {
         );
 
         address notionalFinanceValueProviderAddress = IFactoryNotionalFinanceValueProvider(
-                notionalFiValueProviderFactory
+                notionalValueProviderFactory
             ).create(
                     oracleParams_.timeWindow,
                     oracleParams_.maxValidTime,
@@ -238,7 +238,7 @@ contract Factory is Guarded {
         );
 
         address chainlinkValueProviderAddress = IFactoryChainlinkValueProvider(
-            chainLinkValueProviderFactory
+            chainlinkValueProviderFactory
         ).create(
                 oracleParams_.timeWindow,
                 oracleParams_.maxValidTime,
