@@ -473,6 +473,11 @@ contract Factory is Guarded {
         Guarded(where_).allowCaller(sig_, who_);
     }
 
+    /// @notice Removes permission on the destination contract
+    /// @param where_ What contract to remove permission from. This contract needs to implement `Guarded.blockCaller(sig, who)`
+    /// @param sig_ Method signature [4byte]
+    /// @param who_ Address of who should not be able to call `sig_`
+    /// @dev Reverts if the current contract can't call `.blockCaller`
     function removePermission(
         address where_,
         bytes32 sig_,
