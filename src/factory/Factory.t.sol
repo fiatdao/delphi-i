@@ -70,13 +70,15 @@ contract FactoryTest is DSTest {
         );
 
         // Call should be unsuccessful
-        assertTrue(ok == false, "Unauthorized user should not be allowed to call `setPermission`");
+        assertTrue(
+            ok == false,
+            "Unauthorized user should not be allowed to call `setPermission`"
+        );
     }
 
-    function test_AuthorizedUser_CanSetPermission(
-        bytes32 sig_,
-        address who_
-    ) public {
+    function test_AuthorizedUser_CanSetPermission(bytes32 sig_, address who_)
+        public
+    {
         // Create mock
         MockProvider where = new MockProvider();
 
@@ -98,7 +100,10 @@ contract FactoryTest is DSTest {
         );
 
         // Call should be successful
-        assertTrue(ok, "Authorized user should be allowed to call `setPermission`");
+        assertTrue(
+            ok,
+            "Authorized user should be allowed to call `setPermission`"
+        );
     }
 
     function test_removePermission_CallsBlockCaller_WithCorrectArguments(
@@ -145,13 +150,15 @@ contract FactoryTest is DSTest {
         );
 
         // Call should be unsuccessful
-        assertTrue(ok == false, "Unauthorized user should not be able to call `removePermission`");
+        assertTrue(
+            ok == false,
+            "Unauthorized user should not be able to call `removePermission`"
+        );
     }
 
-    function test_AuthorizedUser_CanRemovePermission(
-        bytes32 sig_,
-        address who_
-    ) public {
+    function test_AuthorizedUser_CanRemovePermission(bytes32 sig_, address who_)
+        public
+    {
         // Create mock
         MockProvider where = new MockProvider();
 
@@ -173,7 +180,10 @@ contract FactoryTest is DSTest {
         );
 
         // Call should be successful
-        assertTrue(ok, "Authorized user should be allowed to call `removePermission`");
+        assertTrue(
+            ok,
+            "Authorized user should be allowed to call `removePermission`"
+        );
     }
 
     function test_deploy_oracle_createsContract(
