@@ -104,11 +104,13 @@ contract Factory is Guarded {
     // @notice Emitted if no value provider is found for given providerType
     error Factory__deployOracle_invalidValueProviderType(uint8);
 
+    // Supported value provider oracle types
     enum ValueProviderType {
-        Notional,
         Element,
+        Notional,
         Yield,
-        Chainlink
+        Chainlink,
+        COUNT
     }
 
     address public immutable elementFiValueProviderFactory;

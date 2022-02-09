@@ -2,11 +2,12 @@
 pragma solidity ^0.8.0;
 
 import "ds-test/test.sol";
+import {Hevm} from "src/test/utils/Hevm.sol";
+import {Caller} from "src/test/utils/Caller.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "src/factory/Factory.sol";
-
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Guarded} from "src/guarded/Guarded.sol";
 import {Oracle} from "src/oracle/Oracle.sol";
 import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
@@ -50,8 +51,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy() public
-    {
+    function test_deploy() public {
         // Check the factory addresses are properly set
         assertEq(
             factory.elementFiValueProviderFactory(),
@@ -96,8 +96,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_ElementFiValueProvider() public
-    {
+    function test_deploy_ElementFiValueProvider() public {
         // Create the oracle data structure
         ElementVPData memory elementValueProvider = createElementVPData();
         OracleData memory elementDataOracle = OracleData({
@@ -110,7 +109,8 @@ contract FactoryTest is DSTest {
         // Set-up the mock providers
         address mockOracleAddress = address(0x110C0);
         elementFiValueProviderFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(IFactoryElementFiValueProvider.create.selector,
+            abi.encodeWithSelector(
+                IFactoryElementFiValueProvider.create.selector,
                 elementDataOracle.timeWindow,
                 elementDataOracle.maxValidTime,
                 elementDataOracle.alpha,
@@ -120,7 +120,8 @@ contract FactoryTest is DSTest {
                 elementValueProvider.underlier,
                 elementValueProvider.ePTokenBond,
                 elementValueProvider.timeScale,
-                elementValueProvider.maturity),
+                elementValueProvider.maturity
+            ),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(mockOracleAddress)
@@ -128,13 +129,110 @@ contract FactoryTest is DSTest {
             true
         );
 
-        address oracleAddress = factory.deployElementFiValueProvider(elementDataOracle);
+        address oracleAddress = factory.deployElementFiValueProvider(
+            elementDataOracle
+        );
 
         // Make sure the Oracle was deployed
-        assertTrue(oracleAddress == mockOracleAddress, "Element Oracle should be correctly deployed");
+        assertTrue(
+            oracleAddress == mockOracleAddress,
+            "Element Oracle should be correctly deployed"
+        );
     }
 
-    function test_deploy_NotionalFinanceValueProvider() public
+    function test_deploy_ElementFiValueProvider_OnlyAuthrorizedUsers() public {
+        // Create the oracle data structure
+        ElementVPData memory elementValueProvider = createElementVPData();
+        OracleData memory elementDataOracle = OracleData({
+            valueProviderData: abi.encode(elementValueProvider),
+            timeWindow: 100,
+            maxValidTime: 300,
+            alpha: 2 * 10**17,
+            valueProviderType: uint8(Factory.ValueProviderType.Element)
+        });
+        // Set-up the mock providers
+        address mockOracleAddress = address(0x110C0);
+        elementFiValueProviderFactoryMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(
+                IFactoryElementFiValueProvider.create.selector,
+                elementDataOracle.timeWindow,
+                elementDataOracle.maxValidTime,
+                elementDataOracle.alpha,
+                elementValueProvider.poolId,
+                elementValueProvider.balancerVault,
+                elementValueProvider.poolToken,
+                elementValueProvider.underlier,
+                elementValueProvider.ePTokenBond,
+                elementValueProvider.timeScale,
+                elementValueProvider.maturity
+            ),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(mockOracleAddress)
+            }),
+            true
+        );
+
+        Caller user = new Caller();
+
+        // Deploy the oracle
+        (bool ok, ) = user.externalCall(
+            address(factory),
+            abi.encodeWithSelector(
+                factory.deployElementFiValueProvider.selector,
+                elementDataOracle
+            )
+        );
+        assertTrue(
+            ok == false,
+            "Only authorized users should be able to deploy oracles"
+        );
+    }
+
+    function test_deploy_NotionalFinanceValueProvider() public {
+        // Create the oracle data structure
+        NotionalVPData memory notionalValueProvider = createNotionalVPData();
+        OracleData memory notionalDataOracle = OracleData({
+            valueProviderData: abi.encode(notionalValueProvider),
+            timeWindow: 100,
+            maxValidTime: 300,
+            alpha: 2 * 10**17,
+            valueProviderType: uint8(Factory.ValueProviderType.Notional)
+        });
+        // Set-up the mock providers
+        address mockOracleAddress = address(0x110C0);
+        notionalValueProviderFactoryMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(
+                IFactoryNotionalFinanceValueProvider.create.selector,
+                notionalDataOracle.timeWindow,
+                notionalDataOracle.maxValidTime,
+                notionalDataOracle.alpha,
+                notionalValueProvider.notionalViewAddress,
+                notionalValueProvider.currencyId,
+                notionalValueProvider.lastImpliedRateDecimals,
+                notionalValueProvider.maturityDate,
+                notionalValueProvider.settlementDate
+            ),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(mockOracleAddress)
+            }),
+            true
+        );
+
+        address oracleAddress = factory.deployNotionalFinanceValueProvider(
+            notionalDataOracle
+        );
+
+        // Make sure the Oracle was deployed
+        assertTrue(
+            oracleAddress == mockOracleAddress,
+            "Notional Oracle should be correctly deployed"
+        );
+    }
+
+    function test_deploy_NotionalFinanceValueProvider_OnlyAuthrorizedUsers()
+        public
     {
         // Create the oracle data structure
         NotionalVPData memory notionalValueProvider = createNotionalVPData();
@@ -148,7 +246,8 @@ contract FactoryTest is DSTest {
         // Set-up the mock providers
         address mockOracleAddress = address(0x110C0);
         notionalValueProviderFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(IFactoryNotionalFinanceValueProvider.create.selector,
+            abi.encodeWithSelector(
+                IFactoryNotionalFinanceValueProvider.create.selector,
                 notionalDataOracle.timeWindow,
                 notionalDataOracle.maxValidTime,
                 notionalDataOracle.alpha,
@@ -156,7 +255,8 @@ contract FactoryTest is DSTest {
                 notionalValueProvider.currencyId,
                 notionalValueProvider.lastImpliedRateDecimals,
                 notionalValueProvider.maturityDate,
-                notionalValueProvider.settlementDate),
+                notionalValueProvider.settlementDate
+            ),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(mockOracleAddress)
@@ -164,14 +264,23 @@ contract FactoryTest is DSTest {
             true
         );
 
-        address oracleAddress = factory.deployNotionalFinanceValueProvider(notionalDataOracle);
+        Caller user = new Caller();
 
-        // Make sure the Oracle was deployed
-        assertTrue(oracleAddress == mockOracleAddress, "Notional Oracle should be correctly deployed");
+        // Deploy the oracle
+        (bool ok, ) = user.externalCall(
+            address(factory),
+            abi.encodeWithSelector(
+                factory.deployNotionalFinanceValueProvider.selector,
+                notionalDataOracle
+            )
+        );
+        assertTrue(
+            ok == false,
+            "Only authorized users should be able to deploy oracles"
+        );
     }
 
-    function test_deploy_YieldValueProvider() public
-    {
+    function test_deploy_YieldValueProvider() public {
         // Create the oracle data structure
         YieldVPData memory yieldValueProvider = createYieldVPData();
         OracleData memory yieldDataOracle = OracleData({
@@ -184,13 +293,15 @@ contract FactoryTest is DSTest {
         // Set-up the mock providers
         address mockOracleAddress = address(0x110C0);
         yieldValueProviderFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(IFactoryYieldValueProvider.create.selector,
+            abi.encodeWithSelector(
+                IFactoryYieldValueProvider.create.selector,
                 yieldDataOracle.timeWindow,
                 yieldDataOracle.maxValidTime,
                 yieldDataOracle.alpha,
                 yieldValueProvider.poolAddress,
                 yieldValueProvider.maturity,
-                yieldValueProvider.timeScale),
+                yieldValueProvider.timeScale
+            ),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(mockOracleAddress)
@@ -198,14 +309,63 @@ contract FactoryTest is DSTest {
             true
         );
 
-        address oracleAddress = factory.deployYieldValueProvider(yieldDataOracle);
+        address oracleAddress = factory.deployYieldValueProvider(
+            yieldDataOracle
+        );
 
         // Make sure the Oracle was deployed
-        assertTrue(oracleAddress == mockOracleAddress, "Yield Oracle should be correctly deployed");
+        assertTrue(
+            oracleAddress == mockOracleAddress,
+            "Yield Oracle should be correctly deployed"
+        );
     }
 
-    function test_deploy_ChainlinkValueProvider() public
-    {
+    function test_deploy_YieldValueProvider_OnlyAuthrorizedUsers() public {
+        // Create the oracle data structure
+        YieldVPData memory yieldValueProvider = createYieldVPData();
+        OracleData memory yieldDataOracle = OracleData({
+            valueProviderData: abi.encode(yieldValueProvider),
+            timeWindow: 100,
+            maxValidTime: 300,
+            alpha: 2 * 10**17,
+            valueProviderType: uint8(Factory.ValueProviderType.Yield)
+        });
+        // Set-up the mock providers
+        address mockOracleAddress = address(0x110C0);
+        yieldValueProviderFactoryMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(
+                IFactoryYieldValueProvider.create.selector,
+                yieldDataOracle.timeWindow,
+                yieldDataOracle.maxValidTime,
+                yieldDataOracle.alpha,
+                yieldValueProvider.poolAddress,
+                yieldValueProvider.maturity,
+                yieldValueProvider.timeScale
+            ),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(mockOracleAddress)
+            }),
+            true
+        );
+
+        Caller user = new Caller();
+
+        // Deploy the oracle
+        (bool ok, ) = user.externalCall(
+            address(factory),
+            abi.encodeWithSelector(
+                factory.deployYieldValueProvider.selector,
+                yieldDataOracle
+            )
+        );
+        assertTrue(
+            ok == false,
+            "Only authorized users should be able to deploy oracles"
+        );
+    }
+
+    function test_deploy_ChainlinkValueProvider() public {
         // Create the oracle data structure
         ChainlinkVPData memory chainlinkValueProvider = createChainlinkVPData();
         OracleData memory chainlinkDataOracle = OracleData({
@@ -218,11 +378,13 @@ contract FactoryTest is DSTest {
         // Set-up the mock providers
         address mockOracleAddress = address(0x110C0);
         chainlinkValueProviderFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(IFactoryChainlinkValueProvider.create.selector,
+            abi.encodeWithSelector(
+                IFactoryChainlinkValueProvider.create.selector,
                 chainlinkDataOracle.timeWindow,
                 chainlinkDataOracle.maxValidTime,
                 chainlinkDataOracle.alpha,
-                chainlinkValueProvider.chainlinkAggregatorAddress),
+                chainlinkValueProvider.chainlinkAggregatorAddress
+            ),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(mockOracleAddress)
@@ -230,118 +392,130 @@ contract FactoryTest is DSTest {
             true
         );
 
-        address oracleAddress = factory.deployChainlinkValueProvider(chainlinkDataOracle);
-
-        // Make sure the Oracle was deployed
-        assertTrue(oracleAddress == mockOracleAddress, "Chainlink Oracle should be correctly deployed");
-    }
-
-    function test_deploy_oracle_createsContract(
-        uint256 timeUpdateWindow_,
-        uint256 maxValidTime_,
-        int256 alpha_
-    ) public {
-        ElementVPData memory elementValueProvider = createElementVPData();
-
-        OracleData memory elementDataOracle = OracleData({
-            valueProviderData: abi.encode(elementValueProvider),
-            timeWindow: timeUpdateWindow_,
-            maxValidTime: maxValidTime_,
-            alpha: alpha_,
-            valueProviderType: uint8(Factory.ValueProviderType.Element)
-        });
-
-        AggregatorOracle aggregatorOracle = new AggregatorOracle();
-        aggregatorOracle.allowCaller(
-            AggregatorOracle.oracleAdd.selector,
-            address(factory)
+        address oracleAddress = factory.deployChainlinkValueProvider(
+            chainlinkDataOracle
         );
 
-        Oracle oracle = Oracle(
-            factory.deployAggregatorOracle(
-                abi.encode(elementDataOracle),
-                address(aggregatorOracle)
+        // Make sure the Oracle was deployed
+        assertTrue(
+            oracleAddress == mockOracleAddress,
+            "Chainlink Oracle should be correctly deployed"
+        );
+    }
+
+    function test_deploy_ChainlinkValueProvider_OnlyAuthrorizedUsers() public {
+        // Create the oracle data structure
+        ChainlinkVPData memory chainlinkValueProvider = createChainlinkVPData();
+        OracleData memory chainlinkDataOracle = OracleData({
+            valueProviderData: abi.encode(chainlinkValueProvider),
+            timeWindow: 100,
+            maxValidTime: 300,
+            alpha: 2 * 10**17,
+            valueProviderType: uint8(Factory.ValueProviderType.Chainlink)
+        });
+        // Set-up the mock providers
+        address mockOracleAddress = address(0x110C0);
+        chainlinkValueProviderFactoryMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(
+                IFactoryChainlinkValueProvider.create.selector,
+                chainlinkDataOracle.timeWindow,
+                chainlinkDataOracle.maxValidTime,
+                chainlinkDataOracle.alpha,
+                chainlinkValueProvider.chainlinkAggregatorAddress
+            ),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(mockOracleAddress)
+            }),
+            true
+        );
+
+        Caller user = new Caller();
+
+        // Deploy the oracle
+        (bool ok, ) = user.externalCall(
+            address(factory),
+            abi.encodeWithSelector(
+                factory.deployChainlinkValueProvider.selector,
+                chainlinkDataOracle
             )
         );
-
-        // Make sure the Oracle was deployed
-        assertTrue(address(oracle) != address(0), "Oracle should be deployed");
-
-        // Check the Oracle's parameters
-        assertEq(
-            elementDataOracle.timeWindow,
-            Oracle(oracle).timeUpdateWindow(),
-            "Time update window should be correct"
-        );
-        assertEq(
-            elementDataOracle.maxValidTime,
-            Oracle(oracle).maxValidTime(),
-            "Max valid time should be correct"
-        );
-        assertEq(
-            elementDataOracle.alpha,
-            Oracle(oracle).alpha(),
-            "Alpha should be correct"
+        assertTrue(
+            ok == false,
+            "Only authorized users should be able to deploy oracles"
         );
     }
 
-    function test_deploy_aggregator_createsContract() public {
-        ElementVPData memory elementValueProvider = createElementVPData();
-
-        OracleData memory elementDataOracle = OracleData({
-            valueProviderData: abi.encode(elementValueProvider),
-            timeWindow: 200,
-            maxValidTime: 600,
-            alpha: 2 * 10**17,
-            valueProviderType: uint8(Factory.ValueProviderType.Element)
-        });
-
-        DiscountRateAggregatorData memory elementAggregatorData;
-        elementAggregatorData.tokenId = 1;
-        elementAggregatorData.requiredValidValues = 1;
-        elementAggregatorData.oracleData = new bytes[](1);
-        elementAggregatorData.oracleData[0] = abi.encode(elementDataOracle);
-
-        address relayerAddress = factory.deployCollybusDiscountRateRelayer(
-            address(0x1234)
+    function test_deploy_AggregatorOracle_forEveryValueProviderType() public {
+        // The test will fail if we add a value type and we do not implement a deploy method for it
+        address mockOracleAddress = address(0x1234);
+        // Define fallback methods for each value provider factory
+        elementFiValueProviderFactoryMock.setDefaultResponse(
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(mockOracleAddress)
+            })
+        );
+        notionalValueProviderFactoryMock.setDefaultResponse(
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(mockOracleAddress)
+            })
+        );
+        yieldValueProviderFactoryMock.setDefaultResponse(
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(mockOracleAddress)
+            })
+        );
+        chainlinkValueProviderFactoryMock.setDefaultResponse(
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(mockOracleAddress)
+            })
         );
 
-        // Make sure the Relayer was deployed
-        assertTrue(relayerAddress != address(0), "Relayer should be deployed");
-
-        address aggregatorAddress = factory.deployDiscountRateAggregator(
-            abi.encode(elementAggregatorData),
-            relayerAddress
+        // Setup an array of oracle data structures for every oracle type
+        OracleData[] memory oracleData = new OracleData[](
+            uint256(Factory.ValueProviderType.COUNT)
         );
+        oracleData[
+            uint256(Factory.ValueProviderType.Element)
+        ] = createElementOracleData();
+        oracleData[
+            uint256(Factory.ValueProviderType.Notional)
+        ] = createNotionalOracleData();
+        oracleData[
+            uint256(Factory.ValueProviderType.Yield)
+        ] = createYieldOracleData();
+        oracleData[
+            uint256(Factory.ValueProviderType.Chainlink)
+        ] = createChainlinkOracleData();
 
-        // Make sure the Aggregator was deployed
-        assertTrue(
-            aggregatorAddress != address(0),
-            "Aggregator should be deployed"
-        );
+        for (
+            uint256 oracleType = 0;
+            oracleType < uint256(Factory.ValueProviderType.COUNT);
+            oracleType++
+        ) {
+            // Create a new mock aggregator and allow the factory to add oracles
+            AggregatorOracle aggregatorOracle = new AggregatorOracle();
+            aggregatorOracle.allowCaller(
+                aggregatorOracle.ANY_SIG(),
+                address(factory)
+            );
 
-        AggregatorOracle aggregator = AggregatorOracle(aggregatorAddress);
-        // Check if the oracles are added
-        assertEq(
-            aggregator.oracleCount(),
-            elementAggregatorData.oracleData.length,
-            "Oracle count should be correct"
-        );
+            // Deploy and add the oracle to the aggregator oracle
+            address oracleAddress = factory.deployAggregatorOracle(
+                abi.encode(oracleData[oracleType]),
+                address(aggregatorOracle)
+            );
 
-        // Iterate and check each oracle was deployed
-        for (uint256 i = 0; i < elementAggregatorData.oracleData.length; i++) {
+            // Check that oracleAdd was called on the aggregator
             assertTrue(
-                aggregator.oracleAt(i) != address(0),
-                "Oracle should exist"
+                aggregatorOracle.oracleExists(oracleAddress),
+                "Deployed oracle should be contained by the aggregator oracle"
             );
         }
-
-        // Check the required valid values
-        assertEq(
-            aggregator.requiredValidValues(),
-            elementAggregatorData.requiredValidValues,
-            "Required valid values should be correct"
-        );
     }
 
     function test_deploy_collybusDiscountRateRelayer_createsContract() public {
@@ -720,6 +894,62 @@ contract FactoryTest is DSTest {
         });
 
         return yieldValueProviderData;
+    }
+
+    function createElementOracleData() internal returns (OracleData memory) {
+        return
+            OracleData({
+                valueProviderData: abi.encode(
+                    ElementVPData(
+                        0,
+                        address(0),
+                        address(0),
+                        address(0),
+                        address(0),
+                        0,
+                        0
+                    )
+                ),
+                timeWindow: 0,
+                maxValidTime: 0,
+                alpha: 0,
+                valueProviderType: uint8(Factory.ValueProviderType.Element)
+            });
+    }
+
+    function createNotionalOracleData() internal returns (OracleData memory) {
+        return
+            OracleData({
+                valueProviderData: abi.encode(
+                    NotionalVPData(address(0), 0, 0, 0, 0)
+                ),
+                timeWindow: 0,
+                maxValidTime: 0,
+                alpha: 0,
+                valueProviderType: uint8(Factory.ValueProviderType.Notional)
+            });
+    }
+
+    function createYieldOracleData() internal returns (OracleData memory) {
+        return
+            OracleData({
+                valueProviderData: abi.encode(YieldVPData(address(0), 0, 0)),
+                timeWindow: 0,
+                maxValidTime: 0,
+                alpha: 0,
+                valueProviderType: uint8(Factory.ValueProviderType.Yield)
+            });
+    }
+
+    function createChainlinkOracleData() internal returns (OracleData memory) {
+        return
+            OracleData({
+                valueProviderData: abi.encode(ChainlinkVPData(address(0))),
+                timeWindow: 0,
+                maxValidTime: 0,
+                alpha: 0,
+                valueProviderType: uint8(Factory.ValueProviderType.Chainlink)
+            });
     }
 
     function createChainlinkVPData() internal returns (ChainlinkVPData memory) {
