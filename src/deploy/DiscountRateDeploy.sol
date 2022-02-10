@@ -21,7 +21,7 @@ interface IConvergentCurvePool {
     function getPoolId() external view returns (bytes32);
 }
 
-contract GoerliDeploy {
+contract DiscountRateDeploy {
     function createDeployData(address convergentCurvePoolAddress_)
         external
         view

@@ -1,13 +1,15 @@
 {
   "GoerliDeploy": "0x383170A2A49987CA7D65563cD209550271149Cf5",
-  "FactoryElementFiValueProvider": "0x40A72B1D4C5D48d42fEcF379eCeF9b604aA41640",
-  "FactoryNotionalFinanceValueProvider": "0x2D728B213C63680FD25154D71531bf0C2Ac7a461",
-  "FactoryYieldValueProvider": "0x186568Ba26EAa43ea2d4E8A2f5903AeC5C7DC699",
-  "FactoryChainlinkValueProvider": "0x450B1aae73DC08f31e720342407aC2AeD729D397",
-  "FactoryAggregatorOracle": "0xAa4850f576e6f3c227aB09EBaa1D4f80e9e4EA09",
-  "FactoryCollybusDiscountRateRelayer": "0x9CD0C7a4eE78B35C5FF8dca6BFB3D49CcC09D33f",
-  "FactoryCollybusSpotPriceRelayer": "0x4338E1654687E085F4A1EC9E53256fF153c6Ee95",
-  "Factory": "0x2C66257771568015bdeBA879C42a86beffFB96a0",
+  "FactoryElementFiValueProvider": "0xc4213f3F2E5e3ba88D3F258A37e7EF0CA8Df27a6",
+  "FactoryNotionalFinanceValueProvider": "0xd0865aaC4F88405dd14F3D07846CEe68952FC1B1",
+  "FactoryYieldValueProvider": "0xea33a9eB0fF7A7f95D992c8C3dd7cE21ccaD3dFe",
+  "FactoryChainlinkValueProvider": "0x64B87b604DeBDEC693782f07E9C641e1e0ee3F42",
+  "FactoryAggregatorOracle": "0x1987F26e0F33FaEad7100c71F4C19E87F0E8D9Ca",
+  "FactoryCollybusDiscountRateRelayer": "0xEBc1AC0C0F3e3faC509CeA3cc0D5Bf086CB3711b",
+  "FactoryCollybusSpotPriceRelayer": "0x9D424f1e18A1Ab529886D7d761B49969a9A5dD39",
+  "Factory": "0xfCA75FC6f28Dc804876A0E25f2F85905Fd50cb8E",
   "GoerliDeployDataHelper": "0x4Ab2dd9247Be22B0D2faB19619CC1fa691b4F3C0",
-  "ChainlinkMockProvider": "0x90e02922f150B63005AD30484d110F7D424d5191"
+  "ChainlinkMockProvider": "0x956189d3ED4219BF47e441Be8Cb4643E2A28931E",
+  "DiscountRateDeploy": "0xc461016B9D061dac7E003E16d1c185625ad76095",
+  "SpotPriceDeploy": "0x3d091641826e6280f3615d0CB29Ea55990e9C6e4"
 }
