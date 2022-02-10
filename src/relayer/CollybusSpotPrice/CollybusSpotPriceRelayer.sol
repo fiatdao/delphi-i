@@ -8,7 +8,6 @@ import {IOracle} from "src/oracle/IOracle.sol";
 import {ICollybus} from "src/relayer/ICollybus.sol";
 import {Guarded} from "src/guarded/Guarded.sol";
 
-
 contract CollybusSpotPriceRelayer is Guarded, ICollybusSpotPriceRelayer {
     // @notice Emitted when trying to add an oracle that already exists
     error CollybusSpotPriceRelayer__addOracle_oracleAlreadyRegistered(
@@ -246,10 +245,10 @@ contract CollybusSpotPriceRelayer is Guarded, ICollybusSpotPriceRelayer {
             }
         }
     }
-    
+
     /// @notice The function will call execute() if check() passes otherwise it will revert
-    function executeWithRevert() public override(IRelayer){
-        if (check()){
+    function executeWithRevert() public override(IRelayer) {
+        if (check()) {
             execute();
         } else {
             revert CollybusSpotPriceRelayer__executeWithRevert_checkFailed();
