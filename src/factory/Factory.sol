@@ -92,7 +92,7 @@ struct RelayerDeployData {
 
 contract Factory is Guarded {
     event RelayerDeployed(address relayerAddress, uint256 relayerType);
-    event AggregatorDeployed(address aggregatorAddress, uint256 aggregatorType);
+    event AggregatorDeployed(address aggregatorAddress, uint256 relayerType);
     event OracleDeployed(address oracleAddress);
 
     // @notice Emitted when the collybus address is address(0)
@@ -111,6 +111,11 @@ contract Factory is Guarded {
         Yield,
         Chainlink,
         COUNT
+    }
+
+    enum RelayerType{
+        DiscountRate,
+        SpotPrice
     }
 
     address public immutable elementFiValueProviderFactory;
@@ -311,6 +316,7 @@ contract Factory is Guarded {
         bytes memory aggregatorDataEncoded_,
         address discountRateRelayerAddress_
     ) public checkCaller returns (address) {
+
         // Create aggregator contract
         address aggregatorOracleAddress = IFactoryAggregatorOracle(
             aggregatorOracleFactory
@@ -353,7 +359,7 @@ contract Factory is Guarded {
             aggData.minimumThresholdValue
         );
 
-        emit AggregatorDeployed(aggregatorOracleAddress, 1);
+        emit AggregatorDeployed(aggregatorOracleAddress, uint(RelayerType.DiscountRate));
         return aggregatorOracleAddress;
     }
 
@@ -408,7 +414,7 @@ contract Factory is Guarded {
             aggData.minimumThresholdValue
         );
 
-        emit AggregatorDeployed(aggregatorOracleAddress, 2);
+        emit AggregatorDeployed(aggregatorOracleAddress, uint(RelayerType.SpotPrice));
         return aggregatorOracleAddress;
     }
 
@@ -430,7 +436,7 @@ contract Factory is Guarded {
                 collybusDiscountRateRelayerFactory
             ).create(collybus_);
 
-        emit RelayerDeployed(discountRateRelayerAddress, 1);
+        emit RelayerDeployed(discountRateRelayerAddress, uint(RelayerType.DiscountRate));
         return discountRateRelayerAddress;
     }
 
@@ -452,7 +458,7 @@ contract Factory is Guarded {
             collybusSpotPriceRelayerFactory
         ).create(collybus_);
 
-        emit RelayerDeployed(spotPriceRelayerAddress, 2);
+        emit RelayerDeployed(spotPriceRelayerAddress, uint(RelayerType.SpotPrice));
         return spotPriceRelayerAddress;
     }
 
