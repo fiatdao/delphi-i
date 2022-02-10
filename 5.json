@@ -8,5 +8,6 @@
   "FactoryCollybusDiscountRateRelayer": "0x9CD0C7a4eE78B35C5FF8dca6BFB3D49CcC09D33f",
   "FactoryCollybusSpotPriceRelayer": "0x4338E1654687E085F4A1EC9E53256fF153c6Ee95",
   "Factory": "0x2C66257771568015bdeBA879C42a86beffFB96a0",
-  "GoerliDeployDataHelper": "0x4Ab2dd9247Be22B0D2faB19619CC1fa691b4F3C0"
+  "GoerliDeployDataHelper": "0x4Ab2dd9247Be22B0D2faB19619CC1fa691b4F3C0",
+  "ChainlinkMockProvider": "0x90e02922f150B63005AD30484d110F7D424d5191"
 }
