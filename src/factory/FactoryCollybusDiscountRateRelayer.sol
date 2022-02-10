@@ -16,8 +16,8 @@ contract FactoryCollybusDiscountRateRelayer is
         returns (address)
     {
         CollybusDiscountRateRelayer discountRateRelayer = new CollybusDiscountRateRelayer(
-            collybus_
-        );
+                collybus_
+            );
 
         discountRateRelayer.allowCaller(keccak256("ANY_SIG"), msg.sender);
 

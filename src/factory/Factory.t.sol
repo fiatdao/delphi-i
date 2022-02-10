@@ -22,9 +22,8 @@ import {CollybusSpotPriceRelayer} from "src/relayer/CollybusSpotPrice/CollybusSp
 import {IChainlinkAggregatorV3Interface} from "src/oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
 
 contract FactoryTest is DSTest {
-
-    error FactoryTest__invalidDiscountRateAggregatorType(uint valueType);
-    error FactoryTest__invalidSpotPriceAggregatorType(uint valueType);
+    error FactoryTest__invalidDiscountRateAggregatorType(uint256 valueType);
+    error FactoryTest__invalidSpotPriceAggregatorType(uint256 valueType);
 
     Factory internal factory;
 
@@ -553,10 +552,10 @@ contract FactoryTest is DSTest {
 
         Caller user = new Caller();
         AggregatorOracle aggregatorOracle = new AggregatorOracle();
-            aggregatorOracle.allowCaller(
-                aggregatorOracle.ANY_SIG(),
-                address(factory)
-            );
+        aggregatorOracle.allowCaller(
+            aggregatorOracle.ANY_SIG(),
+            address(factory)
+        );
 
         // Deploy the oracle
         (bool ok, ) = user.externalCall(
@@ -574,7 +573,9 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_DiscountRateAggregator_forEveryCompatibleValueProvider() public {
+    function test_deploy_DiscountRateAggregator_forEveryCompatibleValueProvider()
+        public
+    {
         for (
             uint256 oracleType = 0;
             oracleType < uint256(Factory.ValueProviderType.COUNT);
@@ -582,8 +583,11 @@ contract FactoryTest is DSTest {
         ) {
             // Set-up the mock providers
             AggregatorOracle mockAggregatorAddress = new AggregatorOracle();
-            mockAggregatorAddress.allowCaller(mockAggregatorAddress.ANY_SIG(),address(factory));
-            
+            mockAggregatorAddress.allowCaller(
+                mockAggregatorAddress.ANY_SIG(),
+                address(factory)
+            );
+
             aggregatorOracleFactoryMock.givenQueryReturnResponse(
                 abi.encodeWithSelector(
                     IFactoryAggregatorOracle.create.selector
@@ -596,11 +600,21 @@ contract FactoryTest is DSTest {
             );
 
             CollybusDiscountRateRelayer discountRateRelayer = new CollybusDiscountRateRelayer(
-                address(0xc011b005)
-            );
+                    address(0xc011b005)
+                );
 
-            discountRateRelayer.allowCaller(discountRateRelayer.ANY_SIG(),address(factory));
-            address aggregatorAddress = factory.deployDiscountRateAggregator(abi.encode(createDiscountRateAggregatorData(Factory.ValueProviderType(oracleType))),address(discountRateRelayer));
+            discountRateRelayer.allowCaller(
+                discountRateRelayer.ANY_SIG(),
+                address(factory)
+            );
+            address aggregatorAddress = factory.deployDiscountRateAggregator(
+                abi.encode(
+                    createDiscountRateAggregatorData(
+                        Factory.ValueProviderType(oracleType)
+                    )
+                ),
+                address(discountRateRelayer)
+            );
 
             assertTrue(
                 aggregatorAddress != address(0),
@@ -609,15 +623,18 @@ contract FactoryTest is DSTest {
         }
     }
 
-    function test_deploy_DiscountRateAggregator_CheckExistanceOfOracles() public{
+    function test_deploy_DiscountRateAggregator_CheckExistanceOfOracles()
+        public
+    {
         // Set-up the mock providers
         AggregatorOracle mockAggregatorAddress = new AggregatorOracle();
-        mockAggregatorAddress.allowCaller(mockAggregatorAddress.ANY_SIG(),address(factory));
+        mockAggregatorAddress.allowCaller(
+            mockAggregatorAddress.ANY_SIG(),
+            address(factory)
+        );
 
         aggregatorOracleFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(
-                IFactoryAggregatorOracle.create.selector
-            ),
+            abi.encodeWithSelector(IFactoryAggregatorOracle.create.selector),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(address(mockAggregatorAddress))
@@ -626,35 +643,46 @@ contract FactoryTest is DSTest {
         );
 
         CollybusDiscountRateRelayer discountRateRelayer = new CollybusDiscountRateRelayer(
-            address(0xc011b005)
+                address(0xc011b005)
+            );
+
+        discountRateRelayer.allowCaller(
+            discountRateRelayer.ANY_SIG(),
+            address(factory)
         );
 
-        discountRateRelayer.allowCaller(discountRateRelayer.ANY_SIG(),address(factory));
-
         DiscountRateAggregatorData
-        memory aggregator = DiscountRateAggregatorData({
-            tokenId: 1,
-            oracleData: new bytes[](1),
-            requiredValidValues: 1,
-            minimumThresholdValue: 10**14
-        });
+            memory aggregator = DiscountRateAggregatorData({
+                tokenId: 1,
+                oracleData: new bytes[](1),
+                requiredValidValues: 1,
+                minimumThresholdValue: 10**14
+            });
 
         aggregator.oracleData[0] = abi.encode(createElementOracleData());
 
-        address aggregatorAddress = factory.deployDiscountRateAggregator(abi.encode(aggregator),address(discountRateRelayer));
+        address aggregatorAddress = factory.deployDiscountRateAggregator(
+            abi.encode(aggregator),
+            address(discountRateRelayer)
+        );
 
-        assertEq(IAggregatorOracle(aggregatorAddress).oracleCount(),1,"Invalid Aggregator oracle count");
+        assertEq(
+            IAggregatorOracle(aggregatorAddress).oracleCount(),
+            1,
+            "Invalid Aggregator oracle count"
+        );
     }
 
-    function test_deploy_DiscountRateAggregator_CheckValidValues() public{
+    function test_deploy_DiscountRateAggregator_CheckValidValues() public {
         // Set-up the mock providers
         AggregatorOracle mockAggregatorAddress = new AggregatorOracle();
-        mockAggregatorAddress.allowCaller(mockAggregatorAddress.ANY_SIG(),address(factory));
+        mockAggregatorAddress.allowCaller(
+            mockAggregatorAddress.ANY_SIG(),
+            address(factory)
+        );
 
         aggregatorOracleFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(
-                IFactoryAggregatorOracle.create.selector
-            ),
+            abi.encodeWithSelector(IFactoryAggregatorOracle.create.selector),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(address(mockAggregatorAddress))
@@ -663,28 +691,40 @@ contract FactoryTest is DSTest {
         );
 
         CollybusDiscountRateRelayer discountRateRelayer = new CollybusDiscountRateRelayer(
-            address(0xc011b005)
+                address(0xc011b005)
+            );
+
+        discountRateRelayer.allowCaller(
+            discountRateRelayer.ANY_SIG(),
+            address(factory)
         );
 
-        discountRateRelayer.allowCaller(discountRateRelayer.ANY_SIG(),address(factory));
-
-        uint validValues = 1;
+        uint256 validValues = 1;
         DiscountRateAggregatorData
-        memory aggregator = DiscountRateAggregatorData({
-            tokenId: 1,
-            oracleData: new bytes[](1),
-            requiredValidValues: validValues,
-            minimumThresholdValue: 10**14
-        });
+            memory aggregator = DiscountRateAggregatorData({
+                tokenId: 1,
+                oracleData: new bytes[](1),
+                requiredValidValues: validValues,
+                minimumThresholdValue: 10**14
+            });
 
         aggregator.oracleData[0] = abi.encode(createElementOracleData());
 
-        address aggregatorAddress = factory.deployDiscountRateAggregator(abi.encode(aggregator),address(discountRateRelayer));
+        address aggregatorAddress = factory.deployDiscountRateAggregator(
+            abi.encode(aggregator),
+            address(discountRateRelayer)
+        );
 
-        assertEq(AggregatorOracle(aggregatorAddress).requiredValidValues(),validValues,"Invalid required valid values");
+        assertEq(
+            AggregatorOracle(aggregatorAddress).requiredValidValues(),
+            validValues,
+            "Invalid required valid values"
+        );
     }
 
-    function test_deploy_SpotPriceAggregator_forEveryCompatibleValueProvider() public {
+    function test_deploy_SpotPriceAggregator_forEveryCompatibleValueProvider()
+        public
+    {
         for (
             uint256 oracleType = 0;
             oracleType < uint256(Factory.ValueProviderType.COUNT);
@@ -692,8 +732,11 @@ contract FactoryTest is DSTest {
         ) {
             // Set-up the mock providers
             AggregatorOracle mockAggregatorAddress = new AggregatorOracle();
-            mockAggregatorAddress.allowCaller(mockAggregatorAddress.ANY_SIG(),address(factory));
-            
+            mockAggregatorAddress.allowCaller(
+                mockAggregatorAddress.ANY_SIG(),
+                address(factory)
+            );
+
             aggregatorOracleFactoryMock.givenQueryReturnResponse(
                 abi.encodeWithSelector(
                     IFactoryAggregatorOracle.create.selector
@@ -706,11 +749,21 @@ contract FactoryTest is DSTest {
             );
 
             CollybusSpotPriceRelayer spotPriceRelayer = new CollybusSpotPriceRelayer(
-                address(0xc011b005)
-            );
+                    address(0xc011b005)
+                );
 
-            spotPriceRelayer.allowCaller(spotPriceRelayer.ANY_SIG(),address(factory));
-            address aggregatorAddress = factory.deploySpotPriceAggregator(abi.encode(createSpotPriceAggregatorData(Factory.ValueProviderType(oracleType))),address(spotPriceRelayer));
+            spotPriceRelayer.allowCaller(
+                spotPriceRelayer.ANY_SIG(),
+                address(factory)
+            );
+            address aggregatorAddress = factory.deploySpotPriceAggregator(
+                abi.encode(
+                    createSpotPriceAggregatorData(
+                        Factory.ValueProviderType(oracleType)
+                    )
+                ),
+                address(spotPriceRelayer)
+            );
 
             assertTrue(
                 aggregatorAddress != address(0),
@@ -719,15 +772,16 @@ contract FactoryTest is DSTest {
         }
     }
 
-    function test_deploy_SpotPriceAggregator_CheckExistanceOfOracles() public{
+    function test_deploy_SpotPriceAggregator_CheckExistanceOfOracles() public {
         // Set-up the mock providers
         AggregatorOracle mockAggregatorAddress = new AggregatorOracle();
-        mockAggregatorAddress.allowCaller(mockAggregatorAddress.ANY_SIG(),address(factory));
+        mockAggregatorAddress.allowCaller(
+            mockAggregatorAddress.ANY_SIG(),
+            address(factory)
+        );
 
         aggregatorOracleFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(
-                IFactoryAggregatorOracle.create.selector
-            ),
+            abi.encodeWithSelector(IFactoryAggregatorOracle.create.selector),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(address(mockAggregatorAddress))
@@ -736,13 +790,15 @@ contract FactoryTest is DSTest {
         );
 
         CollybusSpotPriceRelayer spotPriceRelayer = new CollybusSpotPriceRelayer(
-            address(0xc011b005)
+                address(0xc011b005)
+            );
+
+        spotPriceRelayer.allowCaller(
+            spotPriceRelayer.ANY_SIG(),
+            address(factory)
         );
 
-        spotPriceRelayer.allowCaller(spotPriceRelayer.ANY_SIG(),address(factory));
-
-        SpotPriceAggregatorData
-        memory aggregator = SpotPriceAggregatorData({
+        SpotPriceAggregatorData memory aggregator = SpotPriceAggregatorData({
             tokenAddress: address(0x1234),
             oracleData: new bytes[](1),
             requiredValidValues: 1,
@@ -751,20 +807,28 @@ contract FactoryTest is DSTest {
 
         aggregator.oracleData[0] = abi.encode(createChainlinkOracleData());
 
-        address aggregatorAddress = factory.deploySpotPriceAggregator(abi.encode(aggregator),address(spotPriceRelayer));
+        address aggregatorAddress = factory.deploySpotPriceAggregator(
+            abi.encode(aggregator),
+            address(spotPriceRelayer)
+        );
 
-        assertEq(IAggregatorOracle(aggregatorAddress).oracleCount(),1,"Invalid Aggregator oracle count");
+        assertEq(
+            IAggregatorOracle(aggregatorAddress).oracleCount(),
+            1,
+            "Invalid Aggregator oracle count"
+        );
     }
 
-    function test_deploy_SpotPriceAggregator_CheckValidValues() public{
+    function test_deploy_SpotPriceAggregator_CheckValidValues() public {
         // Set-up the mock providers
         AggregatorOracle mockAggregatorAddress = new AggregatorOracle();
-        mockAggregatorAddress.allowCaller(mockAggregatorAddress.ANY_SIG(),address(factory));
+        mockAggregatorAddress.allowCaller(
+            mockAggregatorAddress.ANY_SIG(),
+            address(factory)
+        );
 
         aggregatorOracleFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(
-                IFactoryAggregatorOracle.create.selector
-            ),
+            abi.encodeWithSelector(IFactoryAggregatorOracle.create.selector),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(address(mockAggregatorAddress))
@@ -773,14 +837,16 @@ contract FactoryTest is DSTest {
         );
 
         CollybusSpotPriceRelayer spotPriceRelayer = new CollybusSpotPriceRelayer(
-            address(0xc011b005)
+                address(0xc011b005)
+            );
+
+        spotPriceRelayer.allowCaller(
+            spotPriceRelayer.ANY_SIG(),
+            address(factory)
         );
 
-        spotPriceRelayer.allowCaller(spotPriceRelayer.ANY_SIG(),address(factory));
-
-        uint validValues = 1;
-        SpotPriceAggregatorData
-        memory aggregator = SpotPriceAggregatorData({
+        uint256 validValues = 1;
+        SpotPriceAggregatorData memory aggregator = SpotPriceAggregatorData({
             tokenAddress: address(0x1234),
             oracleData: new bytes[](1),
             requiredValidValues: validValues,
@@ -789,16 +855,23 @@ contract FactoryTest is DSTest {
 
         aggregator.oracleData[0] = abi.encode(createChainlinkOracleData());
 
-        address aggregatorAddress = factory.deploySpotPriceAggregator(abi.encode(aggregator),address(spotPriceRelayer));
+        address aggregatorAddress = factory.deploySpotPriceAggregator(
+            abi.encode(aggregator),
+            address(spotPriceRelayer)
+        );
 
-        assertEq(AggregatorOracle(aggregatorAddress).requiredValidValues(),validValues,"Invalid required valid values");
+        assertEq(
+            AggregatorOracle(aggregatorAddress).requiredValidValues(),
+            validValues,
+            "Invalid required valid values"
+        );
     }
 
     function test_deploy_collybusDiscountRateRelayer_createsContract() public {
         address collybus = address(0xC0111b005);
         CollybusDiscountRateRelayer mockRelayer = new CollybusDiscountRateRelayer(
-            collybus
-        );
+                collybus
+            );
 
         collybusDiscountRateRelayerFactoryMock.givenQueryReturnResponse(
             abi.encodeWithSelector(
@@ -1138,7 +1211,6 @@ contract FactoryTest is DSTest {
         return notionalValueProvider;
     }
 
-
     function createYieldVPData() internal returns (YieldVPData memory) {
         YieldVPData memory yieldValueProviderData = YieldVPData({
             poolAddress: address(0x123),
@@ -1227,35 +1299,39 @@ contract FactoryTest is DSTest {
         return chainlinkValueProvider;
     }
 
-    function createDiscountRateAggregatorData(Factory.ValueProviderType valueType) internal returns (DiscountRateAggregatorData memory)
-    {
+    function createDiscountRateAggregatorData(
+        Factory.ValueProviderType valueType
+    ) internal returns (DiscountRateAggregatorData memory) {
         DiscountRateAggregatorData
-        memory aggregator = DiscountRateAggregatorData({
-            tokenId: 1,
-            oracleData: new bytes[](1),
-            requiredValidValues: 1,
-            minimumThresholdValue: 10**14
-        });
+            memory aggregator = DiscountRateAggregatorData({
+                tokenId: 1,
+                oracleData: new bytes[](1),
+                requiredValidValues: 1,
+                minimumThresholdValue: 10**14
+            });
 
         if (valueType == Factory.ValueProviderType.Element) {
             aggregator.oracleData[0] = abi.encode(createElementOracleData());
         } else if (valueType == Factory.ValueProviderType.Notional) {
             aggregator.oracleData[0] = abi.encode(createNotionalOracleData());
-        } else if (valueType == Factory.ValueProviderType.Yield){
+        } else if (valueType == Factory.ValueProviderType.Yield) {
             aggregator.oracleData[0] = abi.encode(createYieldOracleData());
-        } else if (valueType == Factory.ValueProviderType.Chainlink){
+        } else if (valueType == Factory.ValueProviderType.Chainlink) {
             aggregator.oracleData[0] = abi.encode(createChainlinkOracleData());
         } else {
-            revert FactoryTest__invalidDiscountRateAggregatorType(uint(valueType));
+            revert FactoryTest__invalidDiscountRateAggregatorType(
+                uint256(valueType)
+            );
         }
 
         return aggregator;
     }
 
-    function createSpotPriceAggregatorData(Factory.ValueProviderType valueType) internal returns (SpotPriceAggregatorData memory)
+    function createSpotPriceAggregatorData(Factory.ValueProviderType valueType)
+        internal
+        returns (SpotPriceAggregatorData memory)
     {
-        SpotPriceAggregatorData
-        memory aggregator = SpotPriceAggregatorData({
+        SpotPriceAggregatorData memory aggregator = SpotPriceAggregatorData({
             tokenAddress: address(0x1234),
             oracleData: new bytes[](1),
             requiredValidValues: 1,
@@ -1266,12 +1342,14 @@ contract FactoryTest is DSTest {
             aggregator.oracleData[0] = abi.encode(createElementOracleData());
         } else if (valueType == Factory.ValueProviderType.Notional) {
             aggregator.oracleData[0] = abi.encode(createNotionalOracleData());
-        } else if (valueType == Factory.ValueProviderType.Yield){
+        } else if (valueType == Factory.ValueProviderType.Yield) {
             aggregator.oracleData[0] = abi.encode(createYieldOracleData());
-        } else if (valueType == Factory.ValueProviderType.Chainlink){
+        } else if (valueType == Factory.ValueProviderType.Chainlink) {
             aggregator.oracleData[0] = abi.encode(createChainlinkOracleData());
         } else {
-            revert FactoryTest__invalidDiscountRateAggregatorType(uint(valueType));
+            revert FactoryTest__invalidDiscountRateAggregatorType(
+                uint256(valueType)
+            );
         }
 
         return aggregator;

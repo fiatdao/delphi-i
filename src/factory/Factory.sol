@@ -113,7 +113,7 @@ contract Factory is Guarded {
         COUNT
     }
 
-    enum RelayerType{
+    enum RelayerType {
         DiscountRate,
         SpotPrice
     }
@@ -316,7 +316,6 @@ contract Factory is Guarded {
         bytes memory aggregatorDataEncoded_,
         address discountRateRelayerAddress_
     ) public checkCaller returns (address) {
-
         // Create aggregator contract
         address aggregatorOracleAddress = IFactoryAggregatorOracle(
             aggregatorOracleFactory
@@ -359,7 +358,10 @@ contract Factory is Guarded {
             aggData.minimumThresholdValue
         );
 
-        emit AggregatorDeployed(aggregatorOracleAddress, uint(RelayerType.DiscountRate));
+        emit AggregatorDeployed(
+            aggregatorOracleAddress,
+            uint256(RelayerType.DiscountRate)
+        );
         return aggregatorOracleAddress;
     }
 
@@ -414,7 +416,10 @@ contract Factory is Guarded {
             aggData.minimumThresholdValue
         );
 
-        emit AggregatorDeployed(aggregatorOracleAddress, uint(RelayerType.SpotPrice));
+        emit AggregatorDeployed(
+            aggregatorOracleAddress,
+            uint256(RelayerType.SpotPrice)
+        );
         return aggregatorOracleAddress;
     }
 
@@ -436,7 +441,10 @@ contract Factory is Guarded {
                 collybusDiscountRateRelayerFactory
             ).create(collybus_);
 
-        emit RelayerDeployed(discountRateRelayerAddress, uint(RelayerType.DiscountRate));
+        emit RelayerDeployed(
+            discountRateRelayerAddress,
+            uint256(RelayerType.DiscountRate)
+        );
         return discountRateRelayerAddress;
     }
 
@@ -458,7 +466,10 @@ contract Factory is Guarded {
             collybusSpotPriceRelayerFactory
         ).create(collybus_);
 
-        emit RelayerDeployed(spotPriceRelayerAddress, uint(RelayerType.SpotPrice));
+        emit RelayerDeployed(
+            spotPriceRelayerAddress,
+            uint256(RelayerType.SpotPrice)
+        );
         return spotPriceRelayerAddress;
     }
 
