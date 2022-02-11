@@ -782,7 +782,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_fullDiscountRateArchitecture() public {
+    function test_deploy_collybusDiscountRate_fullArchitecture() public {
         RelayerDeployData memory deployData = createDiscountRateDeployData();
 
         // Deploy the oracle architecture
@@ -804,7 +804,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_discountRate_addAggregator() public {
+    function test_deploy_collybusDiscountRate_addAggregator() public {
         RelayerDeployData memory deployData = createDiscountRateDeployData();
 
         // Deploy the oracle architecture
@@ -819,22 +819,6 @@ contract FactoryTest is DSTest {
         ).oracleCount();
 
         // Create the Aggregator data structure that will contain a Notional Oracle
-        NotionalVPData memory notionalValueProvider = NotionalVPData({
-            notionalViewAddress: 0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
-            currencyId: 2,
-            lastImpliedRateDecimals: 9,
-            maturityDate: 1671840000,
-            settlementDate: 1648512000
-        });
-
-        OracleData memory notionalOracleData = OracleData({
-            valueProviderData: abi.encode(notionalValueProvider),
-            timeWindow: 200,
-            maxValidTime: 600,
-            alpha: 2 * 10**17,
-            valueProviderType: uint8(Factory.ValueProviderType.Notional)
-        });
-
         DiscountRateAggregatorData
             memory notionalAggregator = DiscountRateAggregatorData({
                 tokenId: 3,
@@ -843,7 +827,9 @@ contract FactoryTest is DSTest {
                 minimumThresholdValue: 10**14
             });
 
-        notionalAggregator.oracleData[0] = abi.encode(notionalOracleData);
+        notionalAggregator.oracleData[0] = abi.encode(
+            createNotionalOracleData()
+        );
 
         // Deploy the new aggregator
         address aggregatorAddress = factory.deployDiscountRateAggregator(
@@ -867,7 +853,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_discountRate_addOracle() public {
+    function test_deploy_collybusDiscountRate_addOracle() public {
         RelayerDeployData memory deployData = createDiscountRateDeployData();
 
         // Deploy the oracle architecture
@@ -881,29 +867,13 @@ contract FactoryTest is DSTest {
             discountRateRelayer
         ).oracleAt(0);
 
-        NotionalVPData memory notionalValueProvider = NotionalVPData({
-            notionalViewAddress: 0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
-            currencyId: 2,
-            lastImpliedRateDecimals: 9,
-            maturityDate: 1671840000,
-            settlementDate: 1648512000
-        });
-
-        OracleData memory notionalOracleData = OracleData({
-            valueProviderData: abi.encode(notionalValueProvider),
-            timeWindow: 200,
-            maxValidTime: 600,
-            alpha: 2 * 10**17,
-            valueProviderType: uint8(Factory.ValueProviderType.Notional)
-        });
-
         // Cache the number of oracles in the aggregator
         uint256 oracleCount = IAggregatorOracle(firstAggregatorAddress)
             .oracleCount();
 
         // Create and add the oracle to the aggregator
         address oracleAddress = factory.deployAggregatorOracle(
-            abi.encode(notionalOracleData),
+            abi.encode(createNotionalOracleData()),
             firstAggregatorAddress
         );
 
@@ -922,7 +892,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_fullSpotPriceArchitecture() public {
+    function test_deploy_collybusSpotPrice_fullArchitecture() public {
         RelayerDeployData memory deployData = createSpotPriceDeployData();
 
         // Deploy the oracle architecture
@@ -944,7 +914,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_spotPrice_addAggregator() public {
+    function test_deploy_collybusSpotPrice_addAggregator() public {
         RelayerDeployData memory deployData = createSpotPriceDeployData();
 
         // Deploy the oracle architecture
@@ -957,17 +927,6 @@ contract FactoryTest is DSTest {
         uint256 aggregatorCount = ICollybusSpotPriceRelayer(spotPriceRelayer)
             .oracleCount();
 
-        // Define the needed data for the new aggregator
-        ChainlinkVPData memory chainlinkValueProvider = createChainlinkVPData();
-
-        OracleData memory chainlinkOracleData = OracleData({
-            valueProviderData: abi.encode(chainlinkValueProvider),
-            timeWindow: 200,
-            maxValidTime: 600,
-            alpha: 2 * 10**17,
-            valueProviderType: uint8(Factory.ValueProviderType.Chainlink)
-        });
-
         // The first aggregator is at address 0x1, make the second one use a different address
         SpotPriceAggregatorData
             memory chainlinkAggregator = SpotPriceAggregatorData({
@@ -977,7 +936,9 @@ contract FactoryTest is DSTest {
                 minimumThresholdValue: 10**14
             });
 
-        chainlinkAggregator.oracleData[0] = abi.encode(chainlinkOracleData);
+        chainlinkAggregator.oracleData[0] = abi.encode(
+            createChainlinkOracleData()
+        );
 
         // Deploy the new aggregator
         address aggregatorAddress = factory.deploySpotPriceAggregator(
@@ -998,6 +959,45 @@ contract FactoryTest is DSTest {
                 aggregatorAddress
             ),
             "Aggregator should exist"
+        );
+    }
+
+    function test_deploy_collybusSpotPrice_addOracle() public {
+        RelayerDeployData memory deployData = createSpotPriceDeployData();
+
+        // Deploy the oracle architecture
+        address spotPriceRelayer = factory.deploySpotPriceArchitecture(
+            abi.encode(deployData),
+            address(0x1234)
+        );
+
+        // Get the address of the first aggregator
+        address firstAggregatorAddress = ICollybusSpotPriceRelayer(
+            spotPriceRelayer
+        ).oracleAt(0);
+
+        // Cache the number of oracles in the aggregator
+        uint256 oracleCount = IAggregatorOracle(firstAggregatorAddress)
+            .oracleCount();
+
+        // Create and add the oracle to the aggregator
+        address oracleAddress = factory.deployAggregatorOracle(
+            abi.encode(createChainlinkOracleData()),
+            firstAggregatorAddress
+        );
+
+        // The aggregator should contain an extra Oracle
+        assertEq(
+            oracleCount + 1,
+            IAggregatorOracle(firstAggregatorAddress).oracleCount(),
+            "Aggregator should contain an extra Oracle"
+        );
+
+        assertTrue(
+            IAggregatorOracle(firstAggregatorAddress).oracleExists(
+                oracleAddress
+            ),
+            "Aggregator should contain the added Oracle"
         );
     }
 
