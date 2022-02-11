@@ -19,7 +19,6 @@ contract FactoryAggregatorOracleTest is DSTest {
     }
 
     function test_create() public {
-        // Create chainlink Value Provider
         address oracleAddress = _factory.create();
 
         assertTrue(
