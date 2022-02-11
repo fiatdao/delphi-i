@@ -12,6 +12,16 @@ import {Guarded} from "src/guarded/Guarded.sol";
 import {Oracle} from "src/oracle/Oracle.sol";
 import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
 
+// Contract Deployers
+import {FactoryElementFiValueProvider} from "src/factory/FactoryElementFiValueProvider.sol";
+import {FactoryNotionalFinanceValueProvider} from "src/factory/FactoryNotionalFinanceValueProvider.sol";
+import {FactoryYieldValueProvider} from "src/factory/FactoryYieldValueProvider.sol";
+import {FactoryChainlinkValueProvider} from "src/factory/FactoryChainlinkValueProvider.sol";
+import {FactoryAggregatorOracle} from "src/factory/FactoryAggregatorOracle.sol";
+import {FactoryCollybusSpotPriceRelayer} from "src/factory/FactoryCollybusSpotPriceRelayer.sol";
+import {FactoryCollybusDiscountRateRelayer} from "src/factory/FactoryCollybusDiscountRateRelayer.sol";
+import {ChainlinkMockProvider} from "src/deploy/ChainlinkMockProvider.sol";
+
 // Relayers
 import {ICollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/ICollybusDiscountRateRelayer.sol";
 import {CollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/CollybusDiscountRateRelayer.sol";
@@ -27,74 +37,25 @@ contract FactoryTest is DSTest {
 
     Factory internal factory;
 
-    MockProvider internal elementFiValueProviderFactoryMock;
-    MockProvider internal notionalValueProviderFactoryMock;
-    MockProvider internal yieldValueProviderFactoryMock;
-    MockProvider internal chainlinkValueProviderFactoryMock;
-    MockProvider internal aggregatorOracleFactoryMock;
-    MockProvider internal collybusDiscountRateRelayerFactoryMock;
-    MockProvider internal collybusSpotPriceRelayerFactoryMock;
+    FactoryElementFiValueProvider internal elementFiValueProviderFactoryMock;
+    FactoryNotionalFinanceValueProvider
+        internal notionalValueProviderFactoryMock;
+    FactoryYieldValueProvider internal yieldValueProviderFactoryMock;
+    FactoryChainlinkValueProvider internal chainlinkValueProviderFactoryMock;
+    FactoryAggregatorOracle internal aggregatorOracleFactoryMock;
+    FactoryCollybusDiscountRateRelayer
+        internal collybusDiscountRateRelayerFactoryMock;
+    FactoryCollybusSpotPriceRelayer
+        internal collybusSpotPriceRelayerFactoryMock;
 
     function setUp() public {
-        elementFiValueProviderFactoryMock = new MockProvider();
-        notionalValueProviderFactoryMock = new MockProvider();
-        yieldValueProviderFactoryMock = new MockProvider();
-        chainlinkValueProviderFactoryMock = new MockProvider();
-        aggregatorOracleFactoryMock = new MockProvider();
-        collybusDiscountRateRelayerFactoryMock = new MockProvider();
-        collybusSpotPriceRelayerFactoryMock = new MockProvider();
-
-        address mockReturnAddress = address(0x110c5);
-        // Define fallback methods for each value provider factory
-        // Test that need specific data will add proper queries
-        elementFiValueProviderFactoryMock.setDefaultResponse(
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(mockReturnAddress)
-            })
-        );
-
-        notionalValueProviderFactoryMock.setDefaultResponse(
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(mockReturnAddress)
-            })
-        );
-
-        yieldValueProviderFactoryMock.setDefaultResponse(
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(mockReturnAddress)
-            })
-        );
-
-        chainlinkValueProviderFactoryMock.setDefaultResponse(
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(mockReturnAddress)
-            })
-        );
-
-        aggregatorOracleFactoryMock.setDefaultResponse(
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(mockReturnAddress)
-            })
-        );
-
-        collybusDiscountRateRelayerFactoryMock.setDefaultResponse(
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(mockReturnAddress)
-            })
-        );
-
-        collybusSpotPriceRelayerFactoryMock.setDefaultResponse(
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(mockReturnAddress)
-            })
-        );
+        elementFiValueProviderFactoryMock = new FactoryElementFiValueProvider();
+        notionalValueProviderFactoryMock = new FactoryNotionalFinanceValueProvider();
+        yieldValueProviderFactoryMock = new FactoryYieldValueProvider();
+        chainlinkValueProviderFactoryMock = new FactoryChainlinkValueProvider();
+        aggregatorOracleFactoryMock = new FactoryAggregatorOracle();
+        collybusDiscountRateRelayerFactoryMock = new FactoryCollybusDiscountRateRelayer();
+        collybusSpotPriceRelayerFactoryMock = new FactoryCollybusSpotPriceRelayer();
 
         factory = new Factory(
             address(elementFiValueProviderFactoryMock),
@@ -162,28 +123,6 @@ contract FactoryTest is DSTest {
             alpha: 2 * 10**17,
             valueProviderType: uint8(Factory.ValueProviderType.Element)
         });
-        // Set-up the mock providers
-        address mockOracleAddress = address(0x110C0);
-        elementFiValueProviderFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(
-                IFactoryElementFiValueProvider.create.selector,
-                elementDataOracle.timeWindow,
-                elementDataOracle.maxValidTime,
-                elementDataOracle.alpha,
-                elementValueProvider.poolId,
-                elementValueProvider.balancerVault,
-                elementValueProvider.poolToken,
-                elementValueProvider.underlier,
-                elementValueProvider.ePTokenBond,
-                elementValueProvider.timeScale,
-                elementValueProvider.maturity
-            ),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(mockOracleAddress)
-            }),
-            false
-        );
 
         address oracleAddress = factory.deployElementFiValueProvider(
             elementDataOracle
@@ -191,7 +130,7 @@ contract FactoryTest is DSTest {
 
         // Make sure the Oracle was deployed
         assertTrue(
-            oracleAddress == mockOracleAddress,
+            oracleAddress != address(0),
             "Element Oracle should be correctly deployed"
         );
     }
@@ -206,28 +145,6 @@ contract FactoryTest is DSTest {
             alpha: 2 * 10**17,
             valueProviderType: uint8(Factory.ValueProviderType.Element)
         });
-        // Set-up the mock providers
-        address mockOracleAddress = address(0x110C0);
-        elementFiValueProviderFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(
-                IFactoryElementFiValueProvider.create.selector,
-                elementDataOracle.timeWindow,
-                elementDataOracle.maxValidTime,
-                elementDataOracle.alpha,
-                elementValueProvider.poolId,
-                elementValueProvider.balancerVault,
-                elementValueProvider.poolToken,
-                elementValueProvider.underlier,
-                elementValueProvider.ePTokenBond,
-                elementValueProvider.timeScale,
-                elementValueProvider.maturity
-            ),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(mockOracleAddress)
-            }),
-            false
-        );
 
         Caller user = new Caller();
 
@@ -255,26 +172,6 @@ contract FactoryTest is DSTest {
             alpha: 2 * 10**17,
             valueProviderType: uint8(Factory.ValueProviderType.Notional)
         });
-        // Set-up the mock providers
-        address mockOracleAddress = address(0x110C0);
-        notionalValueProviderFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(
-                IFactoryNotionalFinanceValueProvider.create.selector,
-                notionalDataOracle.timeWindow,
-                notionalDataOracle.maxValidTime,
-                notionalDataOracle.alpha,
-                notionalValueProvider.notionalViewAddress,
-                notionalValueProvider.currencyId,
-                notionalValueProvider.lastImpliedRateDecimals,
-                notionalValueProvider.maturityDate,
-                notionalValueProvider.settlementDate
-            ),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(mockOracleAddress)
-            }),
-            false
-        );
 
         address oracleAddress = factory.deployNotionalFinanceValueProvider(
             notionalDataOracle
@@ -282,7 +179,7 @@ contract FactoryTest is DSTest {
 
         // Make sure the Oracle was deployed
         assertTrue(
-            oracleAddress == mockOracleAddress,
+            oracleAddress != address(0),
             "Notional Oracle should be correctly deployed"
         );
     }
@@ -299,26 +196,6 @@ contract FactoryTest is DSTest {
             alpha: 2 * 10**17,
             valueProviderType: uint8(Factory.ValueProviderType.Notional)
         });
-        // Set-up the mock providers
-        address mockOracleAddress = address(0x110C0);
-        notionalValueProviderFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(
-                IFactoryNotionalFinanceValueProvider.create.selector,
-                notionalDataOracle.timeWindow,
-                notionalDataOracle.maxValidTime,
-                notionalDataOracle.alpha,
-                notionalValueProvider.notionalViewAddress,
-                notionalValueProvider.currencyId,
-                notionalValueProvider.lastImpliedRateDecimals,
-                notionalValueProvider.maturityDate,
-                notionalValueProvider.settlementDate
-            ),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(mockOracleAddress)
-            }),
-            false
-        );
 
         Caller user = new Caller();
 
@@ -346,24 +223,6 @@ contract FactoryTest is DSTest {
             alpha: 2 * 10**17,
             valueProviderType: uint8(Factory.ValueProviderType.Yield)
         });
-        // Set-up the mock providers
-        address mockOracleAddress = address(0x110C0);
-        yieldValueProviderFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(
-                IFactoryYieldValueProvider.create.selector,
-                yieldDataOracle.timeWindow,
-                yieldDataOracle.maxValidTime,
-                yieldDataOracle.alpha,
-                yieldValueProvider.poolAddress,
-                yieldValueProvider.maturity,
-                yieldValueProvider.timeScale
-            ),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(mockOracleAddress)
-            }),
-            false
-        );
 
         address oracleAddress = factory.deployYieldValueProvider(
             yieldDataOracle
@@ -371,7 +230,7 @@ contract FactoryTest is DSTest {
 
         // Make sure the Oracle was deployed
         assertTrue(
-            oracleAddress == mockOracleAddress,
+            oracleAddress != address(0),
             "Yield Oracle should be correctly deployed"
         );
     }
@@ -386,24 +245,6 @@ contract FactoryTest is DSTest {
             alpha: 2 * 10**17,
             valueProviderType: uint8(Factory.ValueProviderType.Yield)
         });
-        // Set-up the mock providers
-        address mockOracleAddress = address(0x110C0);
-        yieldValueProviderFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(
-                IFactoryYieldValueProvider.create.selector,
-                yieldDataOracle.timeWindow,
-                yieldDataOracle.maxValidTime,
-                yieldDataOracle.alpha,
-                yieldValueProvider.poolAddress,
-                yieldValueProvider.maturity,
-                yieldValueProvider.timeScale
-            ),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(mockOracleAddress)
-            }),
-            false
-        );
 
         Caller user = new Caller();
 
@@ -431,22 +272,6 @@ contract FactoryTest is DSTest {
             alpha: 2 * 10**17,
             valueProviderType: uint8(Factory.ValueProviderType.Chainlink)
         });
-        // Set-up the mock providers
-        address mockOracleAddress = address(0x110C0);
-        chainlinkValueProviderFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(
-                IFactoryChainlinkValueProvider.create.selector,
-                chainlinkDataOracle.timeWindow,
-                chainlinkDataOracle.maxValidTime,
-                chainlinkDataOracle.alpha,
-                chainlinkValueProvider.chainlinkAggregatorAddress
-            ),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(mockOracleAddress)
-            }),
-            false
-        );
 
         address oracleAddress = factory.deployChainlinkValueProvider(
             chainlinkDataOracle
@@ -454,7 +279,7 @@ contract FactoryTest is DSTest {
 
         // Make sure the Oracle was deployed
         assertTrue(
-            oracleAddress == mockOracleAddress,
+            oracleAddress != address(0),
             "Chainlink Oracle should be correctly deployed"
         );
     }
@@ -469,22 +294,6 @@ contract FactoryTest is DSTest {
             alpha: 2 * 10**17,
             valueProviderType: uint8(Factory.ValueProviderType.Chainlink)
         });
-        // Set-up the mock providers
-        address mockOracleAddress = address(0x110C0);
-        chainlinkValueProviderFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(
-                IFactoryChainlinkValueProvider.create.selector,
-                chainlinkDataOracle.timeWindow,
-                chainlinkDataOracle.maxValidTime,
-                chainlinkDataOracle.alpha,
-                chainlinkValueProvider.chainlinkAggregatorAddress
-            ),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(mockOracleAddress)
-            }),
-            false
-        );
 
         Caller user = new Caller();
 
@@ -581,24 +390,6 @@ contract FactoryTest is DSTest {
             oracleType < uint256(Factory.ValueProviderType.COUNT);
             oracleType++
         ) {
-            // Set-up the mock providers
-            AggregatorOracle mockAggregatorAddress = new AggregatorOracle();
-            mockAggregatorAddress.allowCaller(
-                mockAggregatorAddress.ANY_SIG(),
-                address(factory)
-            );
-
-            aggregatorOracleFactoryMock.givenQueryReturnResponse(
-                abi.encodeWithSelector(
-                    IFactoryAggregatorOracle.create.selector
-                ),
-                MockProvider.ReturnData({
-                    success: true,
-                    data: abi.encode(address(mockAggregatorAddress))
-                }),
-                false
-            );
-
             CollybusDiscountRateRelayer discountRateRelayer = new CollybusDiscountRateRelayer(
                     address(0xc011b005)
                 );
@@ -626,22 +417,6 @@ contract FactoryTest is DSTest {
     function test_deploy_DiscountRateAggregator_CheckExistanceOfOracles()
         public
     {
-        // Set-up the mock providers
-        AggregatorOracle mockAggregatorAddress = new AggregatorOracle();
-        mockAggregatorAddress.allowCaller(
-            mockAggregatorAddress.ANY_SIG(),
-            address(factory)
-        );
-
-        aggregatorOracleFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(IFactoryAggregatorOracle.create.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(address(mockAggregatorAddress))
-            }),
-            false
-        );
-
         CollybusDiscountRateRelayer discountRateRelayer = new CollybusDiscountRateRelayer(
                 address(0xc011b005)
             );
@@ -651,15 +426,24 @@ contract FactoryTest is DSTest {
             address(factory)
         );
 
+        uint256 oracleCount = 3;
         DiscountRateAggregatorData
             memory aggregator = DiscountRateAggregatorData({
                 tokenId: 1,
-                oracleData: new bytes[](1),
+                oracleData: new bytes[](oracleCount),
                 requiredValidValues: 1,
                 minimumThresholdValue: 10**14
             });
 
-        aggregator.oracleData[0] = abi.encode(createElementOracleData());
+        for (
+            uint256 oracleIndex = 0;
+            oracleIndex < oracleCount;
+            oracleIndex++
+        ) {
+            aggregator.oracleData[oracleIndex] = abi.encode(
+                createElementOracleData()
+            );
+        }
 
         address aggregatorAddress = factory.deployDiscountRateAggregator(
             abi.encode(aggregator),
@@ -668,28 +452,12 @@ contract FactoryTest is DSTest {
 
         assertEq(
             IAggregatorOracle(aggregatorAddress).oracleCount(),
-            1,
+            oracleCount,
             "Invalid Aggregator oracle count"
         );
     }
 
     function test_deploy_DiscountRateAggregator_CheckValidValues() public {
-        // Set-up the mock providers
-        AggregatorOracle mockAggregatorAddress = new AggregatorOracle();
-        mockAggregatorAddress.allowCaller(
-            mockAggregatorAddress.ANY_SIG(),
-            address(factory)
-        );
-
-        aggregatorOracleFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(IFactoryAggregatorOracle.create.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(address(mockAggregatorAddress))
-            }),
-            false
-        );
-
         CollybusDiscountRateRelayer discountRateRelayer = new CollybusDiscountRateRelayer(
                 address(0xc011b005)
             );
@@ -730,24 +498,6 @@ contract FactoryTest is DSTest {
             oracleType < uint256(Factory.ValueProviderType.COUNT);
             oracleType++
         ) {
-            // Set-up the mock providers
-            AggregatorOracle mockAggregatorAddress = new AggregatorOracle();
-            mockAggregatorAddress.allowCaller(
-                mockAggregatorAddress.ANY_SIG(),
-                address(factory)
-            );
-
-            aggregatorOracleFactoryMock.givenQueryReturnResponse(
-                abi.encodeWithSelector(
-                    IFactoryAggregatorOracle.create.selector
-                ),
-                MockProvider.ReturnData({
-                    success: true,
-                    data: abi.encode(address(mockAggregatorAddress))
-                }),
-                false
-            );
-
             CollybusSpotPriceRelayer spotPriceRelayer = new CollybusSpotPriceRelayer(
                     address(0xc011b005)
                 );
@@ -780,15 +530,6 @@ contract FactoryTest is DSTest {
             address(factory)
         );
 
-        aggregatorOracleFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(IFactoryAggregatorOracle.create.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(address(mockAggregatorAddress))
-            }),
-            false
-        );
-
         CollybusSpotPriceRelayer spotPriceRelayer = new CollybusSpotPriceRelayer(
                 address(0xc011b005)
             );
@@ -798,14 +539,23 @@ contract FactoryTest is DSTest {
             address(factory)
         );
 
+        uint256 oracleCount = 3;
         SpotPriceAggregatorData memory aggregator = SpotPriceAggregatorData({
             tokenAddress: address(0x1234),
-            oracleData: new bytes[](1),
+            oracleData: new bytes[](oracleCount),
             requiredValidValues: 1,
             minimumThresholdValue: 10**14
         });
 
-        aggregator.oracleData[0] = abi.encode(createChainlinkOracleData());
+        for (
+            uint256 oracleIndex = 0;
+            oracleIndex < oracleCount;
+            oracleIndex++
+        ) {
+            aggregator.oracleData[oracleIndex] = abi.encode(
+                createChainlinkOracleData()
+            );
+        }
 
         address aggregatorAddress = factory.deploySpotPriceAggregator(
             abi.encode(aggregator),
@@ -814,28 +564,12 @@ contract FactoryTest is DSTest {
 
         assertEq(
             IAggregatorOracle(aggregatorAddress).oracleCount(),
-            1,
+            oracleCount,
             "Invalid Aggregator oracle count"
         );
     }
 
     function test_deploy_SpotPriceAggregator_CheckValidValues() public {
-        // Set-up the mock providers
-        AggregatorOracle mockAggregatorAddress = new AggregatorOracle();
-        mockAggregatorAddress.allowCaller(
-            mockAggregatorAddress.ANY_SIG(),
-            address(factory)
-        );
-
-        aggregatorOracleFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(IFactoryAggregatorOracle.create.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(address(mockAggregatorAddress))
-            }),
-            false
-        );
-
         CollybusSpotPriceRelayer spotPriceRelayer = new CollybusSpotPriceRelayer(
                 address(0xc011b005)
             );
@@ -869,67 +603,22 @@ contract FactoryTest is DSTest {
 
     function test_deploy_collybusDiscountRateRelayer_createsContract() public {
         address collybus = address(0xC0111b005);
-        CollybusDiscountRateRelayer mockRelayer = new CollybusDiscountRateRelayer(
-                collybus
-            );
-
-        collybusDiscountRateRelayerFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(
-                IFactoryCollybusDiscountRateRelayer.create.selector,
-                collybus
-            ),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(address(mockRelayer))
-            }),
-            false
-        );
-
         address relayer = factory.deployCollybusDiscountRateRelayer(collybus);
         // Make sure the CollybusDiscountRateRelayer was deployed
         assertTrue(
             relayer != address(0),
             "CollybusDiscountRateRelayer should be deployed"
         );
-
-        // Check Collybus
-        assertEq(
-            address(CollybusDiscountRateRelayer(relayer).collybus()),
-            collybus,
-            "Collybus should be correct"
-        );
     }
 
     function test_deploy_collybusSpotPriceRelayer_createsContract() public {
         address collybus = address(0xC01115107);
-        CollybusSpotPriceRelayer mockRelayer = new CollybusSpotPriceRelayer(
-            collybus
-        );
-
-        collybusSpotPriceRelayerFactoryMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(
-                IFactoryCollybusSpotPriceRelayer.create.selector,
-                collybus
-            ),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(address(mockRelayer))
-            }),
-            false
-        );
         address relayer = factory.deployCollybusSpotPriceRelayer(collybus);
 
         // Make sure the CollybusSpotPriceRelayer_ was deployed
         assertTrue(
             relayer != address(0),
             "CollybusSpotPriceRelayer should be deployed"
-        );
-
-        // Check Collybus
-        assertEq(
-            address(CollybusSpotPriceRelayer(relayer).collybus()),
-            collybus,
-            "Collybus should be correct"
         );
     }
 
@@ -1228,9 +917,9 @@ contract FactoryTest is DSTest {
                     ElementVPData(
                         0,
                         address(0),
-                        address(0),
-                        address(0),
-                        address(0),
+                        address(new ERC20("PoolTokenMock", "P")),
+                        address(new ERC20("UnderlierMock", "U")),
+                        address(new ERC20("PricipalMock", "eP")),
                         0,
                         0
                     )
@@ -1269,7 +958,9 @@ contract FactoryTest is DSTest {
     function createChainlinkOracleData() internal returns (OracleData memory) {
         return
             OracleData({
-                valueProviderData: abi.encode(ChainlinkVPData(address(0))),
+                valueProviderData: abi.encode(
+                    ChainlinkVPData(address(new ChainlinkMockProvider()))
+                ),
                 timeWindow: 0,
                 maxValidTime: 0,
                 alpha: 0,

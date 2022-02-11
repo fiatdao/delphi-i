@@ -27,7 +27,9 @@ contract SpotPriceDeploy {
 
         SpotPriceAggregatorData
             memory chainlinkAggregator = SpotPriceAggregatorData({
-                tokenAddress: address(0x78dEca24CBa286C0f8d56370f5406B48cFCE2f86),
+                tokenAddress: address(
+                    0x78dEca24CBa286C0f8d56370f5406B48cFCE2f86
+                ),
                 oracleData: new bytes[](1),
                 requiredValidValues: 1,
                 minimumThresholdValue: 0
