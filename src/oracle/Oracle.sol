@@ -60,7 +60,7 @@ abstract contract Oracle is Pausable, IOracle {
         return (_currentValue, valid);
     }
 
-    function getValue() external view virtual returns (int256);
+    function getValue() external virtual returns (int256);
 
     function update() public override(IOracle) {
         // Not enough time has passed since the last update

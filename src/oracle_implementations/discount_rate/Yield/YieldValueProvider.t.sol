@@ -2,48 +2,40 @@
 pragma solidity ^0.8.0;
 
 import "ds-test/test.sol";
-
 import "src/test/utils/Caller.sol";
+
+import {Convert} from "src/oracle_implementations/discount_rate/utils/Convert.sol";
 import {Hevm} from "src/test/utils/Hevm.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {YieldValueProvider} from "./YieldValueProvider.sol";
 import {IYieldPool} from "./IYieldPool.sol";
 
-contract YieldValueProviderTest is DSTest {
+contract YieldValueProviderTest is DSTest, Convert {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
 
     MockProvider internal mockValueProvider;
 
     YieldValueProvider internal yieldVP;
 
+    // Values take from contract
+    // https://etherscan.io/token/0x3771c99c087a81df4633b50d8b149afaa83e3c9e
+    // at block 13911954
     uint256 internal maturity = 1648177200;
-    int256 internal timeScale = 3168808781;
-    uint112 internal baseReserve = 2129533588416199172581255;
-    uint112 internal fyReserve = 2303024699021990246792971;
-    uint32 internal blockTime = 1643281604;
+    int256 internal timeScale = 3168808781; // 58454204609 in 64.64 format
+    uint112 internal cumulativeBalancesRatio =
+        5141501570599198210548627855691773;
+    uint32 internal blockTime = 1639432842;
 
+    // Default oracle parameters
     uint256 internal _timeUpdateWindow = 100; // seconds
     uint256 internal _maxValidTime = 300;
     int256 internal _alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
-        createWithValues(
-            maturity,
-            timeScale, // 58454204609 in 64.64 format
-            baseReserve,
-            fyReserve,
-            blockTime
-        );
-    }
-
-    function createWithValues(
-        uint256 maturity_,
-        int256 timeScale_,
-        uint112 baseReserve_,
-        uint112 fyReserve_,
-        uint32 blocktime_
-    ) public {
         mockValueProvider = new MockProvider();
+
+        setMockValues(mockValueProvider, cumulativeBalancesRatio, blockTime);
+
         yieldVP = new YieldValueProvider(
             // Oracle arguments
             // Time update window
@@ -54,16 +46,32 @@ contract YieldValueProviderTest is DSTest {
             _alpha,
             // Yield arguments
             address(mockValueProvider),
-            uint256(maturity_),
-            int256(timeScale_)
+            uint256(maturity),
+            int256(timeScale)
         );
+    }
 
-        // Set the value returned by the pool contract
-        mockValueProvider.givenQueryReturnResponse(
+    function setMockValues(
+        MockProvider mockValueProvider_,
+        uint256 cumulativeBalancesRatio_,
+        uint32 blocktime_
+    ) internal {
+        // Set the  getCache values returned by the pool contract
+        mockValueProvider_.givenQueryReturnResponse(
             abi.encodePacked(IYieldPool.getCache.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(baseReserve_, fyReserve_, blocktime_)
+                data: abi.encode(0, 0, blocktime_)
+            }),
+            false
+        );
+
+        // Set the cumulativeBalancesRatio returned by the pool contract
+        mockValueProvider_.givenQueryReturnResponse(
+            abi.encodePacked(IYieldPool.cumulativeBalancesRatio.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(cumulativeBalancesRatio_)
             }),
             false
         );
@@ -91,10 +99,32 @@ contract YieldValueProviderTest is DSTest {
         assertEq(yieldVP.timeScale(), timeScale, "Invalid time scale value");
     }
 
+    function test_check_cumulativeBalanceRatioLast() public {
+        assertEq(
+            yieldVP.cumulativeBalanceRatioLast(),
+            uconvert(cumulativeBalancesRatio, 27, 18),
+            "Invalid cumulativeBalanceRatioLast"
+        );
+    }
+
+    function test_check_blockTimestampLast() public {
+        assertEq(
+            yieldVP.blockTimestampLast(),
+            blockTime,
+            "Invalid blockTimestampLast"
+        );
+    }
+
     function test_getValue() public {
-        // Compute example 1 from:
-        // https://colab.research.google.com/drive/1RYGuGQW3RcRlYkk2JKy6FeEouvr77gFV#scrollTo=ccEQ0z8xF0L4
-        int256 expectedValue = 248182251;
+        // Values take from contract
+        // https://etherscan.io/token/0x3771c99c087a81df4633b50d8b149afaa83e3c9e
+        // at block 13800244
+        int256 expectedValue = 1204540138;
+        setMockValues(
+            mockValueProvider,
+            7342183639948751441026554744281105,
+            1640937617
+        );
         int256 value = yieldVP.getValue();
         assertTrue(value == expectedValue);
     }
