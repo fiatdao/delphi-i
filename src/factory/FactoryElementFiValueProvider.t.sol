@@ -18,9 +18,6 @@ contract FactoryElementFiValueProviderTest is DSTest{
 
     bytes32 private _poolId = bytes32(0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7);
     address private _balancerVaultAddress = address(0x123);
-    address private _poolToke;
-    address private _underlier;
-    address private _ePTokenBond;
     int256 private _timeScale = 2426396518;
     uint256 private _maturity = 1651275535;
 
