@@ -10,8 +10,7 @@ import {FactoryNotionalFinanceValueProvider} from "src/factory/FactoryNotionalFi
 
 import {NotionalFinanceValueProvider} from "src/oracle_implementations/discount_rate/NotionalFinance/NotionalFinanceValueProvider.sol";
 
-contract FactoryNotionalFinanceValueProviderTest is DSTest{
-
+contract FactoryNotionalFinanceValueProviderTest is DSTest {
     uint256 private _oracleUpdateWindow;
     uint256 private _oracleMaxValidTime;
     int256 private _oracleAlpha;
@@ -23,6 +22,7 @@ contract FactoryNotionalFinanceValueProviderTest is DSTest{
     uint256 private _oracleRateDecimals;
 
     FactoryNotionalFinanceValueProvider private factory;
+
     function setUp() public {
         factory = new FactoryNotionalFinanceValueProvider();
     }
@@ -65,13 +65,15 @@ contract FactoryNotionalFinanceValueProviderTest is DSTest{
 
         // Test that properties are correctly set
         assertEq(
-            NotionalFinanceValueProvider(notionalValueProviderAddress).timeUpdateWindow(),
+            NotionalFinanceValueProvider(notionalValueProviderAddress)
+                .timeUpdateWindow(),
             _oracleUpdateWindow,
             "ElementFi Value Provider incorrect timeUpdateWindow"
         );
 
         assertEq(
-            NotionalFinanceValueProvider(notionalValueProviderAddress).maxValidTime(),
+            NotionalFinanceValueProvider(notionalValueProviderAddress)
+                .maxValidTime(),
             _oracleMaxValidTime,
             "Notional Value Provider incorrect maxValidTime"
         );
@@ -83,25 +85,29 @@ contract FactoryNotionalFinanceValueProviderTest is DSTest{
         );
 
         assertEq(
-            NotionalFinanceValueProvider(notionalValueProviderAddress).notionalView(),
+            NotionalFinanceValueProvider(notionalValueProviderAddress)
+                .notionalView(),
             _notionalView,
             "Notional Value Provider incorrect notionalView"
         );
 
         assertEq(
-            NotionalFinanceValueProvider(notionalValueProviderAddress).currencyId(),
+            NotionalFinanceValueProvider(notionalValueProviderAddress)
+                .currencyId(),
             _currencyId,
             "Notional Value Provider incorrect currencyId"
         );
 
         assertEq(
-            NotionalFinanceValueProvider(notionalValueProviderAddress).maturityDate(),
+            NotionalFinanceValueProvider(notionalValueProviderAddress)
+                .maturityDate(),
             _maturityDate,
             "Notional Value Provider incorrect maturityDate"
         );
 
         assertEq(
-            NotionalFinanceValueProvider(notionalValueProviderAddress).settlementDate(),
+            NotionalFinanceValueProvider(notionalValueProviderAddress)
+                .settlementDate(),
             _settlementDate,
             "Notional Value Provider incorrect settlementDate"
         );

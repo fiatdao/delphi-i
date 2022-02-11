@@ -11,8 +11,7 @@ import {FactoryYieldValueProvider} from "src/factory/FactoryYieldValueProvider.s
 import {IYieldPool} from "src/oracle_implementations/discount_rate/Yield/IYieldPool.sol";
 import {YieldValueProvider} from "src/oracle_implementations/discount_rate/Yield/YieldValueProvider.sol";
 
-contract FactoryYieldValueProviderTest is DSTest{
-
+contract FactoryYieldValueProviderTest is DSTest {
     uint256 private _oracleUpdateWindow;
     uint256 private _oracleMaxValidTime;
     int256 private _oracleAlpha;
@@ -21,6 +20,7 @@ contract FactoryYieldValueProviderTest is DSTest{
     int256 private _timeScale;
 
     FactoryYieldValueProvider private factory;
+
     function setUp() public {
         factory = new FactoryYieldValueProvider();
     }

@@ -11,13 +11,13 @@ import {FactoryChainlinkValueProvider} from "src/factory/FactoryChainlinkValuePr
 import {ChainLinkValueProvider} from "src/oracle_implementations/spot_price/Chainlink/ChainLinkValueProvider.sol";
 import {IChainlinkAggregatorV3Interface} from "src/oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
 
-contract FactoryChainlinkValueProviderTest is DSTest{
-
+contract FactoryChainlinkValueProviderTest is DSTest {
     uint256 private _oracleUpdateWindow;
     uint256 private _oracleMaxValidTime;
     int256 private _oracleAlpha;
 
     FactoryChainlinkValueProvider private factory;
+
     function setUp() public {
         factory = new FactoryChainlinkValueProvider();
     }
@@ -78,7 +78,8 @@ contract FactoryChainlinkValueProviderTest is DSTest{
 
         // Test that properties are correctly set
         assertEq(
-            ChainLinkValueProvider(chainlinkValueProviderAddress).chainlinkAggregatorAddress(),
+            ChainLinkValueProvider(chainlinkValueProviderAddress)
+                .chainlinkAggregatorAddress(),
             address(chainlinkMock),
             "Chainlink Value Provider incorrect chainlinkAggregatorAddress"
         );

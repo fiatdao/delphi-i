@@ -10,18 +10,21 @@ import {FactoryElementFiValueProvider} from "src/factory/FactoryElementFiValuePr
 
 import {ElementFiValueProvider} from "src/oracle_implementations/discount_rate/ElementFi/ElementFiValueProvider.sol";
 
-contract FactoryElementFiValueProviderTest is DSTest{
-
+contract FactoryElementFiValueProviderTest is DSTest {
     uint256 private _oracleUpdateWindow;
     uint256 private _oracleMaxValidTime;
     int256 private _oracleAlpha;
 
-    bytes32 private _poolId = bytes32(0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7);
+    bytes32 private _poolId =
+        bytes32(
+            0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7
+        );
     address private _balancerVaultAddress = address(0x123);
     int256 private _timeScale = 2426396518;
     uint256 private _maturity = 1651275535;
 
     FactoryElementFiValueProvider private factory;
+
     function setUp() public {
         factory = new FactoryElementFiValueProvider();
     }
@@ -130,7 +133,8 @@ contract FactoryElementFiValueProviderTest is DSTest{
 
         // Test that properties are correctly set
         assertEq(
-            ElementFiValueProvider(elementValueProviderAddress).timeUpdateWindow(),
+            ElementFiValueProvider(elementValueProviderAddress)
+                .timeUpdateWindow(),
             _oracleUpdateWindow,
             "ElementFi Value Provider incorrect timeUpdateWindow"
         );
@@ -154,7 +158,8 @@ contract FactoryElementFiValueProviderTest is DSTest{
         );
 
         assertEq(
-            ElementFiValueProvider(elementValueProviderAddress).balancerVaultAddress(),
+            ElementFiValueProvider(elementValueProviderAddress)
+                .balancerVaultAddress(),
             _balancerVaultAddress,
             "ElementFi Value Provider incorrect balancerVaultAddress"
         );
@@ -189,5 +194,4 @@ contract FactoryElementFiValueProviderTest is DSTest{
             "ElementFi Value Provider incorrect maturity"
         );
     }
-
 }
