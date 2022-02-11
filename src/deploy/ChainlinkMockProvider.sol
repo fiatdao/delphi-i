@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import {IChainlinkAggregatorV3Interface} from "src/oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
 
 contract ChainlinkMockProvider is IChainlinkAggregatorV3Interface {
-    int256 answer;
+    int256 public answer;
 
     function setAnswer(int256 answer_) external {
         answer = answer_;
@@ -36,7 +36,9 @@ contract ChainlinkMockProvider is IChainlinkAggregatorV3Interface {
         return 0;
     }
 
-    function getRoundData(uint80 _roundId)
+    function getRoundData(
+        uint80 /*_roundId*/
+    )
         external
         view
         override(IChainlinkAggregatorV3Interface)
