@@ -32,8 +32,6 @@ import {CollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/Coll
 import {ICollybusSpotPriceRelayer} from "src/relayer/CollybusSpotPrice/ICollybusSpotPriceRelayer.sol";
 import {CollybusSpotPriceRelayer} from "src/relayer/CollybusSpotPrice/CollybusSpotPriceRelayer.sol";
 
-
-
 contract FactoryTest is DSTest {
     error FactoryTest__invalidDiscountRateAggregatorType(uint256 valueType);
     error FactoryTest__invalidSpotPriceAggregatorType(uint256 valueType);
@@ -1063,25 +1061,20 @@ contract FactoryTest is DSTest {
     }
 
     function createYieldVPData() internal returns (YieldVPData memory) {
-
         // Mock the yield pool that is needed when the value provider contract is created
         MockProvider yieldPool = new MockProvider();
 
         yieldPool.givenQueryReturnResponse(
-            abi.encodeWithSelector(
-                IYieldPool.getCache.selector
-            ),
+            abi.encodeWithSelector(IYieldPool.getCache.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint112(0),uint112(0), uint32(0))
+                data: abi.encode(uint112(0), uint112(0), uint32(0))
             }),
             false
         );
 
         yieldPool.givenQueryReturnResponse(
-            abi.encodeWithSelector(
-                IYieldPool.cumulativeBalancesRatio.selector
-            ),
+            abi.encodeWithSelector(IYieldPool.cumulativeBalancesRatio.selector),
             MockProvider.ReturnData({
                 success: true,
                 data: abi.encode(uint256(0))
@@ -1101,9 +1094,7 @@ contract FactoryTest is DSTest {
     function createElementOracleData() internal returns (OracleData memory) {
         return
             OracleData({
-                valueProviderData: abi.encode(
-                    createElementVPData()
-                ),
+                valueProviderData: abi.encode(createElementVPData()),
                 timeWindow: 0,
                 maxValidTime: 0,
                 alpha: 0,
@@ -1114,9 +1105,7 @@ contract FactoryTest is DSTest {
     function createNotionalOracleData() internal returns (OracleData memory) {
         return
             OracleData({
-                valueProviderData: abi.encode(
-                    createNotionalVPData()
-                ),
+                valueProviderData: abi.encode(createNotionalVPData()),
                 timeWindow: 0,
                 maxValidTime: 0,
                 alpha: 0,
@@ -1138,9 +1127,7 @@ contract FactoryTest is DSTest {
     function createChainlinkOracleData() internal returns (OracleData memory) {
         return
             OracleData({
-                valueProviderData: abi.encode(
-                    createChainlinkVPData()
-                ),
+                valueProviderData: abi.encode(createChainlinkVPData()),
                 timeWindow: 0,
                 maxValidTime: 0,
                 alpha: 0,
