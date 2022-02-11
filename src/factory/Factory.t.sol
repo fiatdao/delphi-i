@@ -5,9 +5,9 @@ import "ds-test/test.sol";
 import {Hevm} from "src/test/utils/Hevm.sol";
 import {Caller} from "src/test/utils/Caller.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "src/factory/Factory.sol";
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Guarded} from "src/guarded/Guarded.sol";
 import {Oracle} from "src/oracle/Oracle.sol";
 import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
@@ -70,10 +70,11 @@ contract FactoryTest is DSTest {
 
     function test_deploy() public {
         // Check the factory addresses are properly set
+
         assertEq(
             factory.elementFiValueProviderFactory(),
             address(elementFiValueProviderFactoryMock),
-            "Invalid elementFiValueProviderFactory"
+            "Invalid elementFiValueProviderFactoryMock"
         );
 
         assertEq(
@@ -110,6 +111,164 @@ contract FactoryTest is DSTest {
             factory.collybusSpotPriceRelayerFactory(),
             address(collybusSpotPriceRelayerFactoryMock),
             "Invalid collybusSpotPriceRelayerFactory"
+        );
+    }
+
+    function test_setPermission_CallsAllowCaller_WithCorrectArguments(
+        bytes32 sig_,
+        address who_
+    ) public {
+        // Define arguments
+        MockProvider where = new MockProvider();
+
+        // Call factory to set permission
+        factory.setPermission(address(where), sig_, who_);
+
+        // Check the destination was called correctly by the factory
+        MockProvider.CallData memory cd = where.getCallData(0);
+        assertEq(cd.caller, address(factory));
+        assertEq(cd.functionSelector, Guarded.allowCaller.selector);
+        assertEq(
+            keccak256(cd.data),
+            keccak256(
+                abi.encodeWithSelector(Guarded.allowCaller.selector, sig_, who_)
+            )
+        );
+    }
+
+    function test_UnauthorizedUser_CannotSetPermission(
+        address where_,
+        bytes32 sig_,
+        address who_
+    ) public {
+        // Create user
+        Caller user = new Caller();
+
+        // Call factory to set permission
+        (bool ok, ) = user.externalCall(
+            address(factory),
+            abi.encodeWithSelector(
+                factory.setPermission.selector,
+                address(where_),
+                sig_,
+                who_
+            )
+        );
+
+        // Call should be unsuccessful
+        assertTrue(
+            ok == false,
+            "Unauthorized user should not be allowed to call `setPermission`"
+        );
+    }
+
+    function test_AuthorizedUser_CanSetPermission(bytes32 sig_, address who_)
+        public
+    {
+        // Create mock
+        MockProvider where = new MockProvider();
+
+        // Create user
+        Caller user = new Caller();
+
+        // Authorize user
+        factory.allowCaller(factory.setPermission.selector, address(user));
+
+        // User calls factory to set permission
+        (bool ok, ) = user.externalCall(
+            address(factory),
+            abi.encodeWithSelector(
+                factory.setPermission.selector,
+                address(where),
+                sig_,
+                who_
+            )
+        );
+
+        // Call should be successful
+        assertTrue(
+            ok,
+            "Authorized user should be allowed to call `setPermission`"
+        );
+    }
+
+    function test_removePermission_CallsBlockCaller_WithCorrectArguments(
+        bytes32 sig_,
+        address who_
+    ) public {
+        // Create mock to check correct call
+        MockProvider where = new MockProvider();
+
+        // Call factory to remove permission
+        factory.removePermission(address(where), sig_, who_);
+
+        // Check the destination was called correctly by the factory
+        MockProvider.CallData memory cd = where.getCallData(0);
+        assertEq(cd.caller, address(factory));
+        assertEq(cd.functionSelector, Guarded.blockCaller.selector);
+        assertEq(
+            keccak256(cd.data),
+            keccak256(
+                abi.encodeWithSelector(Guarded.blockCaller.selector, sig_, who_)
+            )
+        );
+    }
+
+    function test_UnauthorizedUser_CannotRemovePermission(
+        bytes32 sig_,
+        address who_
+    ) public {
+        // Create mock
+        MockProvider where = new MockProvider();
+
+        // Create user
+        Caller user = new Caller();
+
+        // Call factory to remove permission
+        (bool ok, ) = user.externalCall(
+            address(factory),
+            abi.encodeWithSelector(
+                factory.removePermission.selector,
+                address(where),
+                sig_,
+                who_
+            )
+        );
+
+        // Call should be unsuccessful
+        assertTrue(
+            ok == false,
+            "Unauthorized user should not be able to call `removePermission`"
+        );
+    }
+
+    function test_AuthorizedUser_CanRemovePermission(bytes32 sig_, address who_)
+        public
+    {
+        // Create mock
+        MockProvider where = new MockProvider();
+
+        // Create user
+        Caller user = new Caller();
+
+        // Authorize user
+        factory.allowCaller(factory.removePermission.selector, address(user));
+
+        // User calls factory to remove permission
+        (bool ok, ) = user.externalCall(
+            address(factory),
+            abi.encodeWithSelector(
+                factory.removePermission.selector,
+                address(where),
+                sig_,
+                who_
+            )
+        );
+
+        // Call should be successful
+        assertTrue(
+            ok,
+            "Authorized user should be allowed to call `removePermission`"
         );
     }
 
