@@ -23,14 +23,14 @@ contract FactoryElementFiValueProviderTest is DSTest {
     int256 private _timeScale = 2426396518;
     uint256 private _maturity = 1651275535;
 
-    FactoryElementFiValueProvider private factory;
+    FactoryElementFiValueProvider private _factory;
 
     function setUp() public {
-        factory = new FactoryElementFiValueProvider();
+        _factory = new FactoryElementFiValueProvider();
     }
 
     function test_deploy() public {
-        assertTrue(address(factory) != address(0));
+        assertTrue(address(_factory) != address(0));
     }
 
     function test_create() public {
@@ -66,7 +66,7 @@ contract FactoryElementFiValueProviderTest is DSTest {
         );
 
         // Create ElementFi Value Provider
-        address elementValueProviderAddress = factory.create(
+        address elementValueProviderAddress = _factory.create(
             _oracleUpdateWindow,
             _oracleMaxValidTime,
             _oracleAlpha,
@@ -118,7 +118,7 @@ contract FactoryElementFiValueProviderTest is DSTest {
         );
 
         // Create the ElementFi Value Provider
-        address elementValueProviderAddress = factory.create(
+        address elementValueProviderAddress = _factory.create(
             _oracleUpdateWindow,
             _oracleMaxValidTime,
             _oracleAlpha,

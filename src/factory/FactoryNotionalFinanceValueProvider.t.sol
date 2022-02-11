@@ -21,19 +21,19 @@ contract FactoryNotionalFinanceValueProviderTest is DSTest {
     uint256 private _settlementDate;
     uint256 private _oracleRateDecimals;
 
-    FactoryNotionalFinanceValueProvider private factory;
+    FactoryNotionalFinanceValueProvider private _factory;
 
     function setUp() public {
-        factory = new FactoryNotionalFinanceValueProvider();
+        _factory = new FactoryNotionalFinanceValueProvider();
     }
 
     function test_deploy() public {
-        assertTrue(address(factory) != address(0));
+        assertTrue(address(_factory) != address(0));
     }
 
     function test_create() public {
         // Create Notional Value Provider
-        address notionalValueProviderAddress = factory.create(
+        address notionalValueProviderAddress = _factory.create(
             _oracleUpdateWindow,
             _oracleMaxValidTime,
             _oracleAlpha,
@@ -52,7 +52,7 @@ contract FactoryNotionalFinanceValueProviderTest is DSTest {
 
     function test_create_validateProperties() public {
         // Create Notional Value Provider
-        address notionalValueProviderAddress = factory.create(
+        address notionalValueProviderAddress = _factory.create(
             _oracleUpdateWindow,
             _oracleMaxValidTime,
             _oracleAlpha,

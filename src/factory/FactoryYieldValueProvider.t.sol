@@ -19,14 +19,14 @@ contract FactoryYieldValueProviderTest is DSTest {
     uint256 private _maturity;
     int256 private _timeScale;
 
-    FactoryYieldValueProvider private factory;
+    FactoryYieldValueProvider private _factory;
 
     function setUp() public {
-        factory = new FactoryYieldValueProvider();
+        _factory = new FactoryYieldValueProvider();
     }
 
     function test_deploy() public {
-        assertTrue(address(factory) != address(0));
+        assertTrue(address(_factory) != address(0));
     }
 
     function test_create() public {
@@ -51,7 +51,7 @@ contract FactoryYieldValueProviderTest is DSTest {
         );
 
         // Create Yield Value Provider
-        address yieldValueProviderAddress = factory.create(
+        address yieldValueProviderAddress = _factory.create(
             _oracleUpdateWindow,
             _oracleMaxValidTime,
             _oracleAlpha,
@@ -88,7 +88,7 @@ contract FactoryYieldValueProviderTest is DSTest {
         );
 
         // Create Yield Value Provider
-        address yieldValueProviderAddress = factory.create(
+        address yieldValueProviderAddress = _factory.create(
             _oracleUpdateWindow,
             _oracleMaxValidTime,
             _oracleAlpha,

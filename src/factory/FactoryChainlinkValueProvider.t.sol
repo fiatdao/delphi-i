@@ -16,14 +16,14 @@ contract FactoryChainlinkValueProviderTest is DSTest {
     uint256 private _oracleMaxValidTime;
     int256 private _oracleAlpha;
 
-    FactoryChainlinkValueProvider private factory;
+    FactoryChainlinkValueProvider private _factory;
 
     function setUp() public {
-        factory = new FactoryChainlinkValueProvider();
+        _factory = new FactoryChainlinkValueProvider();
     }
 
     function test_deploy() public {
-        assertTrue(address(factory) != address(0));
+        assertTrue(address(_factory) != address(0));
     }
 
     function test_create() public {
@@ -41,7 +41,7 @@ contract FactoryChainlinkValueProviderTest is DSTest {
         );
 
         // Create chainlink Value Provider
-        address chainlinkValueProviderAddress = factory.create(
+        address chainlinkValueProviderAddress = _factory.create(
             _oracleUpdateWindow,
             _oracleMaxValidTime,
             _oracleAlpha,
@@ -69,7 +69,7 @@ contract FactoryChainlinkValueProviderTest is DSTest {
         );
 
         // Create chainlink Value Provider
-        address chainlinkValueProviderAddress = factory.create(
+        address chainlinkValueProviderAddress = _factory.create(
             _oracleUpdateWindow,
             _oracleMaxValidTime,
             _oracleAlpha,
