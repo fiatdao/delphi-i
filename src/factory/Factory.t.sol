@@ -1026,8 +1026,8 @@ contract FactoryTest is DSTest {
             false
         );
 
-        MockProvider poolToken = new MockProvider();
-        poolToken.givenQueryReturnResponse(
+        MockProvider poolTokenMock = new MockProvider();
+        poolTokenMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
             MockProvider.ReturnData({
                 success: true,
@@ -1039,7 +1039,7 @@ contract FactoryTest is DSTest {
         ElementVPData memory elementValueProvider = ElementVPData({
             poolId: 0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7,
             balancerVault: address(0x12345),
-            poolToken: address(poolToken),
+            poolToken: address(poolTokenMock),
             underlier: address(underlierMock),
             ePTokenBond: address(ePTokenBondMock),
             timeScale: 2426396518,
