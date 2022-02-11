@@ -12,7 +12,7 @@ import {Guarded} from "src/guarded/Guarded.sol";
 import {Oracle} from "src/oracle/Oracle.sol";
 import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
 
-// Contract Deployers
+// Contract Deployers and dependencies
 import {FactoryElementFiValueProvider} from "src/factory/FactoryElementFiValueProvider.sol";
 import {FactoryNotionalFinanceValueProvider} from "src/factory/FactoryNotionalFinanceValueProvider.sol";
 import {FactoryYieldValueProvider} from "src/factory/FactoryYieldValueProvider.sol";
@@ -22,6 +22,9 @@ import {FactoryCollybusSpotPriceRelayer} from "src/factory/FactoryCollybusSpotPr
 import {FactoryCollybusDiscountRateRelayer} from "src/factory/FactoryCollybusDiscountRateRelayer.sol";
 import {ChainlinkMockProvider} from "src/deploy/ChainlinkMockProvider.sol";
 
+import {IYieldPool} from "src/oracle_implementations/discount_rate/Yield/IYieldPool.sol";
+import {IChainlinkAggregatorV3Interface} from "src/oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
+
 // Relayers
 import {ICollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/ICollybusDiscountRateRelayer.sol";
 import {CollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/CollybusDiscountRateRelayer.sol";
@@ -29,7 +32,7 @@ import {CollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/Coll
 import {ICollybusSpotPriceRelayer} from "src/relayer/CollybusSpotPrice/ICollybusSpotPriceRelayer.sol";
 import {CollybusSpotPriceRelayer} from "src/relayer/CollybusSpotPrice/CollybusSpotPriceRelayer.sol";
 
-import {IChainlinkAggregatorV3Interface} from "src/oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
+
 
 contract FactoryTest is DSTest {
     error FactoryTest__invalidDiscountRateAggregatorType(uint256 valueType);
@@ -1060,8 +1063,34 @@ contract FactoryTest is DSTest {
     }
 
     function createYieldVPData() internal returns (YieldVPData memory) {
+
+        // Mock the yield pool that is needed when the value provider contract is created
+        MockProvider yieldPool = new MockProvider();
+
+        yieldPool.givenQueryReturnResponse(
+            abi.encodeWithSelector(
+                IYieldPool.getCache.selector
+            ),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint112(0),uint112(0), uint32(0))
+            }),
+            false
+        );
+
+        yieldPool.givenQueryReturnResponse(
+            abi.encodeWithSelector(
+                IYieldPool.cumulativeBalancesRatio.selector
+            ),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint256(0))
+            }),
+            false
+        );
+
         YieldVPData memory yieldValueProviderData = YieldVPData({
-            poolAddress: address(0x123),
+            poolAddress: address(yieldPool),
             maturity: 1648177200,
             timeScale: 3168808781
         });
@@ -1073,15 +1102,7 @@ contract FactoryTest is DSTest {
         return
             OracleData({
                 valueProviderData: abi.encode(
-                    ElementVPData(
-                        0,
-                        address(0),
-                        address(new ERC20("PoolTokenMock", "P")),
-                        address(new ERC20("UnderlierMock", "U")),
-                        address(new ERC20("PricipalMock", "eP")),
-                        0,
-                        0
-                    )
+                    createElementVPData()
                 ),
                 timeWindow: 0,
                 maxValidTime: 0,
@@ -1094,7 +1115,7 @@ contract FactoryTest is DSTest {
         return
             OracleData({
                 valueProviderData: abi.encode(
-                    NotionalVPData(address(0), 0, 0, 0, 0)
+                    createNotionalVPData()
                 ),
                 timeWindow: 0,
                 maxValidTime: 0,
@@ -1106,7 +1127,7 @@ contract FactoryTest is DSTest {
     function createYieldOracleData() internal returns (OracleData memory) {
         return
             OracleData({
-                valueProviderData: abi.encode(YieldVPData(address(0), 0, 0)),
+                valueProviderData: abi.encode(createYieldVPData()),
                 timeWindow: 0,
                 maxValidTime: 0,
                 alpha: 0,
@@ -1118,7 +1139,7 @@ contract FactoryTest is DSTest {
         return
             OracleData({
                 valueProviderData: abi.encode(
-                    ChainlinkVPData(address(new ChainlinkMockProvider()))
+                    createChainlinkVPData()
                 ),
                 timeWindow: 0,
                 maxValidTime: 0,
