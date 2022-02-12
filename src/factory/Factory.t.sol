@@ -1423,7 +1423,8 @@ contract FactoryTest is DSTest {
             oracleType < uint256(Factory.ValueProviderType.COUNT);
             oracleType++
         ) {
-            // use the oracle type as in index for the aggregator data structure
+            // use the oracle type as index for the aggregator data structure
+            // use the oracle type as a unique token Id for each aggregator
             deployData.aggregatorData[oracleType] = abi.encode(
                 createDiscountRateAggregatorData(
                     Factory.ValueProviderType(oracleType),
@@ -1444,13 +1445,15 @@ contract FactoryTest is DSTest {
         deployData.aggregatorData = new bytes[](
             uint256(Factory.ValueProviderType.COUNT)
         );
+
+        // Compute the token address as a uint160 which will be inc after every add
         address tokenAddress = address(uint160(1));
         for (
             uint256 oracleType = 0;
             oracleType < uint256(Factory.ValueProviderType.COUNT);
             oracleType++
         ) {
-            // use the oracle type as in index for the aggregator data structure
+            // use the oracle type as index for the aggregator data structure
             deployData.aggregatorData[oracleType] = abi.encode(
                 createSpotPriceAggregatorData(
                     Factory.ValueProviderType(oracleType),
