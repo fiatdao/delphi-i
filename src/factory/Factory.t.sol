@@ -846,7 +846,9 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_collybusDiscountRateRelayer_onlyAuthorizedUsers() public {
+    function test_deploy_collybusDiscountRateRelayer_onlyAuthorizedUsers()
+        public
+    {
         Caller user = new Caller();
         address collybus = address(0xC0111b005);
 
@@ -918,7 +920,9 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_collybusDiscountRateArchitecture_onlyAuthorizedUsers() public {
+    function test_deploy_collybusDiscountRateArchitecture_onlyAuthorizedUsers()
+        public
+    {
         Caller user = new Caller();
         RelayerDeployData memory deployData = createDiscountRateDeployData();
 
@@ -1048,15 +1052,11 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_collybusSpotPriceArchitecture_onlyAuthorizedUsers() public {
+    function test_deploy_collybusSpotPriceArchitecture_onlyAuthorizedUsers()
+        public
+    {
         Caller user = new Caller();
         RelayerDeployData memory deployData = createSpotPriceDeployData();
-
-        // Deploy the oracle architecture
-        address spotPriceRelayer = factory.deploySpotPriceArchitecture(
-            abi.encode(deployData),
-            address(0x1234)
-        );
 
         // Call deploySpotPriceArchitecture
         (bool ok, ) = user.externalCall(
