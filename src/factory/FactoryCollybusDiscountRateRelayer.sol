@@ -19,7 +19,10 @@ contract FactoryCollybusDiscountRateRelayer is
                 collybus_
             );
 
-        discountRateRelayer.allowCaller(keccak256("ANY_SIG"), msg.sender);
+        discountRateRelayer.allowCaller(
+            discountRateRelayer.ANY_SIG(),
+            msg.sender
+        );
 
         return address(discountRateRelayer);
     }
