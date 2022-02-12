@@ -50,6 +50,7 @@ contract FactoryTest is DSTest {
         internal collybusSpotPriceRelayerFactoryMock;
 
     function setUp() public {
+        // Create all the contract factories needed by the main factory
         elementFiValueProviderFactoryMock = new FactoryElementFiValueProvider();
         notionalValueProviderFactoryMock = new FactoryNotionalFinanceValueProvider();
         yieldValueProviderFactoryMock = new FactoryYieldValueProvider();
@@ -71,7 +72,6 @@ contract FactoryTest is DSTest {
 
     function test_deploy() public {
         // Check the factory addresses are properly set
-
         assertEq(
             factory.elementFiValueProviderFactory(),
             address(elementFiValueProviderFactoryMock),
@@ -547,6 +547,7 @@ contract FactoryTest is DSTest {
     function test_deploy_DiscountRateAggregator_forEveryCompatibleValueProvider()
         public
     {
+        // Deploy discount rate aggregators for every value provider type
         for (
             uint256 oracleType = 0;
             oracleType < uint256(Factory.ValueProviderType.COUNT);
@@ -560,6 +561,8 @@ contract FactoryTest is DSTest {
                 discountRateRelayer.ANY_SIG(),
                 address(factory)
             );
+
+            // Create mock data and deploy the aggregator
             address aggregatorAddress = factory.deployDiscountRateAggregator(
                 abi.encode(
                     createDiscountRateAggregatorData(
@@ -579,6 +582,7 @@ contract FactoryTest is DSTest {
     function test_deploy_DiscountRateAggregator_CheckExistenceOfOracles()
         public
     {
+        // Create a mock discount rate relayer
         CollybusDiscountRateRelayer discountRateRelayer = new CollybusDiscountRateRelayer(
                 address(0xc011b005)
             );
@@ -588,6 +592,7 @@ contract FactoryTest is DSTest {
             address(factory)
         );
 
+        // Create an aggregator with multiple oracles
         uint256 oracleCount = 3;
         DiscountRateAggregatorData
             memory aggregator = DiscountRateAggregatorData({
@@ -607,11 +612,13 @@ contract FactoryTest is DSTest {
             );
         }
 
+        // Deploy the aggregator
         address aggregatorAddress = factory.deployDiscountRateAggregator(
             abi.encode(aggregator),
             address(discountRateRelayer)
         );
 
+        // Check that all the oracles where added
         assertEq(
             IAggregatorOracle(aggregatorAddress).oracleCount(),
             oracleCount,
@@ -629,6 +636,7 @@ contract FactoryTest is DSTest {
             address(factory)
         );
 
+        // Create the mock Discount rate aggregator data
         uint256 validValues = 1;
         DiscountRateAggregatorData
             memory aggregator = DiscountRateAggregatorData({
@@ -640,11 +648,13 @@ contract FactoryTest is DSTest {
 
         aggregator.oracleData[0] = abi.encode(createElementOracleData());
 
+        // Deploy the aggregator
         address aggregatorAddress = factory.deployDiscountRateAggregator(
             abi.encode(aggregator),
             address(discountRateRelayer)
         );
 
+        // Check that the required valid values is correct
         assertEq(
             AggregatorOracle(aggregatorAddress).requiredValidValues(),
             validValues,
@@ -663,6 +673,7 @@ contract FactoryTest is DSTest {
             address(factory)
         );
 
+        // Create the discount rate aggregator data
         DiscountRateAggregatorData
             memory aggregator = DiscountRateAggregatorData({
                 tokenId: 1,
@@ -692,6 +703,7 @@ contract FactoryTest is DSTest {
     function test_deploy_SpotPriceAggregator_forEveryCompatibleValueProvider()
         public
     {
+        // Create a spot price aggregator for every value provider type
         for (
             uint256 oracleType = 0;
             oracleType < uint256(Factory.ValueProviderType.COUNT);
@@ -705,6 +717,8 @@ contract FactoryTest is DSTest {
                 spotPriceRelayer.ANY_SIG(),
                 address(factory)
             );
+
+            // Deploy the aggregator
             address aggregatorAddress = factory.deploySpotPriceAggregator(
                 abi.encode(
                     createSpotPriceAggregatorData(
@@ -738,6 +752,7 @@ contract FactoryTest is DSTest {
             address(factory)
         );
 
+        // Create the aggregator data with multiple oracles
         uint256 oracleCount = 3;
         SpotPriceAggregatorData memory aggregator = SpotPriceAggregatorData({
             tokenAddress: address(0x1234),
@@ -746,6 +761,7 @@ contract FactoryTest is DSTest {
             minimumThresholdValue: 10**14
         });
 
+        // Create each oracle
         for (
             uint256 oracleIndex = 0;
             oracleIndex < oracleCount;
@@ -756,11 +772,13 @@ contract FactoryTest is DSTest {
             );
         }
 
+        // Deploy the spot price aggregator
         address aggregatorAddress = factory.deploySpotPriceAggregator(
             abi.encode(aggregator),
             address(spotPriceRelayer)
         );
 
+        // Check that all the oracles where added
         assertEq(
             IAggregatorOracle(aggregatorAddress).oracleCount(),
             oracleCount,
@@ -778,6 +796,7 @@ contract FactoryTest is DSTest {
             address(factory)
         );
 
+        // Create the spot price aggregator data structure
         uint256 validValues = 1;
         SpotPriceAggregatorData memory aggregator = SpotPriceAggregatorData({
             tokenAddress: address(0x1234),
@@ -786,13 +805,16 @@ contract FactoryTest is DSTest {
             minimumThresholdValue: 10**14
         });
 
+        // Create the oracle data structure
         aggregator.oracleData[0] = abi.encode(createChainlinkOracleData());
 
+        // Deploy the spot price aggregator
         address aggregatorAddress = factory.deploySpotPriceAggregator(
             abi.encode(aggregator),
             address(spotPriceRelayer)
         );
 
+        // Check that required valid values was properly set
         assertEq(
             AggregatorOracle(aggregatorAddress).requiredValidValues(),
             validValues,
@@ -811,6 +833,7 @@ contract FactoryTest is DSTest {
             address(factory)
         );
 
+        // Create the spot price aggregator data structure
         SpotPriceAggregatorData memory aggregator = SpotPriceAggregatorData({
             tokenAddress: address(0x1234),
             oracleData: new bytes[](1),
@@ -1320,6 +1343,7 @@ contract FactoryTest is DSTest {
     function createDiscountRateAggregatorData(
         Factory.ValueProviderType valueType
     ) internal returns (DiscountRateAggregatorData memory) {
+        // Create a discount rate aggregator for a certain given value provider
         DiscountRateAggregatorData
             memory aggregator = DiscountRateAggregatorData({
                 tokenId: 1,
@@ -1328,6 +1352,7 @@ contract FactoryTest is DSTest {
                 minimumThresholdValue: 10**14
             });
 
+        // Create the oracle data structure based on the provided value provider type
         if (valueType == Factory.ValueProviderType.Element) {
             aggregator.oracleData[0] = abi.encode(createElementOracleData());
         } else if (valueType == Factory.ValueProviderType.Notional) {
@@ -1349,6 +1374,7 @@ contract FactoryTest is DSTest {
         internal
         returns (SpotPriceAggregatorData memory)
     {
+        // Create a spot price aggregator for a certain given value provider
         SpotPriceAggregatorData memory aggregator = SpotPriceAggregatorData({
             tokenAddress: address(0x1234),
             oracleData: new bytes[](1),
@@ -1356,6 +1382,7 @@ contract FactoryTest is DSTest {
             minimumThresholdValue: 10**14
         });
 
+        // Create the oracle data structure based on the provided value provider type
         if (valueType == Factory.ValueProviderType.Element) {
             aggregator.oracleData[0] = abi.encode(createElementOracleData());
         } else if (valueType == Factory.ValueProviderType.Notional) {
@@ -1377,6 +1404,7 @@ contract FactoryTest is DSTest {
         internal
         returns (RelayerDeployData memory)
     {
+        // Create the data structure for a full discount rate relayer architecture with multiple oracles and aggregators
         OracleData memory notionalOracleData = createNotionalOracleData();
 
         DiscountRateAggregatorData
@@ -1421,6 +1449,7 @@ contract FactoryTest is DSTest {
         internal
         returns (RelayerDeployData memory)
     {
+        // Create the data structure for a full spot price relayer architecture
         ChainlinkVPData memory chainlinkValueProvider = createChainlinkVPData();
 
         OracleData memory chainlinkOracleData = OracleData({
