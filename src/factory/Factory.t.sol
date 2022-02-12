@@ -566,7 +566,8 @@ contract FactoryTest is DSTest {
             address aggregatorAddress = factory.deployDiscountRateAggregator(
                 abi.encode(
                     createDiscountRateAggregatorData(
-                        Factory.ValueProviderType(oracleType)
+                        Factory.ValueProviderType(oracleType),
+                        oracleType
                     )
                 ),
                 address(discountRateRelayer)
@@ -704,6 +705,8 @@ contract FactoryTest is DSTest {
         public
     {
         // Create a spot price aggregator for every value provider type
+
+        address tokenAddress = address(uint160(1));
         for (
             uint256 oracleType = 0;
             oracleType < uint256(Factory.ValueProviderType.COUNT);
@@ -722,11 +725,14 @@ contract FactoryTest is DSTest {
             address aggregatorAddress = factory.deploySpotPriceAggregator(
                 abi.encode(
                     createSpotPriceAggregatorData(
-                        Factory.ValueProviderType(oracleType)
+                        Factory.ValueProviderType(oracleType),
+                        tokenAddress
                     )
                 ),
                 address(spotPriceRelayer)
             );
+
+            tokenAddress = address(uint160(tokenAddress) + 1);
 
             assertTrue(
                 aggregatorAddress != address(0),
@@ -982,7 +988,8 @@ contract FactoryTest is DSTest {
         // Create the Aggregator data structure that will contain a Notional Oracle
         DiscountRateAggregatorData
             memory notionalAggregator = DiscountRateAggregatorData({
-                tokenId: 3,
+                // use the aggregator count as token id to make sure it is unused
+                tokenId: aggregatorCount,
                 oracleData: new bytes[](1),
                 requiredValidValues: 1,
                 minimumThresholdValue: 10**14
@@ -1113,7 +1120,9 @@ contract FactoryTest is DSTest {
         // The first aggregator is at address 0x1, make the second one use a different address
         SpotPriceAggregatorData
             memory chainlinkAggregator = SpotPriceAggregatorData({
-                tokenAddress: address(0x2),
+                // Use the aggregator count to generate the tokenAddress
+                // We need to offset it by one because the first aggregator has uint160(1) as it's address
+                tokenAddress: address(uint160(aggregatorCount + 1)),
                 oracleData: new bytes[](1),
                 requiredValidValues: 1,
                 minimumThresholdValue: 10**14
@@ -1341,59 +1350,60 @@ contract FactoryTest is DSTest {
     }
 
     function createDiscountRateAggregatorData(
-        Factory.ValueProviderType valueType
+        Factory.ValueProviderType valueType_,
+        uint tokenId_
     ) internal returns (DiscountRateAggregatorData memory) {
         // Create a discount rate aggregator for a certain given value provider
         DiscountRateAggregatorData
             memory aggregator = DiscountRateAggregatorData({
-                tokenId: 1,
+                tokenId: tokenId_,
                 oracleData: new bytes[](1),
                 requiredValidValues: 1,
                 minimumThresholdValue: 10**14
             });
 
         // Create the oracle data structure based on the provided value provider type
-        if (valueType == Factory.ValueProviderType.Element) {
+        if (valueType_ == Factory.ValueProviderType.Element) {
             aggregator.oracleData[0] = abi.encode(createElementOracleData());
-        } else if (valueType == Factory.ValueProviderType.Notional) {
+        } else if (valueType_ == Factory.ValueProviderType.Notional) {
             aggregator.oracleData[0] = abi.encode(createNotionalOracleData());
-        } else if (valueType == Factory.ValueProviderType.Yield) {
+        } else if (valueType_ == Factory.ValueProviderType.Yield) {
             aggregator.oracleData[0] = abi.encode(createYieldOracleData());
-        } else if (valueType == Factory.ValueProviderType.Chainlink) {
+        } else if (valueType_ == Factory.ValueProviderType.Chainlink) {
             aggregator.oracleData[0] = abi.encode(createChainlinkOracleData());
         } else {
             revert FactoryTest__invalidDiscountRateAggregatorType(
-                uint256(valueType)
+                uint256(valueType_)
             );
         }
 
         return aggregator;
     }
 
-    function createSpotPriceAggregatorData(Factory.ValueProviderType valueType)
+    function createSpotPriceAggregatorData(Factory.ValueProviderType valueType_, address tokenAddress_)
         internal
         returns (SpotPriceAggregatorData memory)
     {
         // Create a spot price aggregator for a certain given value provider
         SpotPriceAggregatorData memory aggregator = SpotPriceAggregatorData({
-            tokenAddress: address(0x1234),
+            tokenAddress: tokenAddress_,
             oracleData: new bytes[](1),
             requiredValidValues: 1,
             minimumThresholdValue: 10**14
         });
 
         // Create the oracle data structure based on the provided value provider type
-        if (valueType == Factory.ValueProviderType.Element) {
+        if (valueType_ == Factory.ValueProviderType.Element) {
             aggregator.oracleData[0] = abi.encode(createElementOracleData());
-        } else if (valueType == Factory.ValueProviderType.Notional) {
+        } else if (valueType_ == Factory.ValueProviderType.Notional) {
             aggregator.oracleData[0] = abi.encode(createNotionalOracleData());
-        } else if (valueType == Factory.ValueProviderType.Yield) {
+        } else if (valueType_ == Factory.ValueProviderType.Yield) {
             aggregator.oracleData[0] = abi.encode(createYieldOracleData());
-        } else if (valueType == Factory.ValueProviderType.Chainlink) {
+        } else if (valueType_ == Factory.ValueProviderType.Chainlink) {
             aggregator.oracleData[0] = abi.encode(createChainlinkOracleData());
         } else {
             revert FactoryTest__invalidDiscountRateAggregatorType(
-                uint256(valueType)
+                uint256(valueType_)
             );
         }
 
@@ -1405,42 +1415,16 @@ contract FactoryTest is DSTest {
         returns (RelayerDeployData memory)
     {
         // Create the data structure for a full discount rate relayer architecture with multiple oracles and aggregators
-        OracleData memory notionalOracleData = createNotionalOracleData();
-
-        DiscountRateAggregatorData
-            memory notionalAggregator = DiscountRateAggregatorData({
-                tokenId: 1,
-                oracleData: new bytes[](1),
-                requiredValidValues: 1,
-                minimumThresholdValue: 10**14
-            });
-
-        notionalAggregator.oracleData[0] = abi.encode(notionalOracleData);
-
-        ElementVPData memory elementValueProvider = createElementVPData();
-
-        OracleData memory elementOracleData = OracleData({
-            valueProviderData: abi.encode(elementValueProvider),
-            timeWindow: 200,
-            maxValidTime: 600,
-            alpha: 2 * 10**17,
-            valueProviderType: uint8(Factory.ValueProviderType.Element)
-        });
-
-        DiscountRateAggregatorData
-            memory elementAggregator = DiscountRateAggregatorData({
-                tokenId: 2,
-                oracleData: new bytes[](1),
-                requiredValidValues: 1,
-                minimumThresholdValue: 10**14
-            });
-
-        elementAggregator.oracleData[0] = abi.encode(elementOracleData);
-
         RelayerDeployData memory deployData;
-        deployData.aggregatorData = new bytes[](2);
-        deployData.aggregatorData[0] = abi.encode(elementAggregator);
-        deployData.aggregatorData[1] = abi.encode(notionalAggregator);
+        deployData.aggregatorData = new bytes[](uint256(Factory.ValueProviderType.COUNT));
+        for (
+            uint256 oracleType = 0;
+            oracleType < uint256(Factory.ValueProviderType.COUNT);
+            oracleType++
+        ) {
+            // use the oracle type as in index for the aggregator data structure
+            deployData.aggregatorData[oracleType] = abi.encode(createDiscountRateAggregatorData(Factory.ValueProviderType(oracleType),oracleType));
+        }
 
         return deployData;
     }
@@ -1449,30 +1433,20 @@ contract FactoryTest is DSTest {
         internal
         returns (RelayerDeployData memory)
     {
-        // Create the data structure for a full spot price relayer architecture
-        ChainlinkVPData memory chainlinkValueProvider = createChainlinkVPData();
-
-        OracleData memory chainlinkOracleData = OracleData({
-            valueProviderData: abi.encode(chainlinkValueProvider),
-            timeWindow: 200,
-            maxValidTime: 600,
-            alpha: 2 * 10**17,
-            valueProviderType: uint8(Factory.ValueProviderType.Chainlink)
-        });
-
-        SpotPriceAggregatorData
-            memory chainlinkAggregator = SpotPriceAggregatorData({
-                tokenAddress: address(0x1),
-                oracleData: new bytes[](1),
-                requiredValidValues: 1,
-                minimumThresholdValue: 10**14
-            });
-
-        chainlinkAggregator.oracleData[0] = abi.encode(chainlinkOracleData);
-
+        // Create the data structure for a full spot price relayer architecture with multiple oracles and aggregators
         RelayerDeployData memory deployData;
-        deployData.aggregatorData = new bytes[](1);
-        deployData.aggregatorData[0] = abi.encode(chainlinkAggregator);
+        deployData.aggregatorData = new bytes[](uint256(Factory.ValueProviderType.COUNT));
+        address tokenAddress = address(uint160(1));
+        for (
+            uint256 oracleType = 0;
+            oracleType < uint256(Factory.ValueProviderType.COUNT);
+            oracleType++
+        ) {
+            // use the oracle type as in index for the aggregator data structure
+            deployData.aggregatorData[oracleType] = abi.encode(createSpotPriceAggregatorData(Factory.ValueProviderType(oracleType),tokenAddress));
+            tokenAddress = address(uint160(tokenAddress) + 1);
+        }
+
         return deployData;
     }
 }
