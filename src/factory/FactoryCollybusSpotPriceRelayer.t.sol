@@ -40,4 +40,16 @@ contract FactoryCollybusSpotPriceRelayerTest is DSTest {
             "Factory CollybusSpotPriceRelayer incorrect collybus"
         );
     }
+
+    function test_create_AddsPermission_OnSender() public {
+        address oracle = _factory.create(_collybusAddress);
+
+        assertTrue(
+            CollybusSpotPriceRelayer(oracle).canCall(
+                CollybusSpotPriceRelayer(oracle).ANY_SIG(),
+                address(this)
+            ),
+            "Creator shold have admin access"
+        );
+    }
 }
