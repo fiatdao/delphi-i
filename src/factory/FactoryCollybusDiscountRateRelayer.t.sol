@@ -31,7 +31,7 @@ contract FactoryCollybusDiscountRateRelayerTest is DSTest {
         );
     }
 
-    function test_create_checkCollybus() public {
+    function test_create_validateProperties() public {
         address oracleAddress = _factory.create(_collybusAddress);
 
         assertEq(
