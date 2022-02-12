@@ -306,9 +306,10 @@ contract FactoryTest is DSTest {
             valueProviderType: uint8(Factory.ValueProviderType.Element)
         });
 
+        // Create a new caller for the external call
         Caller user = new Caller();
 
-        // Deploy the oracle
+        // Call deployElementFiValueProvider
         (bool ok, ) = user.externalCall(
             address(factory),
             abi.encodeWithSelector(
@@ -333,6 +334,7 @@ contract FactoryTest is DSTest {
             valueProviderType: uint8(Factory.ValueProviderType.Notional)
         });
 
+        // Deploy the oracle
         address oracleAddress = factory.deployNotionalFinanceValueProvider(
             notionalDataOracle
         );
@@ -344,7 +346,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_NotionalFinanceValueProvider_OnlyAuthrorizedUsers()
+    function test_deploy_NotionalFinanceValueProvider_onlyAuthorizedUsers()
         public
     {
         // Create the oracle data structure
@@ -359,7 +361,7 @@ contract FactoryTest is DSTest {
 
         Caller user = new Caller();
 
-        // Deploy the oracle
+        // Call deployNotionalFinanceValueProvider
         (bool ok, ) = user.externalCall(
             address(factory),
             abi.encodeWithSelector(
@@ -395,7 +397,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_YieldValueProvider_OnlyAuthrorizedUsers() public {
+    function test_deploy_YieldValueProvider_onlyAuthorizedUsers() public {
         // Create the oracle data structure
         YieldVPData memory yieldValueProvider = createYieldVPData();
         OracleData memory yieldDataOracle = OracleData({
@@ -408,7 +410,7 @@ contract FactoryTest is DSTest {
 
         Caller user = new Caller();
 
-        // Deploy the oracle
+        // Call deployYieldValueProvider
         (bool ok, ) = user.externalCall(
             address(factory),
             abi.encodeWithSelector(
@@ -444,7 +446,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_ChainlinkValueProvider_OnlyAuthrorizedUsers() public {
+    function test_deploy_ChainlinkValueProvider_onlyAuthorizedUsers() public {
         // Create the oracle data structure
         ChainlinkVPData memory chainlinkValueProvider = createChainlinkVPData();
         OracleData memory chainlinkDataOracle = OracleData({
@@ -457,7 +459,7 @@ contract FactoryTest is DSTest {
 
         Caller user = new Caller();
 
-        // Deploy the oracle
+        // Call deployChainlinkValueProvider
         (bool ok, ) = user.externalCall(
             address(factory),
             abi.encodeWithSelector(
@@ -516,7 +518,7 @@ contract FactoryTest is DSTest {
         }
     }
 
-    function test_deploy_AggregatorOracle_OnlyAuthrorizedUsers() public {
+    function test_deploy_AggregatorOracle_onlyAuthorizedUsers() public {
         OracleData memory oracleData = createElementOracleData();
 
         Caller user = new Caller();
@@ -526,7 +528,7 @@ contract FactoryTest is DSTest {
             address(factory)
         );
 
-        // Deploy the oracle
+        // Call deployAggregatorOracle
         (bool ok, ) = user.externalCall(
             address(factory),
             abi.encodeWithSelector(
@@ -574,7 +576,7 @@ contract FactoryTest is DSTest {
         }
     }
 
-    function test_deploy_DiscountRateAggregator_CheckExistanceOfOracles()
+    function test_deploy_DiscountRateAggregator_CheckExistenceOfOracles()
         public
     {
         CollybusDiscountRateRelayer discountRateRelayer = new CollybusDiscountRateRelayer(
@@ -650,6 +652,43 @@ contract FactoryTest is DSTest {
         );
     }
 
+    function test_deploy_DiscountRateAggregator_onlyAuthorizedUsers() public {
+        Caller user = new Caller();
+        CollybusDiscountRateRelayer discountRateRelayer = new CollybusDiscountRateRelayer(
+                address(0xc011b005)
+            );
+
+        discountRateRelayer.allowCaller(
+            discountRateRelayer.ANY_SIG(),
+            address(factory)
+        );
+
+        DiscountRateAggregatorData
+            memory aggregator = DiscountRateAggregatorData({
+                tokenId: 1,
+                oracleData: new bytes[](1),
+                requiredValidValues: 1,
+                minimumThresholdValue: 10**14
+            });
+
+        aggregator.oracleData[0] = abi.encode(createElementOracleData());
+
+        // Call deployDiscountRateAggregator
+        (bool ok, ) = user.externalCall(
+            address(factory),
+            abi.encodeWithSelector(
+                factory.deployDiscountRateAggregator.selector,
+                abi.encode(aggregator),
+                address(discountRateRelayer)
+            )
+        );
+
+        assertTrue(
+            ok == false,
+            "Only authorized users should be able to call deployDiscountRateAggregator"
+        );
+    }
+
     function test_deploy_SpotPriceAggregator_forEveryCompatibleValueProvider()
         public
     {
@@ -682,7 +721,7 @@ contract FactoryTest is DSTest {
         }
     }
 
-    function test_deploy_SpotPriceAggregator_CheckExistanceOfOracles() public {
+    function test_deploy_SpotPriceAggregator_CheckExistenceOfOracles() public {
         // Set-up the mock providers
         AggregatorOracle mockAggregatorAddress = new AggregatorOracle();
         mockAggregatorAddress.allowCaller(
@@ -761,6 +800,42 @@ contract FactoryTest is DSTest {
         );
     }
 
+    function test_deploy_SpotPriceAggregator_onlyAuthorizedUsers() public {
+        Caller user = new Caller();
+        CollybusSpotPriceRelayer spotPriceRelayer = new CollybusSpotPriceRelayer(
+                address(0xc011b005)
+            );
+
+        spotPriceRelayer.allowCaller(
+            spotPriceRelayer.ANY_SIG(),
+            address(factory)
+        );
+
+        SpotPriceAggregatorData memory aggregator = SpotPriceAggregatorData({
+            tokenAddress: address(0x1234),
+            oracleData: new bytes[](1),
+            requiredValidValues: 1,
+            minimumThresholdValue: 10**14
+        });
+
+        aggregator.oracleData[0] = abi.encode(createChainlinkOracleData());
+
+        // Call deploySpotPriceAggregator
+        (bool ok, ) = user.externalCall(
+            address(factory),
+            abi.encodeWithSelector(
+                factory.deploySpotPriceAggregator.selector,
+                abi.encode(aggregator),
+                address(spotPriceRelayer)
+            )
+        );
+
+        assertTrue(
+            ok == false,
+            "Only authorized users should be able to call deploySpotPriceAggregator"
+        );
+    }
+
     function test_deploy_collybusDiscountRateRelayer_createsContract() public {
         address collybus = address(0xC0111b005);
         address relayer = factory.deployCollybusDiscountRateRelayer(collybus);
@@ -768,6 +843,25 @@ contract FactoryTest is DSTest {
         assertTrue(
             relayer != address(0),
             "CollybusDiscountRateRelayer should be deployed"
+        );
+    }
+
+    function test_deploy_collybusDiscountRateRelayer_onlyAuthorizedUsers() public {
+        Caller user = new Caller();
+        address collybus = address(0xC0111b005);
+
+        // Call deployCollybusDiscountRateRelayer
+        (bool ok, ) = user.externalCall(
+            address(factory),
+            abi.encodeWithSelector(
+                factory.deployCollybusDiscountRateRelayer.selector,
+                collybus
+            )
+        );
+
+        assertTrue(
+            ok == false,
+            "Only authorized users should be able to call deployCollybusDiscountRateRelayer"
         );
     }
 
@@ -782,7 +876,26 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_collybusDiscountRate_fullArchitecture() public {
+    function test_deploy_collybusSpotPriceRelayer_onlyAuthorizedUsers() public {
+        Caller user = new Caller();
+        address collybus = address(0xC01115107);
+
+        // Call deployCollybusSpotPriceRelayer
+        (bool ok, ) = user.externalCall(
+            address(factory),
+            abi.encodeWithSelector(
+                factory.deployCollybusSpotPriceRelayer.selector,
+                collybus
+            )
+        );
+
+        assertTrue(
+            ok == false,
+            "Only authorized users should be able to call deployCollybusSpotPriceRelayer"
+        );
+    }
+
+    function test_deploy_collybusDiscountRateArchitecture() public {
         RelayerDeployData memory deployData = createDiscountRateDeployData();
 
         // Deploy the oracle architecture
@@ -797,10 +910,31 @@ contract FactoryTest is DSTest {
             "CollybusDiscountPriceRelayer should be deployed"
         );
 
+        // Check that all aggregators were added to the relayer
         assertEq(
             ICollybusDiscountRateRelayer(discountRateRelayer).oracleCount(),
             deployData.aggregatorData.length,
             "Discount rate relayer invalid aggregator count"
+        );
+    }
+
+    function test_deploy_collybusDiscountRateArchitecture_onlyAuthorizedUsers() public {
+        Caller user = new Caller();
+        RelayerDeployData memory deployData = createDiscountRateDeployData();
+
+        // Call deployDiscountRateArchitecture
+        (bool ok, ) = user.externalCall(
+            address(factory),
+            abi.encodeWithSelector(
+                factory.deployDiscountRateArchitecture.selector,
+                abi.encode(deployData),
+                address(0x1234)
+            )
+        );
+
+        assertTrue(
+            ok == false,
+            "Only authorized users should be able to call deployDiscountRateArchitecture"
         );
     }
 
@@ -892,7 +1026,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_collybusSpotPrice_fullArchitecture() public {
+    function test_deploy_collybusSpotPriceArchitecture() public {
         RelayerDeployData memory deployData = createSpotPriceDeployData();
 
         // Deploy the oracle architecture
@@ -911,6 +1045,32 @@ contract FactoryTest is DSTest {
             ICollybusSpotPriceRelayer(spotPriceRelayer).oracleCount(),
             deployData.aggregatorData.length,
             "CollybusSpotPriceRelayer invalid aggregator count"
+        );
+    }
+
+    function test_deploy_collybusSpotPriceArchitecture_onlyAuthorizedUsers() public {
+        Caller user = new Caller();
+        RelayerDeployData memory deployData = createSpotPriceDeployData();
+
+        // Deploy the oracle architecture
+        address spotPriceRelayer = factory.deploySpotPriceArchitecture(
+            abi.encode(deployData),
+            address(0x1234)
+        );
+
+        // Call deploySpotPriceArchitecture
+        (bool ok, ) = user.externalCall(
+            address(factory),
+            abi.encodeWithSelector(
+                factory.deploySpotPriceArchitecture.selector,
+                abi.encode(deployData),
+                address(0x1234)
+            )
+        );
+
+        assertTrue(
+            ok == false,
+            "Only authorized users should be able to call deploySpotPriceArchitecture"
         );
     }
 
