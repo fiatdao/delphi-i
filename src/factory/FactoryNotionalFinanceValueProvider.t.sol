@@ -31,25 +31,6 @@ contract FactoryNotionalFinanceValueProviderTest is DSTest {
         assertTrue(address(_factory) != address(0));
     }
 
-    function test_create() public {
-        // Create Notional Value Provider
-        address notionalValueProviderAddress = _factory.create(
-            _oracleUpdateWindow,
-            _oracleMaxValidTime,
-            _oracleAlpha,
-            _notionalView,
-            _currencyId,
-            _maturityDate,
-            _settlementDate,
-            _oracleRateDecimals
-        );
-
-        assertTrue(
-            notionalValueProviderAddress != address(0),
-            "Factory Notional Value Provider create failed"
-        );
-    }
-
     function test_create_validateProperties() public {
         // Create Notional Value Provider
         address notionalValueProviderAddress = _factory.create(
