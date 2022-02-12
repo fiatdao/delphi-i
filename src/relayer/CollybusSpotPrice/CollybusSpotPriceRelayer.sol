@@ -246,7 +246,8 @@ contract CollybusSpotPriceRelayer is Guarded, ICollybusSpotPriceRelayer {
         }
     }
 
-    /// @notice The function will call execute() if check() passes otherwise it will revert
+    /// @notice The function will call `execute()` if `check()` returns `true`, otherwise it will revert
+    /// @dev This method is needed for services that try to updates the oracles on each block and only call the method if it doesn't fail
     function executeWithRevert() public override(IRelayer) {
         if (check()) {
             execute();

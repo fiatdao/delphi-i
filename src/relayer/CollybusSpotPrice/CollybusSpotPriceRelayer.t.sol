@@ -380,12 +380,12 @@ contract CollybusSpotPriceRelayerTest is DSTest {
     }
 
     function test_executeWithRevert() public {
-        // call should not revert
+        // Call should not revert
         cdrr.executeWithRevert();
     }
 
     function test_executeWithRevert_checkWillReturnFalseAfter() public {
-        // call should not revert because check will return true
+        // Call should not revert because check will return true
         cdrr.executeWithRevert();
 
         assertTrue(
@@ -395,7 +395,7 @@ contract CollybusSpotPriceRelayerTest is DSTest {
     }
 
     function testFail_executeWithRevert_failsWhenCheckReturnsFalse() public {
-        // update oracles and rates
+        // Ppdate oracles and rates
         cdrr.execute();
 
         // Execute with revert should fail because check will return false
