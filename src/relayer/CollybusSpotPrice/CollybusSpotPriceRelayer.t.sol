@@ -378,4 +378,27 @@ contract CollybusSpotPriceRelayerTest is DSTest {
                 uint256(oracle2InitialValue)
         );
     }
+
+    function test_executeWithRevert() public {
+        // call should not revert
+        cdrr.executeWithRevert();
+    }
+
+    function test_executeWithRevert_checkWillReturnFalseAfter() public {
+        // call should not revert because check will return true
+        cdrr.executeWithRevert();
+
+        assertTrue(
+            cdrr.check() == false,
+            "Check should return false after executeWithRevert was called"
+        );
+    }
+
+    function testFail_executeWithRevert_failsWhenCheckReturnsFalse() public {
+        // update oracles and rates
+        cdrr.execute();
+
+        // Execute with revert should fail because check will return false
+        cdrr.executeWithRevert();
+    }
 }
