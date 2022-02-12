@@ -986,9 +986,9 @@ contract FactoryTest is DSTest {
         ).oracleCount();
 
         // Create the Aggregator data structure that will contain a Notional Oracle
+        // Use the aggregator count as token id to make sure it is unused
         DiscountRateAggregatorData
             memory notionalAggregator = DiscountRateAggregatorData({
-                // use the aggregator count as token id to make sure it is unused
                 tokenId: aggregatorCount,
                 oracleData: new bytes[](1),
                 requiredValidValues: 1,
@@ -1117,11 +1117,10 @@ contract FactoryTest is DSTest {
         uint256 aggregatorCount = ICollybusSpotPriceRelayer(spotPriceRelayer)
             .oracleCount();
 
-        // The first aggregator is at address 0x1, make the second one use a different address
+        // Use the aggregator count to generate the tokenAddress
+        // We need to offset it by one because the first aggregator has uint160(1) as it's address
         SpotPriceAggregatorData
             memory chainlinkAggregator = SpotPriceAggregatorData({
-                // Use the aggregator count to generate the tokenAddress
-                // We need to offset it by one because the first aggregator has uint160(1) as it's address
                 tokenAddress: address(uint160(aggregatorCount + 1)),
                 oracleData: new bytes[](1),
                 requiredValidValues: 1,
@@ -1351,7 +1350,7 @@ contract FactoryTest is DSTest {
 
     function createDiscountRateAggregatorData(
         Factory.ValueProviderType valueType_,
-        uint tokenId_
+        uint256 tokenId_
     ) internal returns (DiscountRateAggregatorData memory) {
         // Create a discount rate aggregator for a certain given value provider
         DiscountRateAggregatorData
@@ -1380,10 +1379,10 @@ contract FactoryTest is DSTest {
         return aggregator;
     }
 
-    function createSpotPriceAggregatorData(Factory.ValueProviderType valueType_, address tokenAddress_)
-        internal
-        returns (SpotPriceAggregatorData memory)
-    {
+    function createSpotPriceAggregatorData(
+        Factory.ValueProviderType valueType_,
+        address tokenAddress_
+    ) internal returns (SpotPriceAggregatorData memory) {
         // Create a spot price aggregator for a certain given value provider
         SpotPriceAggregatorData memory aggregator = SpotPriceAggregatorData({
             tokenAddress: tokenAddress_,
@@ -1416,14 +1415,21 @@ contract FactoryTest is DSTest {
     {
         // Create the data structure for a full discount rate relayer architecture with multiple oracles and aggregators
         RelayerDeployData memory deployData;
-        deployData.aggregatorData = new bytes[](uint256(Factory.ValueProviderType.COUNT));
+        deployData.aggregatorData = new bytes[](
+            uint256(Factory.ValueProviderType.COUNT)
+        );
         for (
             uint256 oracleType = 0;
             oracleType < uint256(Factory.ValueProviderType.COUNT);
             oracleType++
         ) {
             // use the oracle type as in index for the aggregator data structure
-            deployData.aggregatorData[oracleType] = abi.encode(createDiscountRateAggregatorData(Factory.ValueProviderType(oracleType),oracleType));
+            deployData.aggregatorData[oracleType] = abi.encode(
+                createDiscountRateAggregatorData(
+                    Factory.ValueProviderType(oracleType),
+                    oracleType
+                )
+            );
         }
 
         return deployData;
@@ -1435,7 +1441,9 @@ contract FactoryTest is DSTest {
     {
         // Create the data structure for a full spot price relayer architecture with multiple oracles and aggregators
         RelayerDeployData memory deployData;
-        deployData.aggregatorData = new bytes[](uint256(Factory.ValueProviderType.COUNT));
+        deployData.aggregatorData = new bytes[](
+            uint256(Factory.ValueProviderType.COUNT)
+        );
         address tokenAddress = address(uint160(1));
         for (
             uint256 oracleType = 0;
@@ -1443,7 +1451,12 @@ contract FactoryTest is DSTest {
             oracleType++
         ) {
             // use the oracle type as in index for the aggregator data structure
-            deployData.aggregatorData[oracleType] = abi.encode(createSpotPriceAggregatorData(Factory.ValueProviderType(oracleType),tokenAddress));
+            deployData.aggregatorData[oracleType] = abi.encode(
+                createSpotPriceAggregatorData(
+                    Factory.ValueProviderType(oracleType),
+                    tokenAddress
+                )
+            );
             tokenAddress = address(uint160(tokenAddress) + 1);
         }
 
