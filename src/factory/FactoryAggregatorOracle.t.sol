@@ -33,7 +33,10 @@ contract FactoryAggregatorOracleTest is DSTest {
         address oracle = _factory.create();
 
         assertTrue(
-            AggregatorOracle(oracle).canCall(AggregatorOracle(oracle).ANY_SIG(), address(this)),
+            AggregatorOracle(oracle).canCall(
+                AggregatorOracle(oracle).ANY_SIG(),
+                address(this)
+            ),
             "Creator shold have admin access"
         );
     }
