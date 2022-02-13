@@ -29,6 +29,43 @@ contract FactoryYieldValueProviderTest is DSTest {
         assertTrue(address(_factory) != address(0));
     }
 
+    function test_create() public {
+        // Mock the yield pool that is needed when the value provider contract is created
+        MockProvider yieldPool = new MockProvider();
+        yieldPool.givenQueryReturnResponse(
+            abi.encodeWithSelector(IYieldPool.getCache.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint112(0), uint112(0), uint32(0))
+            }),
+            false
+        );
+
+        yieldPool.givenQueryReturnResponse(
+            abi.encodeWithSelector(IYieldPool.cumulativeBalancesRatio.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint256(0))
+            }),
+            false
+        );
+
+        // Create Yield Value Provider
+        address yieldValueProviderAddress = _factory.create(
+            _oracleUpdateWindow,
+            _oracleMaxValidTime,
+            _oracleAlpha,
+            address(yieldPool),
+            _maturity,
+            _timeScale
+        );
+
+        assertTrue(
+            yieldValueProviderAddress != address(0),
+            "Factory Yield Value Provider create failed"
+        );
+    }
+
     function test_create_validateProperties() public {
         // Mock the yield pool that is needed when the value provider contract is created
         MockProvider yieldPool = new MockProvider();

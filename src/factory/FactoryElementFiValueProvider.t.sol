@@ -33,6 +33,58 @@ contract FactoryElementFiValueProviderTest is DSTest {
         assertTrue(address(_factory) != address(0));
     }
 
+    function test_create() public {
+        // Create mock ERC20 tokens needed to create the value provider
+        MockProvider underlierMock = new MockProvider();
+        underlierMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ERC20.decimals.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint8(18))
+            }),
+            false
+        );
+
+        MockProvider ePTokenBondMock = new MockProvider();
+        ePTokenBondMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ERC20.decimals.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint8(18))
+            }),
+            false
+        );
+
+        MockProvider poolToken = new MockProvider();
+        poolToken.givenQueryReturnResponse(
+            abi.encodeWithSelector(ERC20.decimals.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint8(18))
+            }),
+            false
+        );
+
+        // Create ElementFi Value Provider
+        address elementValueProviderAddress = _factory.create(
+            _oracleUpdateWindow,
+            _oracleMaxValidTime,
+            _oracleAlpha,
+            _poolId,
+            _balancerVaultAddress,
+            address(poolToken),
+            address(underlierMock),
+            address(ePTokenBondMock),
+            _timeScale,
+            _maturity
+        );
+
+        assertTrue(
+            elementValueProviderAddress != address(0),
+            "Factory ElementFi Value Provider create failed"
+        );
+    }
+
     function test_create_validateProperties() public {
         // Create mock ERC20 tokens needed to create the value provider
         MockProvider underlierMock = new MockProvider();

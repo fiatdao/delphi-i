@@ -26,6 +26,34 @@ contract FactoryChainlinkValueProviderTest is DSTest {
         assertTrue(address(_factory) != address(0));
     }
 
+    function test_create() public {
+        // Create a chainlink mock aggregator
+        MockProvider chainlinkMock = new MockProvider();
+        chainlinkMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(
+                IChainlinkAggregatorV3Interface.decimals.selector
+            ),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(uint8(8))
+            }),
+            false
+        );
+
+        // Create chainlink Value Provider
+        address chainlinkValueProviderAddress = _factory.create(
+            _oracleUpdateWindow,
+            _oracleMaxValidTime,
+            _oracleAlpha,
+            address(chainlinkMock)
+        );
+
+        assertTrue(
+            chainlinkValueProviderAddress != address(0),
+            "Factory Chainlink Value Provider create failed"
+        );
+    }
+
     function test_create_validateProperties() public {
         // Create a chainlink mock aggregator
         MockProvider chainlinkMock = new MockProvider();
