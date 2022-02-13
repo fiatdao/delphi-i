@@ -5,4 +5,6 @@ interface IRelayer {
     function check() external returns (bool);
 
     function execute() external;
+
+    function executeWithRevert() external;
 }

@@ -8,23 +8,26 @@ import {ICollybus} from "src/relayer/ICollybus.sol";
 import {ICollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/ICollybusDiscountRateRelayer.sol";
 import {Guarded} from "src/guarded/Guarded.sol";
 
-// @notice Emitted when trying to add an oracle that already exists
-error CollybusDiscountRateRelayer__addOracle_oracleAlreadyRegistered(
-    address oracle
-);
-
-// @notice Emitted when trying to add an oracle for a tokenId that already has a registered oracle.
-error CollybusDiscountRateRelayer__addOracle_tokenIdHasOracleRegistered(
-    address oracle,
-    uint256 tokenId
-);
-
-// @notice Emitter when trying to remove an oracle that was not registered.
-error CollybusDiscountRateRelayer__removeOracle_oracleNotRegistered(
-    address oracle
-);
-
 contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
+    // @notice Emitted when trying to add an oracle that already exists
+    error CollybusDiscountRateRelayer__addOracle_oracleAlreadyRegistered(
+        address oracle
+    );
+
+    // @notice Emitted when trying to add an oracle for a tokenId that already has a registered oracle.
+    error CollybusDiscountRateRelayer__addOracle_tokenIdHasOracleRegistered(
+        address oracle,
+        uint256 tokenId
+    );
+
+    // @notice Emitter when trying to remove an oracle that was not registered.
+    error CollybusDiscountRateRelayer__removeOracle_oracleNotRegistered(
+        address oracle
+    );
+
+    // @notice Emitter when check() returns false
+    error CollybusDiscountRateRelayer__executeWithRevert_checkFailed();
+
     struct OracleData {
         bool exists;
         uint256 tokenId;
@@ -183,7 +186,7 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
     ///         threshold value set for that oracle.
     /// @dev    Oracles that return invalid values are skipped.
     /// @return Returns 'true' if at least one oracle should update data in the Collybus
-    function check() external override(IRelayer) returns (bool) {
+    function check() public override(IRelayer) returns (bool) {
         uint256 arrayLength = _oracleList.length();
         for (uint256 i = 0; i < arrayLength; i++) {
             // Cache oracle address
@@ -242,6 +245,16 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
 
                 emit UpdatedCollybus(oracleData.tokenId, uint256(rate));
             }
+        }
+    }
+
+    /// @notice The function will call `execute()` if `check()` returns `true`, otherwise it will revert
+    /// @dev This method is needed for services that try to updates the oracles on each block and only call the method if it doesn't fail
+    function executeWithRevert() public override(IRelayer) {
+        if (check()) {
+            execute();
+        } else {
+            revert CollybusDiscountRateRelayer__executeWithRevert_checkFailed();
         }
     }
 
