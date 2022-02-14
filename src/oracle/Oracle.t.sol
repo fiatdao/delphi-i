@@ -68,6 +68,27 @@ contract OracleTest is DSTest {
         assertTrue(address(oracle) != address(0));
     }
 
+    function test_check_timeUpdateWindow() public {
+        // Check that the property was properly set
+        assertTrue(
+            oracle.timeUpdateWindow() == timeUpdateWindow,
+            "Invalid oracle timeUpdateWindow"
+        );
+    }
+
+    function test_check_maxValidTime() public {
+        // Check that the property was properly set
+        assertTrue(
+            oracle.maxValidTime() == maxValidTime,
+            "Invalid oracle maxValidTime"
+        );
+    }
+
+    function test_check_alpha() public {
+        // Check that the property was properly set
+        assertTrue(oracle.alpha() == alpha, "Invalid oracle alpha");
+    }
+
     function test_update_Updates_timestamp() public {
         oracle.update();
 
