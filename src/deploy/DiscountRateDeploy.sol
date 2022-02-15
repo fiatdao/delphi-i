@@ -50,7 +50,7 @@ contract DiscountRateDeploy {
             valueProviderData: abi.encode(elementValueProvider),
             timeWindow: 60,
             maxValidTime: 600,
-            alpha: 2 * 10**17,
+            alpha: 200000000000000000,
             valueProviderType: uint8(Factory.ValueProviderType.Element)
         });
 
@@ -68,7 +68,7 @@ contract DiscountRateDeploy {
             valueProviderData: abi.encode(mockedElementValueProvider),
             timeWindow: 60,
             maxValidTime: 600,
-            alpha: 2 * 10**17,
+            alpha: 200000000000000000,
             valueProviderType: uint8(Factory.ValueProviderType.Element)
         });
 
@@ -77,7 +77,7 @@ contract DiscountRateDeploy {
                 tokenId: 1,
                 oracleData: new bytes[](3),
                 requiredValidValues: 1,
-                minimumThresholdValue: 0
+                minimumThresholdValue: 100000000
             });
 
         elementAggregator.oracleData[0] = abi.encode(elementOracleData);

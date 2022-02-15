@@ -21,7 +21,7 @@ contract SpotPriceDeploy {
             valueProviderData: abi.encode(chainlinkValueProvider),
             timeWindow: 60,
             maxValidTime: 600,
-            alpha: 0,
+            alpha: 200000000000000000,
             valueProviderType: uint8(Factory.ValueProviderType.Chainlink)
         });
 
@@ -32,7 +32,7 @@ contract SpotPriceDeploy {
                 ),
                 oracleData: new bytes[](1),
                 requiredValidValues: 1,
-                minimumThresholdValue: 0
+                minimumThresholdValue: 100000000
             });
 
         chainlinkAggregator.oracleData[0] = abi.encode(chainlinkOracleData);
