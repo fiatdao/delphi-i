@@ -428,18 +428,10 @@ contract OracleTest is DSTest {
     }
 
     function testFail_alphaHasToBe_greaterThanZero() public {
-        new OracleImplementation(
-            timeUpdateWindow,
-            maxValidTime,
-            0
-        );
+        new OracleImplementation(timeUpdateWindow, maxValidTime, 0);
     }
 
     function testFail_alphaHasToBe_lowerThanOne() public {
-        new OracleImplementation(
-            timeUpdateWindow,
-            maxValidTime,
-            1 * 10**18
-        );
+        new OracleImplementation(timeUpdateWindow, maxValidTime, 1 * 10**18);
     }
 }
