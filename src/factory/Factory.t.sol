@@ -1288,7 +1288,7 @@ contract FactoryTest is DSTest {
                 valueProviderData: abi.encode(createElementVPData()),
                 timeWindow: 0,
                 maxValidTime: 0,
-                alpha: 0,
+                alpha: 1,
                 valueProviderType: uint8(Factory.ValueProviderType.Element)
             });
     }
@@ -1299,7 +1299,7 @@ contract FactoryTest is DSTest {
                 valueProviderData: abi.encode(createNotionalVPData()),
                 timeWindow: 0,
                 maxValidTime: 0,
-                alpha: 0,
+                alpha: 1,
                 valueProviderType: uint8(Factory.ValueProviderType.Notional)
             });
     }
@@ -1310,7 +1310,7 @@ contract FactoryTest is DSTest {
                 valueProviderData: abi.encode(createYieldVPData()),
                 timeWindow: 0,
                 maxValidTime: 0,
-                alpha: 0,
+                alpha: 1,
                 valueProviderType: uint8(Factory.ValueProviderType.Yield)
             });
     }
@@ -1321,7 +1321,7 @@ contract FactoryTest is DSTest {
                 valueProviderData: abi.encode(createChainlinkVPData()),
                 timeWindow: 0,
                 maxValidTime: 0,
-                alpha: 0,
+                alpha: 1,
                 valueProviderType: uint8(Factory.ValueProviderType.Chainlink)
             });
     }

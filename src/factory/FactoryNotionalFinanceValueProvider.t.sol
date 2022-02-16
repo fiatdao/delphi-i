@@ -13,7 +13,7 @@ import {NotionalFinanceValueProvider} from "src/oracle_implementations/discount_
 contract FactoryNotionalFinanceValueProviderTest is DSTest {
     uint256 private _oracleUpdateWindow;
     uint256 private _oracleMaxValidTime;
-    int256 private _oracleAlpha;
+    int256 private _oracleAlpha = 1;
 
     address private _notionalView;
     uint16 private _currencyId;

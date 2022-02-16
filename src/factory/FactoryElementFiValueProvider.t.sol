@@ -13,7 +13,7 @@ import {ElementFiValueProvider} from "src/oracle_implementations/discount_rate/E
 contract FactoryElementFiValueProviderTest is DSTest {
     uint256 private _oracleUpdateWindow;
     uint256 private _oracleMaxValidTime;
-    int256 private _oracleAlpha;
+    int256 private _oracleAlpha = 1;
 
     bytes32 private _poolId =
         bytes32(
