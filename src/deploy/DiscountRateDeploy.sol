@@ -56,10 +56,10 @@ contract DiscountRateDeploy {
 
         ElementVPData memory mockedElementValueProvider = ElementVPData({
             poolId: pool.getPoolId(),
-            balancerVault: address(0xa8414C1bb6c1e96e252692008641bbA21b9e6E59),
+            balancerVault: address(pool.getVault()),
             poolToken: address(0x25d7b0bBe1817Dc232523FaD2A7Fbe04EdeB2E25),
-            underlier: address(0x3F757B9f5b2769499951Ed9DCb56BFdc95c97470),
-            ePTokenBond: address(0xDE31883b01B5Baacc3C8733bdC6b1B628AA23710),
+            underlier: address(pool.underlying()),
+            ePTokenBond: address(pool.bond()),
             timeScale: timeScale59x18,
             maturity: pool.expiration()
         });
@@ -77,7 +77,7 @@ contract DiscountRateDeploy {
                 tokenId: 1,
                 oracleData: new bytes[](3),
                 requiredValidValues: 1,
-                minimumThresholdValue: 100000000
+                minimumThresholdValue: 1
             });
 
         elementAggregator.oracleData[0] = abi.encode(elementOracleData);

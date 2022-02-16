@@ -1,0 +1,46 @@
+{
+    "0x9a4b0fe8bda4b212b1a9978c116bad49ef5c5d37": {
+      "collybus": "0x4B1002aB18D7Ea45125D6F908B3A13f947C3FBF9",
+      "type": "Discount Rate Relayer",
+      "aggregatorOracles": {
+        "0x437663Db402d49c414e6C61d46a4316D1fd195f7": {
+          "tokenId": 1,
+          "minimumThresholdValue": 1,
+          "oracles": {
+            "0x053f48B0114A6dcb03101A08659298953A7904f9": {
+              "timeUpdateWindow": 60,
+              "maxValidTime": 600,
+              "alpha": "200000000000000000"
+            },
+            "0x70a324E44E6E04b9F6F2E1c33B2953eA351372E7": {
+              "timeUpdateWindow": 60,
+              "maxValidTime": 600,
+              "alpha": "200000000000000000"
+            },
+            "0xAe15Fe3B87cE13C00A275D16F79c363c3eAbf572": {
+              "timeUpdateWindow": 60,
+              "maxValidTime": 600,
+              "alpha": "200000000000000000"
+            }
+          }
+        }
+      }
+    },
+    "0x7ef09dc5c50ebee3882fb8af57659531c60aae70": {
+      "collybus": "0x4B1002aB18D7Ea45125D6F908B3A13f947C3FBF9",
+      "type": "Spot Price Relayer",
+      "aggregatorOracles": {
+        "0x382Ad073D64FAbc94Ca8fB1085b99fd75C8E66d0": {
+          "tokenAddress": "0x78dEca24CBa286C0f8d56370f5406B48cFCE2f86",
+          "minimumThresholdValue": 1,
+          "oracles": {
+            "0xF4D6bC1E7C6937Ab1922D05A8ab7900e120D832E": {
+              "timeUpdateWindow": 60,
+              "maxValidTime": 600,
+              "alpha": "200000000000000000"
+            }
+          }
+        }
+      }
+    }
+  }
