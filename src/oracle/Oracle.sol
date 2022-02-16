@@ -41,7 +41,7 @@ abstract contract Oracle is Pausable, IOracle {
         int256 alpha_
     ) {
         // Validate alpha
-        if (alpha_ <= 0 || alpha_ >= 1 * 10**18) {
+        if (alpha_ <= 0 || alpha_ > 1 * 10**18) {
             revert Oracle__constructor_alphaInvalid(alpha_);
         }
 

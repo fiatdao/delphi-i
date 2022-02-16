@@ -432,6 +432,6 @@ contract OracleTest is DSTest {
     }
 
     function testFail_alphaHasToBe_lowerThanOne() public {
-        new OracleImplementation(timeUpdateWindow, maxValidTime, 1 * 10**18);
+        new OracleImplementation(timeUpdateWindow, maxValidTime, 1 * 10**18 + 1);
     }
 }
