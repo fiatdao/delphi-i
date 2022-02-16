@@ -6,8 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added 
+### Added
 
 ### Changed
+
+- Added bounds validation for the Oracle's alpha parameter. Issue [#66](https://github.com/fiatdao/delphi/issues/66)
 
 ### Removed

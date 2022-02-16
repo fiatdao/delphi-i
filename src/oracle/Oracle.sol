@@ -6,6 +6,9 @@ import {IOracle} from "src/oracle/IOracle.sol";
 import {Pausable} from "src/pausable/Pausable.sol";
 
 abstract contract Oracle is Pausable, IOracle {
+    /// @notice Emitted when alpha value is invalid
+    error Oracle__constructor_alphaInvalid(int256 alpha);
+
     /// ======== Events ======== ///
 
     event ValueInvalid();
@@ -37,6 +40,11 @@ abstract contract Oracle is Pausable, IOracle {
         uint256 maxValidTime_,
         int256 alpha_
     ) {
+        // Validate alpha
+        if (alpha_ <= 0 || alpha_ > 1 * 10**18) {
+            revert Oracle__constructor_alphaInvalid(alpha_);
+        }
+
         timeUpdateWindow = timeUpdateWindow_;
         maxValidTime = maxValidTime_;
         alpha = alpha_;

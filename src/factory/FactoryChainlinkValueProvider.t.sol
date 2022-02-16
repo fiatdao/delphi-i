@@ -14,7 +14,7 @@ import {IChainlinkAggregatorV3Interface} from "src/oracle_implementations/spot_p
 contract FactoryChainlinkValueProviderTest is DSTest {
     uint256 private _oracleUpdateWindow;
     uint256 private _oracleMaxValidTime;
-    int256 private _oracleAlpha;
+    int256 private _oracleAlpha = 1;
 
     FactoryChainlinkValueProvider private _factory;
 
