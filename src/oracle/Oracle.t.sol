@@ -426,4 +426,20 @@ contract OracleTest is DSTest {
             "Non-authorized user should not be able to call reset()"
         );
     }
+
+    function testFail_alphaHasToBe_greaterThanZero() public {
+        new OracleImplementation(
+            timeUpdateWindow,
+            maxValidTime,
+            0
+        );
+    }
+
+    function testFail_alphaHasToBe_lowerThanOne() public {
+        new OracleImplementation(
+            timeUpdateWindow,
+            maxValidTime,
+            1 * 10**18
+        );
+    }
 }
