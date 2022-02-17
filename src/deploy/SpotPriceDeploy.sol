@@ -10,7 +10,7 @@ import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 contract SpotPriceDeploy {
     function createDeployData(address chainlinkDataFeedAddress_)
         external
-        view
+        pure
         returns (bytes memory)
     {
         ChainlinkVPData memory chainlinkValueProvider = ChainlinkVPData({

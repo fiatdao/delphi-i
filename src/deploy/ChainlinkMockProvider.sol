@@ -11,7 +11,7 @@ contract ChainlinkMockProvider is IChainlinkAggregatorV3Interface {
 
     function decimals()
         external
-        view
+        pure
         override(IChainlinkAggregatorV3Interface)
         returns (uint8)
     {
@@ -20,7 +20,7 @@ contract ChainlinkMockProvider is IChainlinkAggregatorV3Interface {
 
     function description()
         external
-        view
+        pure
         override(IChainlinkAggregatorV3Interface)
         returns (string memory)
     {
@@ -29,7 +29,7 @@ contract ChainlinkMockProvider is IChainlinkAggregatorV3Interface {
 
     function version()
         external
-        view
+        pure
         override(IChainlinkAggregatorV3Interface)
         returns (uint256)
     {

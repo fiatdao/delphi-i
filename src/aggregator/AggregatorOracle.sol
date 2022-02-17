@@ -205,24 +205,24 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
         _unpause();
     }
 
-    function setParam(bytes32 param, uint256 value)
+    function setParam(bytes32 param_, uint256 value_)
         public
         override(IAggregatorOracle)
         checkCaller
     {
-        if (param == "requiredValidValues") {
+        if (param_ == "requiredValidValues") {
             uint256 localOracleCount = oracleCount();
             // Should not be able to set the minimum number of required valid values higher than the oracle count
-            if (value > localOracleCount) {
+            if (value_ > localOracleCount) {
                 revert AggregatorOracle__setParam_requiredValidValues_higherThan_oracleCount(
-                    value,
+                    value_,
                     localOracleCount
                 );
             }
-            requiredValidValues = value;
-        } else revert AggregatorOracle__setParam_unrecognizedParam(param);
+            requiredValidValues = value_;
+        } else revert AggregatorOracle__setParam_unrecognizedParam(param_);
 
-        emit SetParam(param, value);
+        emit SetParam(param_, value_);
     }
 
     /// @notice Aggregates the values
