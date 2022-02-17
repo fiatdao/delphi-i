@@ -1240,7 +1240,11 @@ contract FactoryTest is DSTest {
         return elementValueProvider;
     }
 
-    function createNotionalVPData() public pure returns (NotionalVPData memory) {
+    function createNotionalVPData()
+        public
+        pure
+        returns (NotionalVPData memory)
+    {
         NotionalVPData memory notionalValueProvider = NotionalVPData({
             notionalViewAddress: 0x1344A36A1B56144C3Bc62E7757377D288fDE0369,
             currencyId: 2,
@@ -1293,7 +1297,11 @@ contract FactoryTest is DSTest {
             });
     }
 
-    function createNotionalOracleData() internal pure returns (OracleData memory) {
+    function createNotionalOracleData()
+        internal
+        pure
+        returns (OracleData memory)
+    {
         return
             OracleData({
                 valueProviderData: abi.encode(createNotionalVPData()),

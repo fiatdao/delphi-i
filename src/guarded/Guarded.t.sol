@@ -16,7 +16,7 @@ contract GuardedInstance is Guarded {
         this;
     }
 
-    function guardedMethodRoot()  external view checkCaller {
+    function guardedMethodRoot() external view checkCaller {
         this;
     }
 }
