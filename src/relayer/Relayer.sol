@@ -10,23 +10,28 @@ import {Guarded} from "src/guarded/Guarded.sol";
 
 contract Relayer is Guarded, IRelayer {
     // @notice Emitted when trying to add an oracle that already exists
-    error CollybusDiscountRateRelayer__addOracle_oracleAlreadyRegistered(
-        address oracle
+    error Relayer__addOracle_oracleAlreadyRegistered(
+        address oracle,
+        RelayerType relayerType
     );
 
     // @notice Emitted when trying to add an oracle for a tokenId that already has a registered oracle.
-    error CollybusDiscountRateRelayer__addOracle_tokenIdHasOracleRegistered(
+    error Relayer__addOracle_tokenIdHasOracleRegistered(
         address oracle,
-        bytes tokenId
+        bytes tokenId,
+        RelayerType relayerType
     );
 
     // @notice Emitter when trying to remove an oracle that was not registered.
-    error CollybusDiscountRateRelayer__removeOracle_oracleNotRegistered(
-        address oracle
+    error Relayer__removeOracle_oracleNotRegistered(
+        address oracle,
+        RelayerType relayerType
     );
 
     // @notice Emitter when check() returns false
-    error CollybusDiscountRateRelayer__executeWithRevert_checkFailed();
+    error Relayer__executeWithRevert_checkFailed(RelayerType relayerType);
+
+    error Relayer__execute_collybusUpdateFailed(RelayerType relayerType);
 
     enum RelayerType {
         DiscountRate,
@@ -103,16 +108,18 @@ contract Relayer is Guarded, IRelayer {
     ) public checkCaller {
         // Make sure the oracle was not added previously
         if (oracleExists(oracle_)) {
-            revert CollybusDiscountRateRelayer__addOracle_oracleAlreadyRegistered(
-                oracle_
+            revert Relayer__addOracle_oracleAlreadyRegistered(
+                oracle_,
+                relayerType
             );
         }
 
         // Make sure there are no existing oracles registered for this rate Id
         if (_tokenIds[tokenId_]) {
-            revert CollybusDiscountRateRelayer__addOracle_tokenIdHasOracleRegistered(
+            revert Relayer__addOracle_tokenIdHasOracleRegistered(
                 oracle_,
-                tokenId_
+                tokenId_,
+                relayerType
             );
         }
 
@@ -139,8 +146,9 @@ contract Relayer is Guarded, IRelayer {
     function oracleRemove(address oracle_) public checkCaller {
         // Make sure the oracle is registered
         if (!oracleExists(oracle_)) {
-            revert CollybusDiscountRateRelayer__removeOracle_oracleNotRegistered(
-                oracle_
+            revert Relayer__removeOracle_oracleNotRegistered(
+                oracle_,
+                relayerType
             );
         }
 
@@ -228,8 +236,9 @@ contract Relayer is Guarded, IRelayer {
             ) {
                 oracleData.lastUpdateValue = rate;
 
+                bool success = false;
                 if (relayerType == RelayerType.DiscountRate) {
-                    collybus.call(
+                    (success, ) = collybus.call(
                         abi.encodeWithSelector(
                             ICollybus.updateDiscountRate.selector,
                             abi.decode(oracleData.tokenId, (uint256)),
@@ -237,13 +246,17 @@ contract Relayer is Guarded, IRelayer {
                         )
                     );
                 } else if (relayerType == RelayerType.SpotPrice) {
-                    collybus.call(
+                    (success, ) = collybus.call(
                         abi.encodeWithSelector(
                             ICollybus.updateSpot.selector,
                             abi.decode(oracleData.tokenId, (address)),
                             uint256(rate)
                         )
                     );
+                }
+
+                if (!success) {
+                    revert Relayer__execute_collybusUpdateFailed(relayerType);
                 }
 
                 emit UpdatedCollybus(
@@ -261,7 +274,7 @@ contract Relayer is Guarded, IRelayer {
         if (check()) {
             execute();
         } else {
-            revert CollybusDiscountRateRelayer__executeWithRevert_checkFailed();
+            revert Relayer__executeWithRevert_checkFailed(relayerType);
         }
     }
 

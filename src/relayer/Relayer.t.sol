@@ -11,21 +11,20 @@ import {Relayer} from "src/relayer/Relayer.sol";
 import {IOracle} from "src/oracle/IOracle.sol";
 
 contract TestCollybus is ICollybus {
-    mapping(bytes => uint256) public rateForTokenId;
+    mapping(bytes => uint256) public valueForToken;
 
     function updateDiscountRate(uint256 tokenId, uint256 rate)
         external
         override(ICollybus)
     {
-        rateForTokenId[abi.encode(tokenId)] = rate;
+        valueForToken[abi.encode(tokenId)] = rate;
     }
 
-    function updateSpot(
-        address, /*token*/
-        uint256 /*spot*/
-    ) public pure override(ICollybus) {
-        // This should never be called, since this test only updates the discount rate
-        assert(false);
+    function updateSpot(address tokenAddress, uint256 spot)
+        external
+        override(ICollybus)
+    {
+        valueForToken[abi.encode(tokenAddress)] = spot;
     }
 }
 
@@ -43,6 +42,7 @@ contract RelayerTest is DSTest {
 
     bytes internal mockTokenId1;
     uint256 internal mockTokenId1MinThreshold = 1;
+    int256 internal oracle1InitialValue = 100 * 10**18;
 
     function setUp() public {
         collybus = new TestCollybus();
@@ -57,7 +57,7 @@ contract RelayerTest is DSTest {
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(int256(100 * 10**18), true)
+                data: abi.encode(oracle1InitialValue, true)
             }),
             false
         );
@@ -298,31 +298,10 @@ contract RelayerTest is DSTest {
         assertTrue(cd2.functionSelector == IOracle.update.selector);
     }
 
+    function test_Execute_UpdatedDiscountRateCollybus() public {}
+
     function test_Execute_UpdatesRatesInCollybus() public {
-        MockProvider oracle2 = new MockProvider();
-
-        // Set the value returned by the Oracle.
-        oracle2.givenQueryReturnResponse(
-            abi.encodePacked(IOracle.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(int256(10 * 10**18), true)
-            }),
-            false
-        );
-
-        bytes memory mockTokenId2 = abi.encode(
-            abi.decode(mockTokenId1, (uint256)) + 1
-        );
-        uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
-        // Add oracle with rate id.
-        cdrr.oracleAdd(
-            address(oracle2),
-            mockTokenId2,
-            mockTokenId2MinThreshold
-        );
         hevm.warp(oracleTimeUpdateWindow);
-
         // Execute must call update on all oracles before pushing the values to Collybus
         // Check should trigger an update because the value delta is bigger than the minimum for both oracles
         bool mustUpdate = cdrr.check();
@@ -331,39 +310,13 @@ contract RelayerTest is DSTest {
         cdrr.execute();
 
         assertTrue(
-            collybus.rateForTokenId(mockTokenId1) == uint256(100 * 10**18)
-        );
-        assertTrue(
-            collybus.rateForTokenId(mockTokenId2) == uint256(10 * 10**18)
+            collybus.valueForToken(mockTokenId1) == uint256(oracle1InitialValue)
         );
     }
 
     function test_Execute_DoesNotUpdatesRatesInCollybusWhenDeltaIsBelowThreshold()
         public
     {
-        MockProvider oracle2 = new MockProvider();
-
-        int256 oracle2InitialValue = int256(10 * 10**18);
-        // Set the value returned by the Oracle.
-        oracle2.givenQueryReturnResponse(
-            abi.encodePacked(IOracle.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(oracle2InitialValue, true)
-            }),
-            false
-        );
-
-        bytes memory mockTokenId2 = abi.encode(
-            abi.decode(mockTokenId1, (uint256)) + 1
-        );
-        uint256 mockTokenId2MinThreshold = 1 * 10**18;
-        // Add oracle with rate id
-        cdrr.oracleAdd(
-            address(oracle2),
-            mockTokenId2,
-            mockTokenId2MinThreshold
-        );
         hevm.warp(oracleTimeUpdateWindow);
 
         // Execute must call update on all oracles before pushing the values to Collybus
@@ -371,15 +324,15 @@ contract RelayerTest is DSTest {
         cdrr.execute();
 
         // Make the second value returned by the oracle to be just lower than the minimum threshold
-        int256 oracle2NewValue = oracle2InitialValue +
-            int256(mockTokenId2MinThreshold) -
+        int256 oracleNewValue = oracle1InitialValue +
+            int256(mockTokenId1MinThreshold) -
             1;
 
-        oracle2.givenQueryReturnResponse(
+        oracle1.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(oracle2NewValue, true)
+                data: abi.encode(oracleNewValue, true)
             }),
             false
         );
@@ -390,8 +343,7 @@ contract RelayerTest is DSTest {
 
         // The rate will NOT be updated because the delta is smaller than the threshold
         assertTrue(
-            collybus.rateForTokenId(mockTokenId2) ==
-                uint256(oracle2InitialValue)
+            collybus.valueForToken(mockTokenId1) == uint256(oracle1InitialValue)
         );
     }
 
