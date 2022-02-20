@@ -33,6 +33,7 @@ contract RelayerTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
     Relayer internal cdrr;
     TestCollybus internal collybus;
+    Relayer.RelayerType internal relayerType = Relayer.RelayerType.DiscountRate;
 
     MockProvider internal oracle1;
 
@@ -45,7 +46,7 @@ contract RelayerTest is DSTest {
 
     function setUp() public {
         collybus = new TestCollybus();
-        cdrr = new Relayer(address(collybus), Relayer.RelayerType.DiscountRate);
+        cdrr = new Relayer(address(collybus), relayerType);
 
         oracle1 = new MockProvider();
 
@@ -70,15 +71,19 @@ contract RelayerTest is DSTest {
         hevm.warp(oracleTimeUpdateWindow);
     }
 
-    function test_Deploy() public {
+    function test_deploy() public {
         assertTrue(
             address(cdrr) != address(0),
-            "CollybusDiscountRateRelayer should be deployed"
+            "Relayer should be deployed"
         );
     }
 
-    function test_check_Collybus() public {
+    function test_check_collybus() public {
         assertEq(cdrr.collybus(), address(collybus));
+    }
+
+    function test_check_relayerType() public {
+        assertTrue(cdrr.relayerType() == relayerType, "Invalid relayerType");
     }
 
     function test_check_oracleData() public {

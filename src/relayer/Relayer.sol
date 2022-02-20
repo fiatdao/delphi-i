@@ -253,7 +253,6 @@ contract Relayer is Guarded, IRelayer {
                     );
                 }
                 
-                
                 emit UpdatedCollybus(oracleData.tokenId, uint256(rate), relayerType);
             }
         }
