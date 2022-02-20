@@ -72,10 +72,7 @@ contract RelayerTest is DSTest {
     }
 
     function test_deploy() public {
-        assertTrue(
-            address(cdrr) != address(0),
-            "Relayer should be deployed"
-        );
+        assertTrue(address(cdrr) != address(0), "Relayer should be deployed");
     }
 
     function test_check_collybus() public {
@@ -87,8 +84,9 @@ contract RelayerTest is DSTest {
     }
 
     function test_check_oracleData() public {
-        Relayer.OracleData memory oracleData = cdrr
-            .oraclesData(address(oracle1));
+        Relayer.OracleData memory oracleData = cdrr.oraclesData(
+            address(oracle1)
+        );
 
         assertTrue(oracleData.exists);
         assertEq(oracleData.lastUpdateValue, 0);
@@ -115,7 +113,9 @@ contract RelayerTest is DSTest {
     function test_AddOracle() public {
         // Create a new address that differs from the oracle already added
         address newOracle = address(0x1);
-        bytes memory mockTokenId2 = abi.encode(abi.decode(mockTokenId1,(uint256)) + 1);
+        bytes memory mockTokenId2 = abi.encode(
+            abi.decode(mockTokenId1, (uint256)) + 1
+        );
 
         // Add the oracle for a new token ID.
         cdrr.oracleAdd(newOracle, mockTokenId2, mockTokenId1MinThreshold);
@@ -132,7 +132,9 @@ contract RelayerTest is DSTest {
 
     function testFail_AddOracle_ShouldNotAllowDuplicateOracles() public {
         // Attempt to add the same oracle again but use a different token id.
-        bytes memory mockTokenId2 = abi.encode(abi.decode(mockTokenId1,(uint256)) + 1);
+        bytes memory mockTokenId2 = abi.encode(
+            abi.decode(mockTokenId1, (uint256)) + 1
+        );
 
         cdrr.oracleAdd(
             address(oracle1),
@@ -156,7 +158,9 @@ contract RelayerTest is DSTest {
         Caller user = new Caller();
 
         address newOracle = address(0x1);
-        bytes memory mockTokenId2 = abi.encode(abi.decode(mockTokenId1,(uint256)) + 1);
+        bytes memory mockTokenId2 = abi.encode(
+            abi.decode(mockTokenId1, (uint256)) + 1
+        );
         uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
         // Add the oracle
         (bool ok, ) = user.externalCall(
@@ -223,7 +227,9 @@ contract RelayerTest is DSTest {
             false
         );
 
-        bytes memory mockTokenId2 = abi.encode(abi.decode(mockTokenId1,(uint256)) + 1);
+        bytes memory mockTokenId2 = abi.encode(
+            abi.decode(mockTokenId1, (uint256)) + 1
+        );
         uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
         // Add oracle with rate id
         cdrr.oracleAdd(
@@ -268,7 +274,9 @@ contract RelayerTest is DSTest {
             false
         );
 
-        bytes memory mockTokenId2 = abi.encode(abi.decode(mockTokenId1,(uint256)) + 1);
+        bytes memory mockTokenId2 = abi.encode(
+            abi.decode(mockTokenId1, (uint256)) + 1
+        );
         uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
         // Add oracle with rate id
         cdrr.oracleAdd(
@@ -303,7 +311,9 @@ contract RelayerTest is DSTest {
             false
         );
 
-        bytes memory mockTokenId2 = abi.encode(abi.decode(mockTokenId1,(uint256)) + 1);
+        bytes memory mockTokenId2 = abi.encode(
+            abi.decode(mockTokenId1, (uint256)) + 1
+        );
         uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
         // Add oracle with rate id.
         cdrr.oracleAdd(
@@ -344,7 +354,9 @@ contract RelayerTest is DSTest {
             false
         );
 
-        bytes memory mockTokenId2 = abi.encode(abi.decode(mockTokenId1,(uint256)) + 1);
+        bytes memory mockTokenId2 = abi.encode(
+            abi.decode(mockTokenId1, (uint256)) + 1
+        );
         uint256 mockTokenId2MinThreshold = 1 * 10**18;
         // Add oracle with rate id
         cdrr.oracleAdd(

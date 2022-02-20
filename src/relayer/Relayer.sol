@@ -71,11 +71,7 @@ contract Relayer is Guarded, IRelayer {
 
     /// @notice Returns the number of registered oracles.
     /// @return the total number of oracles.
-    function oracleCount()
-        public
-        view
-        returns (uint256)
-    {
+    function oracleCount() public view returns (uint256) {
         return _oracleList.length();
     }
 
@@ -83,22 +79,14 @@ contract Relayer is Guarded, IRelayer {
     /// @dev            Reverts if the index is out of bounds
     /// @param index_   The internal index of the oracle
     /// @return         Returns the address pf the oracle
-    function oracleAt(uint256 index_)
-        external
-        view
-        returns (address)
-    {
+    function oracleAt(uint256 index_) external view returns (address) {
         return _oracleList.at(index_);
     }
 
     /// @notice         Checks whether an oracle is registered.
     /// @param oracle_  The address of the oracle.
     /// @return         Returns 'true' if the oracle is registered.
-    function oracleExists(address oracle_)
-        public
-        view
-        returns (bool)
-    {
+    function oracleExists(address oracle_) public view returns (bool) {
         return _oraclesData[oracle_].exists;
     }
 
@@ -148,10 +136,7 @@ contract Relayer is Guarded, IRelayer {
     /// @notice         Unregisters an oracle.
     /// @param oracle_  The address of the oracle.
     /// @dev            Reverts if the oracle is not registered
-    function oracleRemove(address oracle_)
-        public
-        checkCaller
-    {
+    function oracleRemove(address oracle_) public checkCaller {
         // Make sure the oracle is registered
         if (!oracleExists(oracle_)) {
             revert CollybusDiscountRateRelayer__removeOracle_oracleNotRegistered(
@@ -245,15 +230,27 @@ contract Relayer is Guarded, IRelayer {
 
                 if (relayerType == RelayerType.DiscountRate) {
                     collybus.call(
-                        abi.encodeWithSelector(ICollybus.updateDiscountRate.selector, abi.decode(oracleData.tokenId,(uint256)),uint256(rate))
+                        abi.encodeWithSelector(
+                            ICollybus.updateDiscountRate.selector,
+                            abi.decode(oracleData.tokenId, (uint256)),
+                            uint256(rate)
+                        )
                     );
-                } else if (relayerType == RelayerType.SpotPrice){
+                } else if (relayerType == RelayerType.SpotPrice) {
                     collybus.call(
-                        abi.encodeWithSelector(ICollybus.updateSpot.selector, abi.decode(oracleData.tokenId,(address)),uint256(rate))
+                        abi.encodeWithSelector(
+                            ICollybus.updateSpot.selector,
+                            abi.decode(oracleData.tokenId, (address)),
+                            uint256(rate)
+                        )
                     );
                 }
-                
-                emit UpdatedCollybus(oracleData.tokenId, uint256(rate), relayerType);
+
+                emit UpdatedCollybus(
+                    oracleData.tokenId,
+                    uint256(rate),
+                    relayerType
+                );
             }
         }
     }
