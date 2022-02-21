@@ -236,7 +236,6 @@ contract Relayer is Guarded, IRelayer {
             ) {
                 oracleData.lastUpdateValue = oracleValue;
 
-                bool success = false;
                 if (relayerType == RelayerType.DiscountRate) {
                     ICollybus(collybus).updateDiscountRate(
                         abi.decode(oracleData.tokenId, (uint256)),
