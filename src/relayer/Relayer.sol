@@ -238,11 +238,13 @@ contract Relayer is Guarded, IRelayer {
 
                 bool success = false;
                 if (relayerType == RelayerType.DiscountRate) {
-                    ICollybus(collybus).updateDiscountRate(abi.decode(oracleData.tokenId, (uint256)),
+                    ICollybus(collybus).updateDiscountRate(
+                        abi.decode(oracleData.tokenId, (uint256)),
                         uint256(oracleValue)
                     );
                 } else if (relayerType == RelayerType.SpotPrice) {
-                    ICollybus(collybus).updateSpot(abi.decode(oracleData.tokenId, (address)),
+                    ICollybus(collybus).updateSpot(
+                        abi.decode(oracleData.tokenId, (address)),
                         uint256(oracleValue)
                     );
                 }

@@ -298,10 +298,9 @@ contract RelayerTest is DSTest {
         assertTrue(cd2.functionSelector == IOracle.update.selector);
     }
 
-    function test_Execute_UpdatedDiscountRateCollybus() public {}
-
     function test_Execute_UpdatesRatesInCollybus() public {
         hevm.warp(oracleTimeUpdateWindow);
+        // Check the discount rate in collybus
         // Execute must call update on all oracles before pushing the values to Collybus
         // Check should trigger an update because the value delta is bigger than the minimum for both oracles
         bool mustUpdate = cdrr.check();
@@ -310,7 +309,44 @@ contract RelayerTest is DSTest {
         cdrr.execute();
 
         assertTrue(
-            collybus.valueForToken(mockTokenId1) == uint256(oracle1InitialValue)
+            collybus.valueForToken(mockTokenId1) ==
+                uint256(oracle1InitialValue),
+            "Invalid discount rate relayer rate value"
+        );
+
+        // Create a spot price relayer and check the spot prices in the Collybus
+        Relayer spotPriceRelayer = new Relayer(
+            address(collybus),
+            Relayer.RelayerType.SpotPrice
+        );
+        MockProvider spotPriceOracle = new MockProvider();
+        int256 value = int256(1 * 10**18);
+
+        bytes memory mockSpotTokenAddress = abi.encode(address(0x1));
+
+        // Set the value returned by the Oracle.
+        spotPriceOracle.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(value, true)
+            }),
+            false
+        );
+
+        // Add oracle with rate id
+        spotPriceRelayer.oracleAdd(
+            address(spotPriceOracle),
+            mockSpotTokenAddress,
+            1
+        );
+
+        // Update the rates in collybus
+        spotPriceRelayer.execute();
+
+        assertTrue(
+            collybus.valueForToken(mockSpotTokenAddress) == uint256(value),
+            "Invalid spot price relayer spot value"
         );
     }
 
