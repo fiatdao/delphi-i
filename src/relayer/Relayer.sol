@@ -222,7 +222,7 @@ contract Relayer is Guarded, IRelayer {
 
             // We always update the oracles before retrieving the rates
             IOracle(localOracle).update();
-            (int256 rate, bool isValid) = IOracle(localOracle).value();
+            (int256 oracleValue, bool isValid) = IOracle(localOracle).value();
 
             if (!isValid) continue;
 
@@ -231,37 +231,25 @@ contract Relayer is Guarded, IRelayer {
             // If the change in delta rate from the last update is bigger than the threshold value push
             // the rates to Collybus
             if (
-                absDelta(oracleData.lastUpdateValue, rate) >=
+                absDelta(oracleData.lastUpdateValue, oracleValue) >=
                 oracleData.minimumThresholdValue
             ) {
-                oracleData.lastUpdateValue = rate;
+                oracleData.lastUpdateValue = oracleValue;
 
                 bool success = false;
                 if (relayerType == RelayerType.DiscountRate) {
-                    (success, ) = collybus.call(
-                        abi.encodeWithSelector(
-                            ICollybus.updateDiscountRate.selector,
-                            abi.decode(oracleData.tokenId, (uint256)),
-                            uint256(rate)
-                        )
+                    ICollybus(collybus).updateDiscountRate(abi.decode(oracleData.tokenId, (uint256)),
+                        uint256(oracleValue)
                     );
                 } else if (relayerType == RelayerType.SpotPrice) {
-                    (success, ) = collybus.call(
-                        abi.encodeWithSelector(
-                            ICollybus.updateSpot.selector,
-                            abi.decode(oracleData.tokenId, (address)),
-                            uint256(rate)
-                        )
+                    ICollybus(collybus).updateSpot(abi.decode(oracleData.tokenId, (address)),
+                        uint256(oracleValue)
                     );
-                }
-
-                if (!success) {
-                    revert Relayer__execute_collybusUpdateFailed(relayerType);
                 }
 
                 emit UpdatedCollybus(
                     oracleData.tokenId,
-                    uint256(rate),
+                    uint256(oracleValue),
                     relayerType
                 );
             }
