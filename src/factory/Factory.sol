@@ -78,7 +78,10 @@ struct RelayerDeployData {
 }
 
 contract Factory is Guarded {
-    event RelayerDeployed(address relayerAddress, uint256 relayerType);
+    event RelayerDeployed(
+        address relayerAddress,
+        IRelayer.RelayerType relayerType
+    );
     event AggregatorDeployed(address aggregatorAddress);
     event OracleDeployed(address oracleAddress);
 
@@ -95,11 +98,6 @@ contract Factory is Guarded {
         Yield,
         Chainlink,
         COUNT
-    }
-
-    enum RelayerType {
-        DiscountRate,
-        SpotPrice
     }
 
     address public immutable elementFiValueProviderFactory;
@@ -347,7 +345,7 @@ contract Factory is Guarded {
     /// @param collybus_ Address of Collybus
     /// @dev Reverts if Collybus is not set
     /// @return Returns the address of the Relayer
-    function deployCollybusDiscountRateRelayer(address collybus_)
+    function deployRelayer(address collybus_, IRelayer.RelayerType type_)
         public
         checkCaller
         returns (address)
@@ -359,33 +357,10 @@ contract Factory is Guarded {
 
         address relayerAddress = IFactoryRelayer(relayerFactory).create(
             collybus_,
-            IRelayer.RelayerType.DiscountRate
+            type_
         );
 
-        emit RelayerDeployed(relayerAddress, uint256(RelayerType.DiscountRate));
-        return relayerAddress;
-    }
-
-    /// @notice Deploys a new Spot Price Relayer
-    /// @param collybus_ Address of Collybus
-    /// @dev Reverts if Collybus is not set
-    /// @return Returns the address of the Relayer
-    function deployCollybusSpotPriceRelayer(address collybus_)
-        public
-        checkCaller
-        returns (address)
-    {
-        // The Collybus address is needed in order to deploy the Spot Price Rate Relayer
-        if (collybus_ == address(0)) {
-            revert Factory__deployRelayer_invalidCollybusAddress();
-        }
-
-        address relayerAddress = IFactoryRelayer(relayerFactory).create(
-            collybus_,
-            IRelayer.RelayerType.SpotPrice
-        );
-
-        emit RelayerDeployed(relayerAddress, uint256(RelayerType.SpotPrice));
+        emit RelayerDeployed(relayerAddress, type_);
         return relayerAddress;
     }
 
@@ -403,8 +378,9 @@ contract Factory is Guarded {
             (RelayerDeployData)
         );
         // Create the relayer and cache the address
-        address discountRateRelayerAddress = deployCollybusDiscountRateRelayer(
-            collybus_
+        address discountRateRelayerAddress = deployRelayer(
+            collybus_,
+            IRelayer.RelayerType.DiscountRate
         );
 
         // Iterate and deploy each aggregator
@@ -434,8 +410,9 @@ contract Factory is Guarded {
         );
 
         // Create the relayer and cache the address
-        address spotPriceRelayerAddress = deployCollybusSpotPriceRelayer(
-            collybusAddress_
+        address spotPriceRelayerAddress = deployRelayer(
+            collybusAddress_,
+            IRelayer.RelayerType.SpotPrice
         );
 
         // Iterate and deploy each aggregator

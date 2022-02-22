@@ -245,11 +245,13 @@ contract Relayer is Guarded, IRelayer {
                 oracleData.lastUpdateValue = oracleValue;
 
                 if (relayerType == RelayerType.DiscountRate) {
+                    // Convert bytes32 to bytes in order to decode the token Id
                     ICollybus(collybus).updateDiscountRate(
                         abi.decode(abi.encode(oracleData.tokenId), (uint256)),
                         uint256(oracleValue)
                     );
                 } else if (relayerType == RelayerType.SpotPrice) {
+                    // Convert bytes32 to bytes in order to decode the token Id
                     ICollybus(collybus).updateSpot(
                         abi.decode(abi.encode(oracleData.tokenId), (address)),
                         uint256(oracleValue)

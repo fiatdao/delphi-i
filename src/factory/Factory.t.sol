@@ -673,11 +673,14 @@ contract FactoryTest is DSTest {
 
     function test_deploy_collybusDiscountRateRelayer_createsContract() public {
         address collybus = address(0xC0111b005);
-        address relayer = factory.deployCollybusDiscountRateRelayer(collybus);
-        // Make sure the CollybusDiscountRateRelayer was deployed
+        address relayer = factory.deployRelayer(
+            collybus,
+            IRelayer.RelayerType.DiscountRate
+        );
+        // Make sure the Relayer was deployed
         assertTrue(
             relayer != address(0),
-            "CollybusDiscountRateRelayer should be deployed"
+            "Discount Rate Relayer should be deployed"
         );
     }
 
@@ -691,25 +694,29 @@ contract FactoryTest is DSTest {
         (bool ok, ) = user.externalCall(
             address(factory),
             abi.encodeWithSelector(
-                factory.deployCollybusDiscountRateRelayer.selector,
-                collybus
+                factory.deployRelayer.selector,
+                collybus,
+                IRelayer.RelayerType.DiscountRate
             )
         );
 
         assertTrue(
             ok == false,
-            "Only authorized users should be able to call deployCollybusDiscountRateRelayer"
+            "Only authorized users should be able to deploy Relayers"
         );
     }
 
     function test_deploy_collybusSpotPriceRelayer_createsContract() public {
         address collybus = address(0xC01115107);
-        address relayer = factory.deployCollybusSpotPriceRelayer(collybus);
+        address relayer = factory.deployRelayer(
+            collybus,
+            IRelayer.RelayerType.SpotPrice
+        );
 
-        // Make sure the CollybusSpotPriceRelayer_ was deployed
+        // Make sure the Relayer_ was deployed
         assertTrue(
             relayer != address(0),
-            "CollybusSpotPriceRelayer should be deployed"
+            "Spot Price Relayer should be deployed"
         );
     }
 
@@ -721,14 +728,15 @@ contract FactoryTest is DSTest {
         (bool ok, ) = user.externalCall(
             address(factory),
             abi.encodeWithSelector(
-                factory.deployCollybusSpotPriceRelayer.selector,
-                collybus
+                factory.deployRelayer.selector,
+                collybus,
+                IRelayer.RelayerType.SpotPrice
             )
         );
 
         assertTrue(
             ok == false,
-            "Only authorized users should be able to call deployCollybusSpotPriceRelayer"
+            "Only authorized users should be able to deploy Relayers"
         );
     }
 
