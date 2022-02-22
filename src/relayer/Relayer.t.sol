@@ -310,7 +310,6 @@ contract RelayerTest is DSTest {
     }
 
     function test_Execute_UpdateSpotPriceInCollybus() public {
-
         // Create a spot price relayer and check the spot prices in the Collybus
         Relayer spotPriceRelayer = new Relayer(
             address(collybus),
