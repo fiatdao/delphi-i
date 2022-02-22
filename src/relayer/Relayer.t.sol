@@ -349,31 +349,118 @@ contract RelayerTest is DSTest {
     function test_Execute_DoesNotUpdatesRatesInCollybusWhenDeltaIsBelowThreshold()
         public
     {
-        // Execute must call update on all oracles before pushing the values to Collybus
-        cdrr.execute();
+        // Threshold percentage
+        uint256 thresholdPercentage = 50_00; // 50%
 
-        // Make the second value returned by the oracle to be just lower than the minimum threshold
-        int256 oracleNewValue = oracle1InitialValue +
-            int256(mockTokenId1MinThreshold) -
-            1;
+        // Create a local relayer
+        Relayer localRelayer = new Relayer(address(collybus), relayerType);
 
-        oracle1.givenQueryReturnResponse(
+        // Create a local oracle
+        MockProvider localOracle = new MockProvider();
+
+        // Set the value returned by the Oracle.
+        int256 initialValue = 100 * 10**18;
+        localOracle.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(oracleNewValue, true)
+                data: abi.encode(initialValue, true)
             }),
             false
         );
 
-        hevm.warp(oracleTimeUpdateWindow);
+        // Add oracle with a thresold percentage
+        localRelayer.oracleAdd(
+            address(localOracle),
+            mockTokenId1,
+            thresholdPercentage
+        );
 
+        // Make sure the values are updated, start clean
         cdrr.execute();
 
-        // The rate will NOT be updated because the delta is smaller than the threshold
+        // The initial value is the value we just defined
         assertTrue(
-            collybus.valueForToken(mockTokenId1) == uint256(oracle1InitialValue)
+            collybus.valueForToken(mockTokenId1) == uint256(initialValue)
         );
+
+        // Update the oracle with a new value under the threshold limit
+        int256 secondValue = initialValue +
+            (initialValue * int256(thresholdPercentage)) /
+            100_00 -
+            1;
+        localOracle.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(secondValue, true)
+            }),
+            false
+        );
+
+        // Relayer should not need to update values since it's below the thresold
+        assertTrue(cdrr.check() == false, "Should not update values");
+    }
+
+    function test_Execute_UpdatesRatesInCollybusWhenDeltaIsAboveThreshold()
+        public
+    {
+        // Threshold percentage
+        uint256 thresholdPercentage = 50_00; // 50%
+
+        // Create a local relayer
+        Relayer localRelayer = new Relayer(address(collybus), relayerType);
+
+        // Create a local oracle
+        MockProvider localOracle = new MockProvider();
+
+        // Set the value returned by the Oracle.
+        int256 initialValue = 100 * 10**18;
+        localOracle.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(initialValue, true)
+            }),
+            false
+        );
+
+        emit log_uint(thresholdPercentage);
+
+        // Add oracle with a thresold percentage
+        localRelayer.oracleAdd(
+            address(localOracle),
+            mockTokenId1,
+            thresholdPercentage
+        );
+
+        // Make sure the values are updated, start clean
+        cdrr.execute();
+
+        // The initial value is the value we just defined
+        assertTrue(
+            collybus.valueForToken(mockTokenId1) == uint256(initialValue)
+        );
+
+        // Update the oracle with a new value above the threshold limit
+        int256 secondValue = initialValue +
+            (initialValue * int256(thresholdPercentage)) /
+            100_00 +
+            1;
+        localOracle.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(secondValue, true)
+            }),
+            false
+        );
+
+        emit log_uint(uint256(initialValue));
+        emit log_uint(uint256(secondValue));
+
+        // Relayer should need to update values since it's above the thresold
+        assertTrue(cdrr.check() == true, "Should update values");
     }
 
     function test_executeWithRevert() public {

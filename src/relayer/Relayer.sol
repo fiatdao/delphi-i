@@ -206,8 +206,11 @@ contract Relayer is Guarded, IRelayer {
             if (!isValid) continue;
 
             if (
-                absDelta(_oraclesData[localOracle].lastUpdateValue, rate) >=
-                _oraclesData[localOracle].minimumThresholdValue
+                checkDeviation(
+                    _oraclesData[localOracle].lastUpdateValue,
+                    rate,
+                    _oraclesData[localOracle].minimumThresholdValue
+                )
             ) {
                 emit ShouldUpdate(true);
                 return true;
@@ -284,5 +287,24 @@ contract Relayer is Guarded, IRelayer {
             return uint256(a - b);
         }
         return uint256(b - a);
+    }
+
+    /// @notice             Returns true if the percentage difference between the two values is bigger than the `percentage`
+    /// @param baseValue    The value that the percentage is based on
+    /// @param newValue     The new value
+    /// @param percentage   The percentage threshold value (100% = 100_00, 50% = 50_00, etc)
+    function checkDeviation(
+        int256 baseValue,
+        int256 newValue,
+        uint256 percentage
+    ) public view returns (bool) {
+        int256 deviation = (baseValue * int256(percentage)) / 100_00;
+
+        if (
+            baseValue + deviation <= newValue ||
+            baseValue - deviation >= newValue
+        ) return true;
+
+        return false;
     }
 }
