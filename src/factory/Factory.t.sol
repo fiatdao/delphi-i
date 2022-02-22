@@ -671,7 +671,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_collybusDiscountRateRelayer_createsContract() public {
+    function test_deploy_Relayer_DiscountRate_createsContract() public {
         address collybus = address(0xC0111b005);
         address relayer = factory.deployRelayer(
             collybus,
@@ -684,29 +684,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_collybusDiscountRateRelayer_onlyAuthorizedUsers()
-        public
-    {
-        Caller user = new Caller();
-        address collybus = address(0xC0111b005);
-
-        // Call deployCollybusDiscountRateRelayer
-        (bool ok, ) = user.externalCall(
-            address(factory),
-            abi.encodeWithSelector(
-                factory.deployRelayer.selector,
-                collybus,
-                IRelayer.RelayerType.DiscountRate
-            )
-        );
-
-        assertTrue(
-            ok == false,
-            "Only authorized users should be able to deploy Relayers"
-        );
-    }
-
-    function test_deploy_collybusSpotPriceRelayer_createsContract() public {
+    function test_deploy_Relayer_SpotPrice_createsContract() public {
         address collybus = address(0xC01115107);
         address relayer = factory.deployRelayer(
             collybus,
@@ -720,17 +698,19 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_collybusSpotPriceRelayer_onlyAuthorizedUsers() public {
+    function test_deploy_Relayer_onlyAuthorizedUsers()
+        public
+    {
         Caller user = new Caller();
-        address collybus = address(0xC01115107);
+        address collybus = address(0xC0111b005);
 
-        // Call deployCollybusSpotPriceRelayer
+        // Call deployCollybusDiscountRateRelayer
         (bool ok, ) = user.externalCall(
             address(factory),
             abi.encodeWithSelector(
                 factory.deployRelayer.selector,
                 collybus,
-                IRelayer.RelayerType.SpotPrice
+                IRelayer.RelayerType.DiscountRate
             )
         );
 
