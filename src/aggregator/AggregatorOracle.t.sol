@@ -62,7 +62,7 @@ contract AggregatorOracleTest is DSTest {
         aggregatorOracle.oracleAdd(address(oracle1));
     }
 
-    function test_AddOracle_OnlyAuthrorizedUserShouldBeAbleToAdd() public {
+    function test_AddOracle_OnlyAuthorizedUserShouldBeAbleToAdd() public {
         Caller user = new Caller();
 
         // Create an oracle
