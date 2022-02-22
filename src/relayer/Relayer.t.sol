@@ -8,23 +8,24 @@ import {Caller} from "src/test/utils/Caller.sol";
 
 import {ICollybus} from "src/relayer/ICollybus.sol";
 import {Relayer} from "src/relayer/Relayer.sol";
+import {IRelayer} from "src/relayer/IRelayer.sol";
 import {IOracle} from "src/oracle/IOracle.sol";
 
 contract TestCollybus is ICollybus {
-    mapping(bytes => uint256) public valueForToken;
+    mapping(bytes32 => uint256) public valueForToken;
 
     function updateDiscountRate(uint256 tokenId, uint256 rate)
         external
         override(ICollybus)
     {
-        valueForToken[abi.encode(tokenId)] = rate;
+        valueForToken[bytes32(abi.encode(tokenId))] = rate;
     }
 
     function updateSpot(address tokenAddress, uint256 spot)
         external
         override(ICollybus)
     {
-        valueForToken[abi.encode(tokenAddress)] = spot;
+        valueForToken[bytes32(abi.encode(tokenAddress))] = spot;
     }
 }
 
@@ -32,7 +33,8 @@ contract RelayerTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
     Relayer internal cdrr;
     TestCollybus internal collybus;
-    Relayer.RelayerType internal relayerType = Relayer.RelayerType.DiscountRate;
+    IRelayer.RelayerType internal relayerType =
+        IRelayer.RelayerType.DiscountRate;
 
     MockProvider internal oracle1;
 
@@ -40,7 +42,7 @@ contract RelayerTest is DSTest {
     uint256 internal oracleMaxValidTime = 300;
     int256 internal oracleAlpha = 2 * 10**17; // 0.2
 
-    bytes internal mockTokenId1;
+    bytes32 internal mockTokenId1;
     uint256 internal mockTokenId1MinThreshold = 1;
     int256 internal oracle1InitialValue = 100 * 10**18;
 
@@ -50,7 +52,7 @@ contract RelayerTest is DSTest {
 
         oracle1 = new MockProvider();
 
-        mockTokenId1 = abi.encode(uint256(1));
+        mockTokenId1 = bytes32(abi.encode(uint256(1)));
 
         // Set the value returned by the Oracle.
         oracle1.givenQueryReturnResponse(
@@ -113,8 +115,8 @@ contract RelayerTest is DSTest {
     function test_AddOracle() public {
         // Create a new address that differs from the oracle already added
         address newOracle = address(0x1);
-        bytes memory mockTokenId2 = abi.encode(
-            abi.decode(mockTokenId1, (uint256)) + 1
+        bytes32 mockTokenId2 = bytes32(
+            abi.encode(abi.decode(abi.encode(mockTokenId1), (uint256)) + 1)
         );
 
         // Add the oracle for a new token ID.
@@ -132,8 +134,8 @@ contract RelayerTest is DSTest {
 
     function testFail_AddOracle_ShouldNotAllowDuplicateOracles() public {
         // Attempt to add the same oracle again but use a different token id.
-        bytes memory mockTokenId2 = abi.encode(
-            abi.decode(mockTokenId1, (uint256)) + 1
+        bytes32 mockTokenId2 = bytes32(
+            abi.encode(abi.decode(abi.encode(mockTokenId1), (uint256)) + 1)
         );
 
         cdrr.oracleAdd(
@@ -158,8 +160,8 @@ contract RelayerTest is DSTest {
         Caller user = new Caller();
 
         address newOracle = address(0x1);
-        bytes memory mockTokenId2 = abi.encode(
-            abi.decode(mockTokenId1, (uint256)) + 1
+        bytes32 mockTokenId2 = bytes32(
+            abi.encode(abi.decode(abi.encode(mockTokenId1), (uint256)) + 1)
         );
         uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
         // Add the oracle
@@ -227,8 +229,8 @@ contract RelayerTest is DSTest {
             false
         );
 
-        bytes memory mockTokenId2 = abi.encode(
-            abi.decode(mockTokenId1, (uint256)) + 1
+        bytes32 mockTokenId2 = bytes32(
+            abi.encode(abi.decode(abi.encode(mockTokenId1), (uint256)) + 1)
         );
         uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
         // Add oracle with rate id
@@ -274,8 +276,8 @@ contract RelayerTest is DSTest {
             false
         );
 
-        bytes memory mockTokenId2 = abi.encode(
-            abi.decode(mockTokenId1, (uint256)) + 1
+        bytes32 mockTokenId2 = bytes32(
+            abi.encode(abi.decode(abi.encode(mockTokenId1), (uint256)) + 1)
         );
         uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
         // Add oracle with rate id
@@ -317,12 +319,12 @@ contract RelayerTest is DSTest {
         // Create a spot price relayer and check the spot prices in the Collybus
         Relayer spotPriceRelayer = new Relayer(
             address(collybus),
-            Relayer.RelayerType.SpotPrice
+            IRelayer.RelayerType.SpotPrice
         );
         MockProvider spotPriceOracle = new MockProvider();
         int256 value = int256(1 * 10**18);
 
-        bytes memory mockSpotTokenAddress = abi.encode(address(0x1));
+        bytes32 mockSpotTokenAddress = bytes32(abi.encode(address(0x1)));
 
         // Set the value returned by the Oracle.
         spotPriceOracle.givenQueryReturnResponse(

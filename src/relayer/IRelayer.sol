@@ -2,9 +2,28 @@
 pragma solidity ^0.8.0;
 
 interface IRelayer {
+    enum RelayerType {
+        DiscountRate,
+        SpotPrice
+    }
+
     function check() external returns (bool);
 
     function execute() external;
 
     function executeWithRevert() external;
+
+    function oracleCount() external view returns (uint256);
+
+    function oracleAdd(
+        address oracle_,
+        bytes32 encodedToken_,
+        uint256 minimumThresholdValue_
+    ) external;
+
+    function oracleRemove(address oracle_) external;
+
+    function oracleExists(address oracle_) external view returns (bool);
+
+    function oracleAt(uint256 index) external view returns (address);
 }

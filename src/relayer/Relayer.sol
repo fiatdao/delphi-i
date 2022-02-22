@@ -5,7 +5,6 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {IRelayer} from "src/relayer/IRelayer.sol";
 import {IOracle} from "src/oracle/IOracle.sol";
 import {ICollybus} from "src/relayer/ICollybus.sol";
-import {ICollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/ICollybusDiscountRateRelayer.sol";
 import {Guarded} from "src/guarded/Guarded.sol";
 
 contract Relayer is Guarded, IRelayer {
@@ -18,7 +17,7 @@ contract Relayer is Guarded, IRelayer {
     // @notice Emitted when trying to add an oracle for a tokenId that already has a registered oracle.
     error Relayer__addOracle_tokenIdHasOracleRegistered(
         address oracle,
-        bytes tokenId,
+        bytes32 tokenId,
         RelayerType relayerType
     );
 
@@ -33,14 +32,9 @@ contract Relayer is Guarded, IRelayer {
 
     error Relayer__execute_collybusUpdateFailed(RelayerType relayerType);
 
-    enum RelayerType {
-        DiscountRate,
-        SpotPrice
-    }
-
     struct OracleData {
         bool exists;
-        bytes tokenId;
+        bytes32 tokenId;
         int256 lastUpdateValue;
         uint256 minimumThresholdValue;
     }
@@ -51,7 +45,7 @@ contract Relayer is Guarded, IRelayer {
     event OracleRemoved(address oracleAddress);
     event ShouldUpdate(bool shouldUpdate);
     event UpdateOracle(address oracle, int256 value, bool valid);
-    event UpdatedCollybus(bytes tokenId, uint256 rate, RelayerType);
+    event UpdatedCollybus(bytes32 tokenId, uint256 rate, RelayerType);
 
     /// ======== Storage ======== ///
 
@@ -63,7 +57,7 @@ contract Relayer is Guarded, IRelayer {
     mapping(address => OracleData) private _oraclesData;
 
     // Mapping used tokenId's
-    mapping(bytes => bool) public _tokenIds;
+    mapping(bytes32 => bool) public _encodedTokenIds;
 
     // Array used for iterating the oracles.
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -76,7 +70,7 @@ contract Relayer is Guarded, IRelayer {
 
     /// @notice Returns the number of registered oracles.
     /// @return the total number of oracles.
-    function oracleCount() public view returns (uint256) {
+    function oracleCount() external view override(IRelayer) returns (uint256) {
         return _oracleList.length();
     }
 
@@ -84,28 +78,38 @@ contract Relayer is Guarded, IRelayer {
     /// @dev            Reverts if the index is out of bounds
     /// @param index_   The internal index of the oracle
     /// @return         Returns the address pf the oracle
-    function oracleAt(uint256 index_) external view returns (address) {
+    function oracleAt(uint256 index_)
+        external
+        view
+        override(IRelayer)
+        returns (address)
+    {
         return _oracleList.at(index_);
     }
 
     /// @notice         Checks whether an oracle is registered.
     /// @param oracle_  The address of the oracle.
     /// @return         Returns 'true' if the oracle is registered.
-    function oracleExists(address oracle_) public view returns (bool) {
+    function oracleExists(address oracle_)
+        public
+        view
+        override(IRelayer)
+        returns (bool)
+    {
         return _oraclesData[oracle_].exists;
     }
 
     /// @notice                         Registers an oracle to a token id and set the minimum threshold delta value
     ///                                 calculate the annual rate.
     /// @param oracle_                  The address of the oracle.
-    /// @param tokenId_                 The unique token id for which this oracle will update rate values.
+    /// @param encodedTokenId_          The unique token id for which this oracle will update rate values.
     /// @param minimumThresholdValue_   The minimum value delta threshold needed in order to push values to the Collybus
     /// @dev                            Reverts if the oracle is already registered or if the rate id is taken by another oracle.
     function oracleAdd(
         address oracle_,
-        bytes memory tokenId_,
+        bytes32 encodedTokenId_,
         uint256 minimumThresholdValue_
-    ) public checkCaller {
+    ) public override(IRelayer) checkCaller {
         // Make sure the oracle was not added previously
         if (oracleExists(oracle_)) {
             revert Relayer__addOracle_oracleAlreadyRegistered(
@@ -115,10 +119,10 @@ contract Relayer is Guarded, IRelayer {
         }
 
         // Make sure there are no existing oracles registered for this rate Id
-        if (_tokenIds[tokenId_]) {
+        if (_encodedTokenIds[encodedTokenId_]) {
             revert Relayer__addOracle_tokenIdHasOracleRegistered(
                 oracle_,
-                tokenId_,
+                encodedTokenId_,
                 relayerType
             );
         }
@@ -127,13 +131,13 @@ contract Relayer is Guarded, IRelayer {
         _oracleList.add(oracle_);
 
         // Mark the token Id as used
-        _tokenIds[tokenId_] = true;
+        _encodedTokenIds[encodedTokenId_] = true;
 
         // Update the oracle address => data mapping with the oracle parameters.
         _oraclesData[oracle_] = OracleData({
             exists: true,
             lastUpdateValue: 0,
-            tokenId: tokenId_,
+            tokenId: encodedTokenId_,
             minimumThresholdValue: minimumThresholdValue_
         });
 
@@ -143,7 +147,11 @@ contract Relayer is Guarded, IRelayer {
     /// @notice         Unregisters an oracle.
     /// @param oracle_  The address of the oracle.
     /// @dev            Reverts if the oracle is not registered
-    function oracleRemove(address oracle_) public checkCaller {
+    function oracleRemove(address oracle_)
+        public
+        override(IRelayer)
+        checkCaller
+    {
         // Make sure the oracle is registered
         if (!oracleExists(oracle_)) {
             revert Relayer__removeOracle_oracleNotRegistered(
@@ -153,7 +161,7 @@ contract Relayer is Guarded, IRelayer {
         }
 
         // Reset the tokenId Mapping
-        _tokenIds[_oraclesData[oracle_].tokenId] = false;
+        _encodedTokenIds[_oraclesData[oracle_].tokenId] = false;
 
         // Remove the oracle from the list
         // This returns true/false depending on if the oracle was removed
@@ -238,12 +246,12 @@ contract Relayer is Guarded, IRelayer {
 
                 if (relayerType == RelayerType.DiscountRate) {
                     ICollybus(collybus).updateDiscountRate(
-                        abi.decode(oracleData.tokenId, (uint256)),
+                        abi.decode(abi.encode(oracleData.tokenId), (uint256)),
                         uint256(oracleValue)
                     );
                 } else if (relayerType == RelayerType.SpotPrice) {
                     ICollybus(collybus).updateSpot(
-                        abi.decode(oracleData.tokenId, (address)),
+                        abi.decode(abi.encode(oracleData.tokenId), (address)),
                         uint256(oracleValue)
                     );
                 }

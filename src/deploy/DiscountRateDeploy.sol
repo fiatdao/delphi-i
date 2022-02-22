@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IVault} from "src/oracle_implementations/discount_rate/ElementFi/IVault.sol";
-import {RelayerDeployData, DiscountRateAggregatorData, OracleData, ElementVPData, Factory} from "src/factory/Factory.sol";
+import {RelayerDeployData, AggregatorData, OracleData, ElementVPData, Factory} from "src/factory/Factory.sol";
 
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
@@ -72,13 +72,12 @@ contract DiscountRateDeploy {
             valueProviderType: uint8(Factory.ValueProviderType.Element)
         });
 
-        DiscountRateAggregatorData
-            memory elementAggregator = DiscountRateAggregatorData({
-                tokenId: 1,
-                oracleData: new bytes[](3),
-                requiredValidValues: 1,
-                minimumThresholdValue: 1
-            });
+        AggregatorData memory elementAggregator = AggregatorData({
+            encodedTokenId: bytes32(abi.encode(1)),
+            oracleData: new bytes[](3),
+            requiredValidValues: 1,
+            minimumThresholdValue: 1
+        });
 
         elementAggregator.oracleData[0] = abi.encode(elementOracleData);
         elementAggregator.oracleData[1] = abi.encode(elementOracleData);
