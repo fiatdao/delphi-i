@@ -52,10 +52,10 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     }
 
     /// @notice Calculates the annual rate used by the FIAT DAO contracts
-    /// the rate is precomputed by the notional contract and scaled to 1e18 precision.
+    /// the rate is precomputed by the notional contract and scaled to 1e18 precision
     /// @dev For more details regarding the computed rate in the Notional contracts:
     /// https://github.com/notional-finance/contracts-v2/blob/b8e3792e39486b2719c6153acc270199377cc6b9/contracts/internal/markets/Market.sol#L495
-    /// @return result The result as an signed 59.18-decimal fixed-point number.
+    /// @return result The result as an signed 59.18-decimal fixed-point number
     function getValue() external view override(Oracle) returns (int256) {
         // No values for matured pools
         if (block.timestamp >= maturityDate) {
