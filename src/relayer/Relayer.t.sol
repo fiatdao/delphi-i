@@ -92,7 +92,7 @@ contract RelayerTest is DSTest {
 
         assertTrue(oracleData.exists);
         assertEq(oracleData.lastUpdateValue, 0);
-        //assertEq(oracleData.tokenId, mockTokenId1);
+        assertEq(oracleData.tokenId, mockTokenId1);
         assertEq(oracleData.minimumThresholdValue, mockTokenId1MinThreshold);
     }
 
@@ -289,7 +289,6 @@ contract RelayerTest is DSTest {
         hevm.warp(oracleTimeUpdateWindow);
 
         // Execute must call update on all oracles before pushing the values to Collybus
-        cdrr.check();
         cdrr.execute();
 
         // Update was called for both oracles
@@ -300,14 +299,7 @@ contract RelayerTest is DSTest {
         assertTrue(cd2.functionSelector == IOracle.update.selector);
     }
 
-    function test_Execute_UpdatesRatesInCollybus() public {
-        hevm.warp(oracleTimeUpdateWindow);
-        // Check the discount rate in collybus
-        // Execute must call update on all oracles before pushing the values to Collybus
-        // Check should trigger an update because the value delta is bigger than the minimum for both oracles
-        bool mustUpdate = cdrr.check();
-        assertTrue(mustUpdate);
-
+    function test_Execute_UpdateDiscountRateInCollybus() public {
         cdrr.execute();
 
         assertTrue(
@@ -315,6 +307,9 @@ contract RelayerTest is DSTest {
                 uint256(oracle1InitialValue),
             "Invalid discount rate relayer rate value"
         );
+    }
+
+    function test_Execute_UpdateSpotPriceInCollybus() public {
 
         // Create a spot price relayer and check the spot prices in the Collybus
         Relayer spotPriceRelayer = new Relayer(
@@ -355,10 +350,7 @@ contract RelayerTest is DSTest {
     function test_Execute_DoesNotUpdatesRatesInCollybusWhenDeltaIsBelowThreshold()
         public
     {
-        hevm.warp(oracleTimeUpdateWindow);
-
         // Execute must call update on all oracles before pushing the values to Collybus
-        cdrr.check();
         cdrr.execute();
 
         // Make the second value returned by the oracle to be just lower than the minimum threshold
