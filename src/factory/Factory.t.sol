@@ -698,9 +698,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_Relayer_onlyAuthorizedUsers()
-        public
-    {
+    function test_deploy_Relayer_onlyAuthorizedUsers() public {
         Caller user = new Caller();
         address collybus = address(0xC0111b005);
 
