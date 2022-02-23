@@ -281,17 +281,6 @@ contract Relayer is Guarded, IRelayer {
         }
     }
 
-    /// @notice     Computes the positive delta between two signed int256
-    /// @param a    First parameter.
-    /// @param b    Second parameter.
-    /// @return     Returns the positive delta.
-    function absDelta(int256 a, int256 b) internal pure returns (uint256) {
-        if (a > b) {
-            return uint256(a - b);
-        }
-        return uint256(b - a);
-    }
-
     /// @notice             Returns true if the percentage difference between the two values is bigger than the `percentage`
     /// @param baseValue    The value that the percentage is based on
     /// @param newValue     The new value
