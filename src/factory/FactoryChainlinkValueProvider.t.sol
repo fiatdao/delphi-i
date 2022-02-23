@@ -33,10 +33,7 @@ contract FactoryChainlinkValueProviderTest is DSTest {
             abi.encodeWithSelector(
                 IChainlinkAggregatorV3Interface.decimals.selector
             ),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(uint8(8))
-            }),
+            MockProvider.ReturnData({success: true, data: abi.encode(8)}),
             false
         );
 
@@ -61,10 +58,7 @@ contract FactoryChainlinkValueProviderTest is DSTest {
             abi.encodeWithSelector(
                 IChainlinkAggregatorV3Interface.decimals.selector
             ),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(uint8(8))
-            }),
+            MockProvider.ReturnData({success: true, data: abi.encode(8)}),
             false
         );
 

@@ -36,7 +36,7 @@ contract FactoryYieldValueProviderTest is DSTest {
             abi.encodeWithSelector(IYieldPool.getCache.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint112(0), uint112(0), uint32(0))
+                data: abi.encode(0, 0, 0)
             }),
             false
         );
@@ -45,7 +45,7 @@ contract FactoryYieldValueProviderTest is DSTest {
             abi.encodeWithSelector(IYieldPool.cumulativeBalancesRatio.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint256(0))
+                data: abi.encode(0)
             }),
             false
         );
@@ -73,7 +73,7 @@ contract FactoryYieldValueProviderTest is DSTest {
             abi.encodeWithSelector(IYieldPool.getCache.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint112(0), uint112(0), uint32(0))
+                data: abi.encode(0, 0, 0)
             }),
             false
         );
@@ -82,7 +82,7 @@ contract FactoryYieldValueProviderTest is DSTest {
             abi.encodeWithSelector(IYieldPool.cumulativeBalancesRatio.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint256(0))
+                data: abi.encode(0)
             }),
             false
         );

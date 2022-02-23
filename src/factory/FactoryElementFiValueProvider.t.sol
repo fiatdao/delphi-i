@@ -40,7 +40,7 @@ contract FactoryElementFiValueProviderTest is DSTest {
             abi.encodeWithSelector(ERC20.decimals.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint8(18))
+                data: abi.encode(18)
             }),
             false
         );
@@ -50,7 +50,7 @@ contract FactoryElementFiValueProviderTest is DSTest {
             abi.encodeWithSelector(ERC20.decimals.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint8(18))
+                data: abi.encode(18)
             }),
             false
         );
@@ -60,7 +60,7 @@ contract FactoryElementFiValueProviderTest is DSTest {
             abi.encodeWithSelector(ERC20.decimals.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint8(18))
+                data: abi.encode(18)
             }),
             false
         );
@@ -92,7 +92,7 @@ contract FactoryElementFiValueProviderTest is DSTest {
             abi.encodeWithSelector(ERC20.decimals.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint8(18))
+                data: abi.encode(18)
             }),
             false
         );
@@ -102,7 +102,7 @@ contract FactoryElementFiValueProviderTest is DSTest {
             abi.encodeWithSelector(ERC20.decimals.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint8(18))
+                data: abi.encode(18)
             }),
             false
         );
@@ -112,7 +112,7 @@ contract FactoryElementFiValueProviderTest is DSTest {
             abi.encodeWithSelector(ERC20.decimals.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint8(18))
+                data: abi.encode(18)
             }),
             false
         );

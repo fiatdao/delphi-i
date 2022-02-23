@@ -27,7 +27,7 @@ contract SpotPriceDeploy {
 
         AggregatorData memory chainlinkAggregator = AggregatorData({
             encodedTokenId: bytes32(
-                abi.encode(address(0x78dEca24CBa286C0f8d56370f5406B48cFCE2f86))
+                uint256(uint160(0x78dEca24CBa286C0f8d56370f5406B48cFCE2f86))
             ),
             oracleData: new bytes[](1),
             requiredValidValues: 1,

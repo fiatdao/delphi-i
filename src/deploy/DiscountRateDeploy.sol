@@ -73,7 +73,7 @@ contract DiscountRateDeploy {
         });
 
         AggregatorData memory elementAggregator = AggregatorData({
-            encodedTokenId: bytes32(abi.encode(1)),
+            encodedTokenId: bytes32(uint256(1)),
             oracleData: new bytes[](3),
             requiredValidValues: 1,
             minimumThresholdValue: 1
