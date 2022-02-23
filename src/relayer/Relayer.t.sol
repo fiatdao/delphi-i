@@ -352,6 +352,9 @@ contract RelayerTest is DSTest {
         // Threshold percentage
         uint256 thresholdPercentage = 50_00; // 50%
 
+        // TokenId
+        bytes32 localTokenId = bytes32("percentage_threshold_token_test");
+
         // Create a local relayer
         Relayer localRelayer = new Relayer(address(collybus), relayerType);
 
@@ -359,7 +362,7 @@ contract RelayerTest is DSTest {
         MockProvider localOracle = new MockProvider();
 
         // Set the value returned by the Oracle.
-        int256 initialValue = 100 * 10**18;
+        int256 initialValue = 100;
         localOracle.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
@@ -372,16 +375,16 @@ contract RelayerTest is DSTest {
         // Add oracle with a thresold percentage
         localRelayer.oracleAdd(
             address(localOracle),
-            mockTokenId1,
+            localTokenId,
             thresholdPercentage
         );
 
         // Make sure the values are updated, start clean
-        cdrr.execute();
+        localRelayer.execute();
 
         // The initial value is the value we just defined
-        assertTrue(
-            collybus.valueForToken(mockTokenId1) == uint256(initialValue)
+        assertEq(
+            collybus.valueForToken(localTokenId), uint256(initialValue), "We should have the initial value"
         );
 
         // Update the oracle with a new value under the threshold limit
@@ -399,7 +402,17 @@ contract RelayerTest is DSTest {
         );
 
         // Relayer should not need to update values since it's below the thresold
-        assertTrue(cdrr.check() == false, "Should not update values");
+        assertTrue(localRelayer.check() == false, "Should not update values");
+
+        // Execute the relayer
+        localRelayer.execute();
+
+        // Make sure the new value was not pushed into Collybus
+        assertEq(
+            collybus.valueForToken(localTokenId),
+            uint256(initialValue),
+            "Collybus should not have been updated"
+        );
     }
 
     function test_Execute_UpdatesRatesInCollybusWhenDeltaIsAboveThreshold()
@@ -408,6 +421,9 @@ contract RelayerTest is DSTest {
         // Threshold percentage
         uint256 thresholdPercentage = 50_00; // 50%
 
+        // TokenId
+        bytes32 localTokenId = bytes32("percentage_threshold_token_test");
+
         // Create a local relayer
         Relayer localRelayer = new Relayer(address(collybus), relayerType);
 
@@ -415,7 +431,7 @@ contract RelayerTest is DSTest {
         MockProvider localOracle = new MockProvider();
 
         // Set the value returned by the Oracle.
-        int256 initialValue = 100 * 10**18;
+        int256 initialValue = 100;
         localOracle.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
@@ -425,21 +441,21 @@ contract RelayerTest is DSTest {
             false
         );
 
-        emit log_uint(thresholdPercentage);
-
         // Add oracle with a thresold percentage
         localRelayer.oracleAdd(
             address(localOracle),
-            mockTokenId1,
+            localTokenId,
             thresholdPercentage
         );
 
-        // Make sure the values are updated, start clean
-        cdrr.execute();
+        // Make sure the values are updated, start from `initialValue`
+        localRelayer.execute();
 
         // The initial value is the value we just defined
-        assertTrue(
-            collybus.valueForToken(mockTokenId1) == uint256(initialValue)
+        assertEq(
+            collybus.valueForToken(localTokenId),
+            uint256(initialValue),
+            "We should have the initial value"
         );
 
         // Update the oracle with a new value above the threshold limit
@@ -456,11 +472,18 @@ contract RelayerTest is DSTest {
             false
         );
 
-        emit log_uint(uint256(initialValue));
-        emit log_uint(uint256(secondValue));
-
         // Relayer should need to update values since it's above the thresold
-        assertTrue(cdrr.check() == true, "Should update values");
+        assertTrue(localRelayer.check() == true, "Should update values");
+
+        // Execute the relayer
+        localRelayer.execute();
+
+        // Make sure the new value was pushed into Collybus
+        assertEq(
+            collybus.valueForToken(localTokenId),
+            uint256(secondValue),
+            "Collybus should have the new value"
+        );
     }
 
     function test_executeWithRevert() public {

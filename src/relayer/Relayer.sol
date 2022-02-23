@@ -242,8 +242,11 @@ contract Relayer is Guarded, IRelayer {
             // If the change in delta rate from the last update is bigger than the threshold value push
             // the rates to Collybus
             if (
-                absDelta(oracleData.lastUpdateValue, oracleValue) >=
-                oracleData.minimumThresholdValue
+                checkDeviation(
+                    oracleData.lastUpdateValue,
+                    oracleValue,
+                    oracleData.minimumThresholdValue
+                )
             ) {
                 oracleData.lastUpdateValue = oracleValue;
 
