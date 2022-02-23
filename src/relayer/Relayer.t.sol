@@ -93,7 +93,10 @@ contract RelayerTest is DSTest {
         assertTrue(oracleData.exists);
         assertEq(oracleData.lastUpdateValue, 0);
         assertEq(oracleData.tokenId, mockTokenId1);
-        assertEq(oracleData.minimumThresholdValue, mockTokenId1MinThreshold);
+        assertEq(
+            oracleData.minimumPercentageDeltaValue,
+            mockTokenId1MinThreshold
+        );
     }
 
     function test_CheckExistenceOfOracle() public {

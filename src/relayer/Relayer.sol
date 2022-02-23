@@ -36,7 +36,7 @@ contract Relayer is Guarded, IRelayer {
         bool exists;
         bytes32 tokenId;
         int256 lastUpdateValue;
-        uint256 minimumThresholdValue;
+        uint256 minimumPercentageDeltaValue;
     }
 
     /// ======== Events ======== ///
@@ -99,16 +99,16 @@ contract Relayer is Guarded, IRelayer {
         return _oraclesData[oracle_].exists;
     }
 
-    /// @notice                         Registers an oracle to a token id and set the minimum threshold delta value
-    ///                                 calculate the annual rate.
-    /// @param oracle_                  The address of the oracle.
-    /// @param encodedTokenId_          The unique token id for which this oracle will update rate values.
-    /// @param minimumThresholdValue_   The minimum value delta threshold needed in order to push values to the Collybus
-    /// @dev                            Reverts if the oracle is already registered or if the rate id is taken by another oracle.
+    /// @notice                                 Registers an oracle to a token id and set the minimum threshold delta value
+    ///                                         calculate the annual rate.
+    /// @param oracle_                          The address of the oracle.
+    /// @param encodedTokenId_                  The unique token id for which this oracle will update rate values.
+    /// @param minimumPercentageDeltaValue_     The minimum value delta threshold needed in order to push values to the Collybus
+    /// @dev                                    Reverts if the oracle is already registered or if the rate id is taken by another oracle.
     function oracleAdd(
         address oracle_,
         bytes32 encodedTokenId_,
-        uint256 minimumThresholdValue_
+        uint256 minimumPercentageDeltaValue_
     ) public override(IRelayer) checkCaller {
         // Make sure the oracle was not added previously
         if (oracleExists(oracle_)) {
@@ -138,7 +138,7 @@ contract Relayer is Guarded, IRelayer {
             exists: true,
             lastUpdateValue: 0,
             tokenId: encodedTokenId_,
-            minimumThresholdValue: minimumThresholdValue_
+            minimumPercentageDeltaValue: minimumPercentageDeltaValue_
         });
 
         emit OracleAdded(oracle_);
@@ -209,7 +209,7 @@ contract Relayer is Guarded, IRelayer {
                 checkDeviation(
                     _oraclesData[localOracle].lastUpdateValue,
                     rate,
-                    _oraclesData[localOracle].minimumThresholdValue
+                    _oraclesData[localOracle].minimumPercentageDeltaValue
                 )
             ) {
                 emit ShouldUpdate(true);
@@ -245,7 +245,7 @@ contract Relayer is Guarded, IRelayer {
                 checkDeviation(
                     oracleData.lastUpdateValue,
                     oracleValue,
-                    oracleData.minimumThresholdValue
+                    oracleData.minimumPercentageDeltaValue
                 )
             ) {
                 oracleData.lastUpdateValue = oracleValue;

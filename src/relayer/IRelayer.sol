@@ -18,7 +18,7 @@ interface IRelayer {
     function oracleAdd(
         address oracle_,
         bytes32 encodedToken_,
-        uint256 minimumThresholdValue_
+        uint256 minimumPercentageDeltaValue_
     ) external;
 
     function oracleRemove(address oracle_) external;

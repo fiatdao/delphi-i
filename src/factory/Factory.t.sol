@@ -576,7 +576,7 @@ contract FactoryTest is DSTest {
             encodedTokenId: bytes32(abi.encode(1)),
             oracleData: new bytes[](oracleCount),
             requiredValidValues: 1,
-            minimumThresholdValue: 10**14
+            minimumPercentageDeltaValue: 1
         });
 
         for (
@@ -617,7 +617,7 @@ contract FactoryTest is DSTest {
             encodedTokenId: bytes32(abi.encode(1)),
             oracleData: new bytes[](1),
             requiredValidValues: validValues,
-            minimumThresholdValue: 10**14
+            minimumPercentageDeltaValue: 1
         });
 
         aggregator.oracleData[0] = abi.encode(createElementOracleData());
@@ -650,7 +650,7 @@ contract FactoryTest is DSTest {
             encodedTokenId: bytes32(abi.encode(1)),
             oracleData: new bytes[](1),
             requiredValidValues: 1,
-            minimumThresholdValue: 10**14
+            minimumPercentageDeltaValue: 1
         });
 
         aggregator.oracleData[0] = abi.encode(createElementOracleData());
@@ -781,7 +781,7 @@ contract FactoryTest is DSTest {
             encodedTokenId: bytes32(abi.encode(aggregatorCount)),
             oracleData: new bytes[](1),
             requiredValidValues: 1,
-            minimumThresholdValue: 10**14
+            minimumPercentageDeltaValue: 1
         });
 
         notionalAggregator.oracleData[0] = abi.encode(
@@ -1062,7 +1062,7 @@ contract FactoryTest is DSTest {
             encodedTokenId: bytes32(abi.encode(tokenId_)),
             oracleData: new bytes[](1),
             requiredValidValues: 1,
-            minimumThresholdValue: 10**14
+            minimumPercentageDeltaValue: 1
         });
 
         // Create the oracle data structure based on the provided value provider type
@@ -1092,7 +1092,7 @@ contract FactoryTest is DSTest {
             encodedTokenId: bytes32(abi.encode(tokenAddress_)),
             oracleData: new bytes[](1),
             requiredValidValues: 1,
-            minimumThresholdValue: 10**14
+            minimumPercentageDeltaValue: 1
         });
 
         // Create the oracle data structure based on the provided value provider type

@@ -67,7 +67,7 @@ struct AggregatorData {
     bytes32 encodedTokenId;
     bytes[] oracleData;
     uint256 requiredValidValues;
-    uint256 minimumThresholdValue;
+    uint256 minimumPercentageDeltaValue;
 }
 
 /// @notice Data structure that wraps needed data to deploy a full Relayer architecture
@@ -334,7 +334,7 @@ contract Factory is Guarded {
         IRelayer(relayerAddress_).oracleAdd(
             aggregatorOracleAddress,
             aggData.encodedTokenId,
-            aggData.minimumThresholdValue
+            aggData.minimumPercentageDeltaValue
         );
 
         emit AggregatorDeployed(aggregatorOracleAddress);

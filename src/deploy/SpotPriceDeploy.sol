@@ -31,7 +31,7 @@ contract SpotPriceDeploy {
             ),
             oracleData: new bytes[](1),
             requiredValidValues: 1,
-            minimumThresholdValue: 1
+            minimumPercentageDeltaValue: 1
         });
 
         chainlinkAggregator.oracleData[0] = abi.encode(chainlinkOracleData);
