@@ -70,7 +70,6 @@ contract RelayerTest is DSTest {
             mockTokenId1,
             mockTokenId1MinThreshold
         );
-        hevm.warp(oracleTimeUpdateWindow);
     }
 
     function test_deploy() public {
@@ -239,7 +238,6 @@ contract RelayerTest is DSTest {
             mockTokenId2,
             mockTokenId2MinThreshold
         );
-        hevm.warp(oracleTimeUpdateWindow);
 
         // Check will search for at least one updatable oracle, which in our case is the first one in the list
         // therefore, the first oracle will be updated but the second will not
@@ -286,7 +284,6 @@ contract RelayerTest is DSTest {
             mockTokenId2,
             mockTokenId2MinThreshold
         );
-        hevm.warp(oracleTimeUpdateWindow);
 
         // Execute must call update on all oracles before pushing the values to Collybus
         cdrr.execute();
@@ -365,8 +362,6 @@ contract RelayerTest is DSTest {
             }),
             false
         );
-
-        hevm.warp(oracleTimeUpdateWindow);
 
         cdrr.execute();
 
