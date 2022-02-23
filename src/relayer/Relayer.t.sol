@@ -31,7 +31,7 @@ contract TestCollybus is ICollybus {
 
 contract RelayerTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
-    Relayer internal cdrr;
+    Relayer internal relayer;
     TestCollybus internal collybus;
     IRelayer.RelayerType internal relayerType =
         IRelayer.RelayerType.DiscountRate;
@@ -48,7 +48,7 @@ contract RelayerTest is DSTest {
 
     function setUp() public {
         collybus = new TestCollybus();
-        cdrr = new Relayer(address(collybus), relayerType);
+        relayer = new Relayer(address(collybus), relayerType);
 
         oracle1 = new MockProvider();
 
@@ -65,7 +65,7 @@ contract RelayerTest is DSTest {
         );
 
         // Add oracle with rate id
-        cdrr.oracleAdd(
+        relayer.oracleAdd(
             address(oracle1),
             mockTokenId1,
             mockTokenId1MinThreshold
@@ -73,19 +73,19 @@ contract RelayerTest is DSTest {
     }
 
     function test_deploy() public {
-        assertTrue(address(cdrr) != address(0), "Relayer should be deployed");
+        assertTrue(address(relayer) != address(0), "Relayer should be deployed");
     }
 
     function test_check_collybus() public {
-        assertEq(cdrr.collybus(), address(collybus));
+        assertEq(relayer.collybus(), address(collybus));
     }
 
     function test_check_relayerType() public {
-        assertTrue(cdrr.relayerType() == relayerType, "Invalid relayerType");
+        assertTrue(relayer.relayerType() == relayerType, "Invalid relayerType");
     }
 
     function test_check_oracleData() public {
-        Relayer.OracleData memory oracleData = cdrr.oraclesData(
+        Relayer.OracleData memory oracleData = relayer.oraclesData(
             address(oracle1)
         );
 
@@ -98,7 +98,7 @@ contract RelayerTest is DSTest {
     function test_CheckExistenceOfOracle() public {
         // Check that oracle was added
         assertTrue(
-            cdrr.oracleExists(address(oracle1)),
+            relayer.oracleExists(address(oracle1)),
             "Oracle should be added"
         );
     }
@@ -106,7 +106,7 @@ contract RelayerTest is DSTest {
     function test_ReturnNumberOfOracles() public {
         // Check the number of existing oracles
         assertTrue(
-            cdrr.oracleCount() == 1,
+            relayer.oracleCount() == 1,
             "CollybusDiscountRateRelayer should contain 1 oracle"
         );
     }
@@ -119,14 +119,14 @@ contract RelayerTest is DSTest {
         );
 
         // Add the oracle for a new token ID.
-        cdrr.oracleAdd(newOracle, mockTokenId2, mockTokenId1MinThreshold);
+        relayer.oracleAdd(newOracle, mockTokenId2, mockTokenId1MinThreshold);
 
         // Check that oracle was added
-        assertTrue(cdrr.oracleExists(newOracle), "Oracle should be added");
+        assertTrue(relayer.oracleExists(newOracle), "Oracle should be added");
 
         // Check the number of existing oracles
         assertTrue(
-            cdrr.oracleCount() == 2,
+            relayer.oracleCount() == 2,
             "CollybusDiscountRateRelayer should contain 2 oracles"
         );
     }
@@ -137,7 +137,7 @@ contract RelayerTest is DSTest {
             abi.encode(abi.decode(abi.encode(mockTokenId1), (uint256)) + 1)
         );
 
-        cdrr.oracleAdd(
+        relayer.oracleAdd(
             address(oracle1),
             mockTokenId2,
             mockTokenId1MinThreshold
@@ -148,7 +148,7 @@ contract RelayerTest is DSTest {
         // We can use any address, the oracle will not be interrogated on add.
         address newOracle = address(0x1);
         // Add a new oracle that has the same token id as the previously added oracle.
-        cdrr.oracleAdd(
+        relayer.oracleAdd(
             address(newOracle),
             mockTokenId1,
             mockTokenId1MinThreshold
@@ -165,9 +165,9 @@ contract RelayerTest is DSTest {
         uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
         // Add the oracle
         (bool ok, ) = user.externalCall(
-            address(cdrr),
+            address(relayer),
             abi.encodeWithSelector(
-                cdrr.oracleAdd.selector,
+                relayer.oracleAdd.selector,
                 newOracle,
                 mockTokenId2,
                 mockTokenId2MinThreshold
@@ -181,11 +181,11 @@ contract RelayerTest is DSTest {
 
     function test_RemoveOracle_DeletesOracle() public {
         // Remove the only oracle.
-        cdrr.oracleRemove(address(oracle1));
+        relayer.oracleRemove(address(oracle1));
 
         // Oracle should not exist
         assertTrue(
-            cdrr.oracleExists(address(oracle1)) == false,
+            relayer.oracleExists(address(oracle1)) == false,
             "CollybusDiscountRateRelayer oracle should be deleted"
         );
     }
@@ -194,7 +194,7 @@ contract RelayerTest is DSTest {
         address newOracle = address(0x1);
 
         // Attempt to remove oracle that does not exist.
-        cdrr.oracleRemove(newOracle);
+        relayer.oracleRemove(newOracle);
     }
 
     function test_RemoveOracle_OnlyAuthorizedUserShouldBeAbleToRemove() public {
@@ -202,8 +202,8 @@ contract RelayerTest is DSTest {
 
         // Add the oracle
         (bool ok, ) = user.externalCall(
-            address(cdrr),
-            abi.encodeWithSelector(cdrr.oracleRemove.selector, address(oracle1))
+            address(relayer),
+            abi.encodeWithSelector(relayer.oracleRemove.selector, address(oracle1))
         );
         assertTrue(
             ok == false,
@@ -212,7 +212,7 @@ contract RelayerTest is DSTest {
     }
 
     function test_checkCalls_returnsTrueWhenUpdateNeeded() public {
-        bool mustUpdate = cdrr.check();
+        bool mustUpdate = relayer.check();
         assertTrue(mustUpdate);
     }
 
@@ -233,7 +233,7 @@ contract RelayerTest is DSTest {
         );
         uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
         // Add oracle with rate id
-        cdrr.oracleAdd(
+        relayer.oracleAdd(
             address(oracle2),
             mockTokenId2,
             mockTokenId2MinThreshold
@@ -241,7 +241,7 @@ contract RelayerTest is DSTest {
 
         // Check will search for at least one updatable oracle, which in our case is the first one in the list
         // therefore, the first oracle will be updated but the second will not
-        cdrr.check();
+        relayer.check();
 
         // Update should be the first called function
         MockProvider.CallData memory cd1 = oracle1.getCallData(0);
@@ -253,12 +253,12 @@ contract RelayerTest is DSTest {
     }
 
     function test_Check_ReturnsFalseAfterExecute() public {
-        bool checkBeforeUpdate = cdrr.check();
+        bool checkBeforeUpdate = relayer.check();
         assertTrue(checkBeforeUpdate);
 
-        cdrr.execute();
+        relayer.execute();
 
-        bool checkAfterUpdate = cdrr.check();
+        bool checkAfterUpdate = relayer.check();
         assertTrue(checkAfterUpdate == false);
     }
 
@@ -279,14 +279,14 @@ contract RelayerTest is DSTest {
         );
         uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
         // Add oracle with rate id
-        cdrr.oracleAdd(
+        relayer.oracleAdd(
             address(oracle2),
             mockTokenId2,
             mockTokenId2MinThreshold
         );
 
         // Execute must call update on all oracles before pushing the values to Collybus
-        cdrr.execute();
+        relayer.execute();
 
         // Update was called for both oracles
         MockProvider.CallData memory cd1 = oracle1.getCallData(0);
@@ -297,7 +297,7 @@ contract RelayerTest is DSTest {
     }
 
     function test_Execute_UpdateDiscountRateInCollybus() public {
-        cdrr.execute();
+        relayer.execute();
 
         assertTrue(
             collybus.valueForToken(mockTokenId1) ==
@@ -347,7 +347,7 @@ contract RelayerTest is DSTest {
         public
     {
         // Execute must call update on all oracles before pushing the values to Collybus
-        cdrr.execute();
+        relayer.execute();
 
         // Make the second value returned by the oracle to be just lower than the minimum threshold
         int256 oracleNewValue = oracle1InitialValue +
@@ -363,7 +363,7 @@ contract RelayerTest is DSTest {
             false
         );
 
-        cdrr.execute();
+        relayer.execute();
 
         // The rate will NOT be updated because the delta is smaller than the threshold
         assertTrue(
@@ -373,24 +373,24 @@ contract RelayerTest is DSTest {
 
     function test_executeWithRevert() public {
         // Call should not revert
-        cdrr.executeWithRevert();
+        relayer.executeWithRevert();
     }
 
     function test_executeWithRevert_checkWillReturnFalseAfter() public {
         // Call should not revert because check will return true
-        cdrr.executeWithRevert();
+        relayer.executeWithRevert();
 
         assertTrue(
-            cdrr.check() == false,
+            relayer.check() == false,
             "Check should return false after executeWithRevert was called"
         );
     }
 
     function testFail_executeWithRevert_failsWhenCheckReturnsFalse() public {
         // Update oracles and rates
-        cdrr.execute();
+        relayer.execute();
 
         // Execute with revert should fail because check will return false
-        cdrr.executeWithRevert();
+        relayer.executeWithRevert();
     }
 }
