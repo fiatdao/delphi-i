@@ -34,19 +34,13 @@ contract FactoryYieldValueProviderTest is DSTest {
         MockProvider yieldPool = new MockProvider();
         yieldPool.givenQueryReturnResponse(
             abi.encodeWithSelector(IYieldPool.getCache.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(0, 0, 0)
-            }),
+            MockProvider.ReturnData({success: true, data: abi.encode(0, 0, 0)}),
             false
         );
 
         yieldPool.givenQueryReturnResponse(
             abi.encodeWithSelector(IYieldPool.cumulativeBalancesRatio.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(0)
-            }),
+            MockProvider.ReturnData({success: true, data: abi.encode(0)}),
             false
         );
 
@@ -71,19 +65,13 @@ contract FactoryYieldValueProviderTest is DSTest {
         MockProvider yieldPool = new MockProvider();
         yieldPool.givenQueryReturnResponse(
             abi.encodeWithSelector(IYieldPool.getCache.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(0, 0, 0)
-            }),
+            MockProvider.ReturnData({success: true, data: abi.encode(0, 0, 0)}),
             false
         );
 
         yieldPool.givenQueryReturnResponse(
             abi.encodeWithSelector(IYieldPool.cumulativeBalancesRatio.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(0)
-            }),
+            MockProvider.ReturnData({success: true, data: abi.encode(0)}),
             false
         );
 
