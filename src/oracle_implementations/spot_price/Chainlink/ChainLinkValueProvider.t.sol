@@ -49,7 +49,7 @@ contract ChainLinkValueProviderTest is DSTest {
             ),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint8(8))
+                data: abi.encode(8)
             }),
             false
         );

@@ -83,7 +83,7 @@ contract ElementFiValueProviderTest is DSTest {
             abi.encodeWithSelector(ERC20.decimals.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint8(18))
+                data: abi.encode(18)
             }),
             false
         );
@@ -92,7 +92,7 @@ contract ElementFiValueProviderTest is DSTest {
             abi.encodeWithSelector(ERC20.decimals.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint8(18))
+                data: abi.encode(18)
             }),
             false
         );
@@ -101,7 +101,7 @@ contract ElementFiValueProviderTest is DSTest {
             abi.encodeWithSelector(ERC20.decimals.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint8(18))
+                data: abi.encode(18)
             }),
             false
         );
@@ -110,7 +110,7 @@ contract ElementFiValueProviderTest is DSTest {
             abi.encodeWithSelector(IERC20.totalSupply.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint256(874253869672828123816))
+                data: abi.encode(874253869672828123816)
             }),
             false
         );

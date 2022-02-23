@@ -573,7 +573,7 @@ contract FactoryTest is DSTest {
         // Create an aggregator with multiple oracles
         uint256 oracleCount = 3;
         AggregatorData memory aggregator = AggregatorData({
-            encodedTokenId: bytes32(abi.encode(1)),
+            encodedTokenId: bytes32(uint256(1)),
             oracleData: new bytes[](oracleCount),
             requiredValidValues: 1,
             minimumPercentageDeltaValue: 1
@@ -614,7 +614,7 @@ contract FactoryTest is DSTest {
         // Create the mock Discount rate aggregator data
         uint256 validValues = 1;
         AggregatorData memory aggregator = AggregatorData({
-            encodedTokenId: bytes32(abi.encode(1)),
+            encodedTokenId: bytes32(uint256(1)),
             oracleData: new bytes[](1),
             requiredValidValues: validValues,
             minimumPercentageDeltaValue: 1
@@ -647,7 +647,7 @@ contract FactoryTest is DSTest {
 
         // Create the discount rate aggregator data
         AggregatorData memory aggregator = AggregatorData({
-            encodedTokenId: bytes32(abi.encode(1)),
+            encodedTokenId: bytes32(uint256(1)),
             oracleData: new bytes[](1),
             requiredValidValues: 1,
             minimumPercentageDeltaValue: 1
@@ -778,7 +778,7 @@ contract FactoryTest is DSTest {
         // Create the Aggregator data structure that will contain a Notional Oracle
         // Use the aggregator count as token id to make sure it is unused
         AggregatorData memory notionalAggregator = AggregatorData({
-            encodedTokenId: bytes32(abi.encode(aggregatorCount)),
+            encodedTokenId: bytes32(uint256(aggregatorCount)),
             oracleData: new bytes[](1),
             requiredValidValues: 1,
             minimumPercentageDeltaValue: 1
@@ -1059,7 +1059,7 @@ contract FactoryTest is DSTest {
     ) internal returns (AggregatorData memory) {
         // Create a discount rate aggregator for a certain given value provider
         AggregatorData memory aggregator = AggregatorData({
-            encodedTokenId: bytes32(abi.encode(tokenId_)),
+            encodedTokenId: bytes32(tokenId_),
             oracleData: new bytes[](1),
             requiredValidValues: 1,
             minimumPercentageDeltaValue: 1
@@ -1089,7 +1089,7 @@ contract FactoryTest is DSTest {
     ) internal returns (AggregatorData memory) {
         // Create a spot price aggregator for a certain given value provider
         AggregatorData memory aggregator = AggregatorData({
-            encodedTokenId: bytes32(abi.encode(tokenAddress_)),
+            encodedTokenId: bytes32(uint256(uint160(tokenAddress_))),
             oracleData: new bytes[](1),
             requiredValidValues: 1,
             minimumPercentageDeltaValue: 1
