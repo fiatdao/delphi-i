@@ -30,8 +30,6 @@ contract Relayer is Guarded, IRelayer {
     // @notice Emitter when check() returns false
     error Relayer__executeWithRevert_checkFailed(RelayerType relayerType);
 
-    error Relayer__execute_collybusUpdateFailed(RelayerType relayerType);
-
     struct OracleData {
         bool exists;
         bytes32 tokenId;
@@ -183,8 +181,6 @@ contract Relayer is Guarded, IRelayer {
     {
         return _oraclesData[oracle_];
     }
-
-    // function oraclesData()
 
     /// @notice Iterates and updates each oracle until it finds one that should push data
     ///         in the Collybus, more exactly, the delta change in value is bigger than the minimum
