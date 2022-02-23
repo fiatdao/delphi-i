@@ -76,7 +76,7 @@ contract DiscountRateDeploy {
             encodedTokenId: bytes32(uint256(1)),
             oracleData: new bytes[](3),
             requiredValidValues: 1,
-            minimumThresholdValue: 1
+            minimumPercentageDeltaValue: 1
         });
 
         elementAggregator.oracleData[0] = abi.encode(elementOracleData);

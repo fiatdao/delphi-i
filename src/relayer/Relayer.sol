@@ -36,7 +36,7 @@ contract Relayer is Guarded, IRelayer {
         bool exists;
         bytes32 tokenId;
         int256 lastUpdateValue;
-        uint256 minimumThresholdValue;
+        uint256 minimumPercentageDeltaValue;
     }
 
     /// ======== Events ======== ///
@@ -99,16 +99,16 @@ contract Relayer is Guarded, IRelayer {
         return _oraclesData[oracle_].exists;
     }
 
-    /// @notice                         Registers an oracle to a token id and set the minimum threshold delta value
-    ///                                 calculate the annual rate.
-    /// @param oracle_                  The address of the oracle.
-    /// @param encodedTokenId_          The unique token id for which this oracle will update rate values.
-    /// @param minimumThresholdValue_   The minimum value delta threshold needed in order to push values to the Collybus
-    /// @dev                            Reverts if the oracle is already registered or if the rate id is taken by another oracle.
+    /// @notice                                 Registers an oracle to a token id and set the minimum threshold delta value
+    ///                                         calculate the annual rate.
+    /// @param oracle_                          The address of the oracle.
+    /// @param encodedTokenId_                  The unique token id for which this oracle will update rate values.
+    /// @param minimumPercentageDeltaValue_     The minimum value delta threshold needed in order to push values to the Collybus
+    /// @dev                                    Reverts if the oracle is already registered or if the rate id is taken by another oracle.
     function oracleAdd(
         address oracle_,
         bytes32 encodedTokenId_,
-        uint256 minimumThresholdValue_
+        uint256 minimumPercentageDeltaValue_
     ) public override(IRelayer) checkCaller {
         // Make sure the oracle was not added previously
         if (oracleExists(oracle_)) {
@@ -138,7 +138,7 @@ contract Relayer is Guarded, IRelayer {
             exists: true,
             lastUpdateValue: 0,
             tokenId: encodedTokenId_,
-            minimumThresholdValue: minimumThresholdValue_
+            minimumPercentageDeltaValue: minimumPercentageDeltaValue_
         });
 
         emit OracleAdded(oracle_);
@@ -206,8 +206,11 @@ contract Relayer is Guarded, IRelayer {
             if (!isValid) continue;
 
             if (
-                absDelta(_oraclesData[localOracle].lastUpdateValue, rate) >=
-                _oraclesData[localOracle].minimumThresholdValue
+                checkDeviation(
+                    _oraclesData[localOracle].lastUpdateValue,
+                    rate,
+                    _oraclesData[localOracle].minimumPercentageDeltaValue
+                )
             ) {
                 emit ShouldUpdate(true);
                 return true;
@@ -239,8 +242,11 @@ contract Relayer is Guarded, IRelayer {
             // If the change in delta rate from the last update is bigger than the threshold value push
             // the rates to Collybus
             if (
-                absDelta(oracleData.lastUpdateValue, oracleValue) >=
-                oracleData.minimumThresholdValue
+                checkDeviation(
+                    oracleData.lastUpdateValue,
+                    oracleValue,
+                    oracleData.minimumPercentageDeltaValue
+                )
             ) {
                 oracleData.lastUpdateValue = oracleValue;
 
@@ -275,14 +281,22 @@ contract Relayer is Guarded, IRelayer {
         }
     }
 
-    /// @notice     Computes the positive delta between two signed int256
-    /// @param a    First parameter.
-    /// @param b    Second parameter.
-    /// @return     Returns the positive delta.
-    function absDelta(int256 a, int256 b) internal pure returns (uint256) {
-        if (a > b) {
-            return uint256(a - b);
-        }
-        return uint256(b - a);
+    /// @notice             Returns true if the percentage difference between the two values is bigger than the `percentage`
+    /// @param baseValue    The value that the percentage is based on
+    /// @param newValue     The new value
+    /// @param percentage   The percentage threshold value (100% = 100_00, 50% = 50_00, etc)
+    function checkDeviation(
+        int256 baseValue,
+        int256 newValue,
+        uint256 percentage
+    ) public view returns (bool) {
+        int256 deviation = (baseValue * int256(percentage)) / 100_00;
+
+        if (
+            baseValue + deviation <= newValue ||
+            baseValue - deviation >= newValue
+        ) return true;
+
+        return false;
     }
 }
