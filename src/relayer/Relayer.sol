@@ -5,34 +5,38 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {IRelayer} from "src/relayer/IRelayer.sol";
 import {IOracle} from "src/oracle/IOracle.sol";
 import {ICollybus} from "src/relayer/ICollybus.sol";
-import {ICollybusDiscountRateRelayer} from "src/relayer/CollybusDiscountRate/ICollybusDiscountRateRelayer.sol";
 import {Guarded} from "src/guarded/Guarded.sol";
 
-contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
+contract Relayer is Guarded, IRelayer {
     // @notice Emitted when trying to add an oracle that already exists
-    error CollybusDiscountRateRelayer__addOracle_oracleAlreadyRegistered(
-        address oracle
+    error Relayer__addOracle_oracleAlreadyRegistered(
+        address oracle,
+        RelayerType relayerType
     );
 
     // @notice Emitted when trying to add an oracle for a tokenId that already has a registered oracle.
-    error CollybusDiscountRateRelayer__addOracle_tokenIdHasOracleRegistered(
+    error Relayer__addOracle_tokenIdHasOracleRegistered(
         address oracle,
-        uint256 tokenId
+        bytes32 tokenId,
+        RelayerType relayerType
     );
 
     // @notice Emitter when trying to remove an oracle that was not registered.
-    error CollybusDiscountRateRelayer__removeOracle_oracleNotRegistered(
-        address oracle
+    error Relayer__removeOracle_oracleNotRegistered(
+        address oracle,
+        RelayerType relayerType
     );
 
     // @notice Emitter when check() returns false
-    error CollybusDiscountRateRelayer__executeWithRevert_checkFailed();
+    error Relayer__executeWithRevert_checkFailed(RelayerType relayerType);
+
+    error Relayer__execute_collybusUpdateFailed(RelayerType relayerType);
 
     struct OracleData {
         bool exists;
-        uint256 tokenId;
+        bytes32 tokenId;
         int256 lastUpdateValue;
-        uint256 minimumThresholdValue;
+        uint256 minimumPercentageDeltaValue;
     }
 
     /// ======== Events ======== ///
@@ -41,34 +45,32 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
     event OracleRemoved(address oracleAddress);
     event ShouldUpdate(bool shouldUpdate);
     event UpdateOracle(address oracle, int256 value, bool valid);
-    event UpdatedCollybus(uint256 tokenId, uint256 rate);
+    event UpdatedCollybus(bytes32 tokenId, uint256 rate, RelayerType);
 
     /// ======== Storage ======== ///
 
     address public immutable collybus;
 
+    RelayerType public immutable relayerType;
+
     // Mapping that will hold all the oracle params needed by the contract
     mapping(address => OracleData) private _oraclesData;
 
     // Mapping used tokenId's
-    mapping(uint256 => bool) public _tokenIds;
+    mapping(bytes32 => bool) public _encodedTokenIds;
 
     // Array used for iterating the oracles.
     using EnumerableSet for EnumerableSet.AddressSet;
     EnumerableSet.AddressSet private _oracleList;
 
-    constructor(address collybusAddress_) {
+    constructor(address collybusAddress_, RelayerType type_) {
         collybus = collybusAddress_;
+        relayerType = type_;
     }
 
     /// @notice Returns the number of registered oracles.
     /// @return the total number of oracles.
-    function oracleCount()
-        public
-        view
-        override(ICollybusDiscountRateRelayer)
-        returns (uint256)
-    {
+    function oracleCount() external view override(IRelayer) returns (uint256) {
         return _oracleList.length();
     }
 
@@ -79,7 +81,7 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
     function oracleAt(uint256 index_)
         external
         view
-        override(ICollybusDiscountRateRelayer)
+        override(IRelayer)
         returns (address)
     {
         return _oracleList.at(index_);
@@ -91,35 +93,37 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
     function oracleExists(address oracle_)
         public
         view
-        override(ICollybusDiscountRateRelayer)
+        override(IRelayer)
         returns (bool)
     {
         return _oraclesData[oracle_].exists;
     }
 
-    /// @notice                         Registers an oracle to a token id and set the minimum threshold delta value
-    ///                                 calculate the annual rate.
-    /// @param oracle_                  The address of the oracle.
-    /// @param tokenId_                 The unique token id for which this oracle will update rate values.
-    /// @param minimumThresholdValue_   The minimum value delta threshold needed in order to push values to the Collybus
-    /// @dev                            Reverts if the oracle is already registered or if the rate id is taken by another oracle.
+    /// @notice                                 Registers an oracle to a token id and set the minimum threshold delta value
+    ///                                         calculate the annual rate.
+    /// @param oracle_                          The address of the oracle.
+    /// @param encodedTokenId_                  The unique token id for which this oracle will update rate values.
+    /// @param minimumPercentageDeltaValue_     The minimum value delta threshold needed in order to push values to the Collybus
+    /// @dev                                    Reverts if the oracle is already registered or if the rate id is taken by another oracle.
     function oracleAdd(
         address oracle_,
-        uint256 tokenId_,
-        uint256 minimumThresholdValue_
-    ) public override(ICollybusDiscountRateRelayer) checkCaller {
+        bytes32 encodedTokenId_,
+        uint256 minimumPercentageDeltaValue_
+    ) public override(IRelayer) checkCaller {
         // Make sure the oracle was not added previously
         if (oracleExists(oracle_)) {
-            revert CollybusDiscountRateRelayer__addOracle_oracleAlreadyRegistered(
-                oracle_
+            revert Relayer__addOracle_oracleAlreadyRegistered(
+                oracle_,
+                relayerType
             );
         }
 
         // Make sure there are no existing oracles registered for this rate Id
-        if (_tokenIds[tokenId_]) {
-            revert CollybusDiscountRateRelayer__addOracle_tokenIdHasOracleRegistered(
+        if (_encodedTokenIds[encodedTokenId_]) {
+            revert Relayer__addOracle_tokenIdHasOracleRegistered(
                 oracle_,
-                tokenId_
+                encodedTokenId_,
+                relayerType
             );
         }
 
@@ -127,14 +131,14 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
         _oracleList.add(oracle_);
 
         // Mark the token Id as used
-        _tokenIds[tokenId_] = true;
+        _encodedTokenIds[encodedTokenId_] = true;
 
         // Update the oracle address => data mapping with the oracle parameters.
         _oraclesData[oracle_] = OracleData({
             exists: true,
             lastUpdateValue: 0,
-            tokenId: tokenId_,
-            minimumThresholdValue: minimumThresholdValue_
+            tokenId: encodedTokenId_,
+            minimumPercentageDeltaValue: minimumPercentageDeltaValue_
         });
 
         emit OracleAdded(oracle_);
@@ -145,18 +149,19 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
     /// @dev            Reverts if the oracle is not registered
     function oracleRemove(address oracle_)
         public
-        override(ICollybusDiscountRateRelayer)
+        override(IRelayer)
         checkCaller
     {
         // Make sure the oracle is registered
         if (!oracleExists(oracle_)) {
-            revert CollybusDiscountRateRelayer__removeOracle_oracleNotRegistered(
-                oracle_
+            revert Relayer__removeOracle_oracleNotRegistered(
+                oracle_,
+                relayerType
             );
         }
 
         // Reset the tokenId Mapping
-        _tokenIds[_oraclesData[oracle_].tokenId] = false;
+        _encodedTokenIds[_oraclesData[oracle_].tokenId] = false;
 
         // Remove the oracle from the list
         // This returns true/false depending on if the oracle was removed
@@ -201,8 +206,11 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
             if (!isValid) continue;
 
             if (
-                absDelta(_oraclesData[localOracle].lastUpdateValue, rate) >=
-                _oraclesData[localOracle].minimumThresholdValue
+                checkDeviation(
+                    _oraclesData[localOracle].lastUpdateValue,
+                    rate,
+                    _oraclesData[localOracle].minimumPercentageDeltaValue
+                )
             ) {
                 emit ShouldUpdate(true);
                 return true;
@@ -225,7 +233,7 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
 
             // We always update the oracles before retrieving the rates
             IOracle(localOracle).update();
-            (int256 rate, bool isValid) = IOracle(localOracle).value();
+            (int256 oracleValue, bool isValid) = IOracle(localOracle).value();
 
             if (!isValid) continue;
 
@@ -234,16 +242,31 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
             // If the change in delta rate from the last update is bigger than the threshold value push
             // the rates to Collybus
             if (
-                absDelta(oracleData.lastUpdateValue, rate) >=
-                oracleData.minimumThresholdValue
+                checkDeviation(
+                    oracleData.lastUpdateValue,
+                    oracleValue,
+                    oracleData.minimumPercentageDeltaValue
+                )
             ) {
-                oracleData.lastUpdateValue = rate;
-                ICollybus(collybus).updateDiscountRate(
-                    oracleData.tokenId,
-                    uint256(rate)
-                );
+                oracleData.lastUpdateValue = oracleValue;
 
-                emit UpdatedCollybus(oracleData.tokenId, uint256(rate));
+                if (relayerType == RelayerType.DiscountRate) {
+                    ICollybus(collybus).updateDiscountRate(
+                        uint256(oracleData.tokenId),
+                        uint256(oracleValue)
+                    );
+                } else if (relayerType == RelayerType.SpotPrice) {
+                    ICollybus(collybus).updateSpot(
+                        address(uint160(uint256(oracleData.tokenId))),
+                        uint256(oracleValue)
+                    );
+                }
+
+                emit UpdatedCollybus(
+                    oracleData.tokenId,
+                    uint256(oracleValue),
+                    relayerType
+                );
             }
         }
     }
@@ -254,18 +277,26 @@ contract CollybusDiscountRateRelayer is Guarded, ICollybusDiscountRateRelayer {
         if (check()) {
             execute();
         } else {
-            revert CollybusDiscountRateRelayer__executeWithRevert_checkFailed();
+            revert Relayer__executeWithRevert_checkFailed(relayerType);
         }
     }
 
-    /// @notice     Computes the positive delta between two signed int256
-    /// @param a    First parameter.
-    /// @param b    Second parameter.
-    /// @return     Returns the positive delta.
-    function absDelta(int256 a, int256 b) internal pure returns (uint256) {
-        if (a > b) {
-            return uint256(a - b);
-        }
-        return uint256(b - a);
+    /// @notice             Returns true if the percentage difference between the two values is bigger than the `percentage`
+    /// @param baseValue    The value that the percentage is based on
+    /// @param newValue     The new value
+    /// @param percentage   The percentage threshold value (100% = 100_00, 50% = 50_00, etc)
+    function checkDeviation(
+        int256 baseValue,
+        int256 newValue,
+        uint256 percentage
+    ) public view returns (bool) {
+        int256 deviation = (baseValue * int256(percentage)) / 100_00;
+
+        if (
+            baseValue + deviation <= newValue ||
+            baseValue - deviation >= newValue
+        ) return true;
+
+        return false;
     }
 }

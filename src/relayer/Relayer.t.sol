@@ -7,32 +7,34 @@ import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {Caller} from "src/test/utils/Caller.sol";
 
 import {ICollybus} from "src/relayer/ICollybus.sol";
-import {CollybusDiscountRateRelayer} from "./CollybusDiscountRateRelayer.sol";
+import {Relayer} from "src/relayer/Relayer.sol";
+import {IRelayer} from "src/relayer/IRelayer.sol";
 import {IOracle} from "src/oracle/IOracle.sol";
 
 contract TestCollybus is ICollybus {
-    mapping(uint256 => uint256) public rateForTokenId;
+    mapping(bytes32 => uint256) public valueForToken;
 
     function updateDiscountRate(uint256 tokenId, uint256 rate)
         external
         override(ICollybus)
     {
-        rateForTokenId[tokenId] = rate;
+        valueForToken[bytes32(uint256(tokenId))] = rate;
     }
 
-    function updateSpot(
-        address, /*token*/
-        uint256 /*spot*/
-    ) public pure override(ICollybus) {
-        // This should never be called, since this test only updates the discount rate
-        assert(false);
+    function updateSpot(address tokenAddress, uint256 spot)
+        external
+        override(ICollybus)
+    {
+        valueForToken[bytes32(uint256(uint160(tokenAddress)))] = spot;
     }
 }
 
-contract CollybusDiscountRateRelayerTest is DSTest {
+contract RelayerTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
-    CollybusDiscountRateRelayer internal cdrr;
+    Relayer internal relayer;
     TestCollybus internal collybus;
+    IRelayer.RelayerType internal relayerType =
+        IRelayer.RelayerType.DiscountRate;
 
     MockProvider internal oracle1;
 
@@ -40,59 +42,69 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     uint256 internal oracleMaxValidTime = 300;
     int256 internal oracleAlpha = 2 * 10**17; // 0.2
 
-    uint256 internal mockTokenId1 = 1;
+    bytes32 internal mockTokenId1;
     uint256 internal mockTokenId1MinThreshold = 1;
+    int256 internal oracle1InitialValue = 100 * 10**18;
 
     function setUp() public {
         collybus = new TestCollybus();
-        cdrr = new CollybusDiscountRateRelayer(address(collybus));
+        relayer = new Relayer(address(collybus), relayerType);
 
         oracle1 = new MockProvider();
+
+        mockTokenId1 = bytes32(uint256(1));
 
         // Set the value returned by the Oracle.
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(int256(100 * 10**18), true)
+                data: abi.encode(oracle1InitialValue, true)
             }),
             false
         );
 
         // Add oracle with rate id
-        cdrr.oracleAdd(
+        relayer.oracleAdd(
             address(oracle1),
             mockTokenId1,
             mockTokenId1MinThreshold
         );
-        hevm.warp(oracleTimeUpdateWindow);
     }
 
-    function test_Deploy() public {
+    function test_deploy() public {
         assertTrue(
-            address(cdrr) != address(0),
-            "CollybusDiscountRateRelayer should be deployed"
+            address(relayer) != address(0),
+            "Relayer should be deployed"
         );
     }
 
-    function test_check_Collybus() public {
-        assertEq(cdrr.collybus(), address(collybus));
+    function test_check_collybus() public {
+        assertEq(relayer.collybus(), address(collybus));
+    }
+
+    function test_check_relayerType() public {
+        assertTrue(relayer.relayerType() == relayerType, "Invalid relayerType");
     }
 
     function test_check_oracleData() public {
-        CollybusDiscountRateRelayer.OracleData memory oracleData = cdrr
-            .oraclesData(address(oracle1));
+        Relayer.OracleData memory oracleData = relayer.oraclesData(
+            address(oracle1)
+        );
 
         assertTrue(oracleData.exists);
         assertEq(oracleData.lastUpdateValue, 0);
         assertEq(oracleData.tokenId, mockTokenId1);
-        assertEq(oracleData.minimumThresholdValue, mockTokenId1MinThreshold);
+        assertEq(
+            oracleData.minimumPercentageDeltaValue,
+            mockTokenId1MinThreshold
+        );
     }
 
     function test_CheckExistenceOfOracle() public {
         // Check that oracle was added
         assertTrue(
-            cdrr.oracleExists(address(oracle1)),
+            relayer.oracleExists(address(oracle1)),
             "Oracle should be added"
         );
     }
@@ -100,7 +112,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     function test_ReturnNumberOfOracles() public {
         // Check the number of existing oracles
         assertTrue(
-            cdrr.oracleCount() == 1,
+            relayer.oracleCount() == 1,
             "CollybusDiscountRateRelayer should contain 1 oracle"
         );
     }
@@ -108,26 +120,26 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     function test_AddOracle() public {
         // Create a new address that differs from the oracle already added
         address newOracle = address(0x1);
-        uint256 mockTokenId2 = mockTokenId1 + 1;
+        bytes32 mockTokenId2 = bytes32(uint256(mockTokenId1) + 1);
 
         // Add the oracle for a new token ID.
-        cdrr.oracleAdd(newOracle, mockTokenId2, mockTokenId1MinThreshold);
+        relayer.oracleAdd(newOracle, mockTokenId2, mockTokenId1MinThreshold);
 
         // Check that oracle was added
-        assertTrue(cdrr.oracleExists(newOracle), "Oracle should be added");
+        assertTrue(relayer.oracleExists(newOracle), "Oracle should be added");
 
         // Check the number of existing oracles
         assertTrue(
-            cdrr.oracleCount() == 2,
+            relayer.oracleCount() == 2,
             "CollybusDiscountRateRelayer should contain 2 oracles"
         );
     }
 
     function testFail_AddOracle_ShouldNotAllowDuplicateOracles() public {
         // Attempt to add the same oracle again but use a different token id.
-        uint256 mockTokenId2 = mockTokenId1 + 1;
+        bytes32 mockTokenId2 = bytes32(uint256(mockTokenId1) + 1);
 
-        cdrr.oracleAdd(
+        relayer.oracleAdd(
             address(oracle1),
             mockTokenId2,
             mockTokenId1MinThreshold
@@ -138,7 +150,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         // We can use any address, the oracle will not be interrogated on add.
         address newOracle = address(0x1);
         // Add a new oracle that has the same token id as the previously added oracle.
-        cdrr.oracleAdd(
+        relayer.oracleAdd(
             address(newOracle),
             mockTokenId1,
             mockTokenId1MinThreshold
@@ -149,13 +161,13 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         Caller user = new Caller();
 
         address newOracle = address(0x1);
-        uint256 mockTokenId2 = mockTokenId1 + 1;
+        bytes32 mockTokenId2 = bytes32(uint256(mockTokenId1) + 1);
         uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
         // Add the oracle
         (bool ok, ) = user.externalCall(
-            address(cdrr),
+            address(relayer),
             abi.encodeWithSelector(
-                cdrr.oracleAdd.selector,
+                relayer.oracleAdd.selector,
                 newOracle,
                 mockTokenId2,
                 mockTokenId2MinThreshold
@@ -169,11 +181,11 @@ contract CollybusDiscountRateRelayerTest is DSTest {
 
     function test_RemoveOracle_DeletesOracle() public {
         // Remove the only oracle.
-        cdrr.oracleRemove(address(oracle1));
+        relayer.oracleRemove(address(oracle1));
 
         // Oracle should not exist
         assertTrue(
-            cdrr.oracleExists(address(oracle1)) == false,
+            relayer.oracleExists(address(oracle1)) == false,
             "CollybusDiscountRateRelayer oracle should be deleted"
         );
     }
@@ -182,7 +194,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         address newOracle = address(0x1);
 
         // Attempt to remove oracle that does not exist.
-        cdrr.oracleRemove(newOracle);
+        relayer.oracleRemove(newOracle);
     }
 
     function test_RemoveOracle_OnlyAuthorizedUserShouldBeAbleToRemove() public {
@@ -190,8 +202,11 @@ contract CollybusDiscountRateRelayerTest is DSTest {
 
         // Add the oracle
         (bool ok, ) = user.externalCall(
-            address(cdrr),
-            abi.encodeWithSelector(cdrr.oracleRemove.selector, address(oracle1))
+            address(relayer),
+            abi.encodeWithSelector(
+                relayer.oracleRemove.selector,
+                address(oracle1)
+            )
         );
         assertTrue(
             ok == false,
@@ -200,7 +215,7 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     }
 
     function test_checkCalls_returnsTrueWhenUpdateNeeded() public {
-        bool mustUpdate = cdrr.check();
+        bool mustUpdate = relayer.check();
         assertTrue(mustUpdate);
     }
 
@@ -216,19 +231,18 @@ contract CollybusDiscountRateRelayerTest is DSTest {
             false
         );
 
-        uint256 mockTokenId2 = mockTokenId1 + 1;
+        bytes32 mockTokenId2 = bytes32(uint256(mockTokenId1) + 1);
         uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
         // Add oracle with rate id
-        cdrr.oracleAdd(
+        relayer.oracleAdd(
             address(oracle2),
             mockTokenId2,
             mockTokenId2MinThreshold
         );
-        hevm.warp(oracleTimeUpdateWindow);
 
         // Check will search for at least one updatable oracle, which in our case is the first one in the list
         // therefore, the first oracle will be updated but the second will not
-        cdrr.check();
+        relayer.check();
 
         // Update should be the first called function
         MockProvider.CallData memory cd1 = oracle1.getCallData(0);
@@ -240,12 +254,12 @@ contract CollybusDiscountRateRelayerTest is DSTest {
     }
 
     function test_Check_ReturnsFalseAfterExecute() public {
-        bool checkBeforeUpdate = cdrr.check();
+        bool checkBeforeUpdate = relayer.check();
         assertTrue(checkBeforeUpdate);
 
-        cdrr.execute();
+        relayer.execute();
 
-        bool checkAfterUpdate = cdrr.check();
+        bool checkAfterUpdate = relayer.check();
         assertTrue(checkAfterUpdate == false);
     }
 
@@ -261,19 +275,17 @@ contract CollybusDiscountRateRelayerTest is DSTest {
             false
         );
 
-        uint256 mockTokenId2 = mockTokenId1 + 1;
+        bytes32 mockTokenId2 = bytes32(uint256(mockTokenId1) + 1);
         uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
         // Add oracle with rate id
-        cdrr.oracleAdd(
+        relayer.oracleAdd(
             address(oracle2),
             mockTokenId2,
             mockTokenId2MinThreshold
         );
-        hevm.warp(oracleTimeUpdateWindow);
 
         // Execute must call update on all oracles before pushing the values to Collybus
-        cdrr.check();
-        cdrr.execute();
+        relayer.execute();
 
         // Update was called for both oracles
         MockProvider.CallData memory cd1 = oracle1.getCallData(0);
@@ -283,119 +295,215 @@ contract CollybusDiscountRateRelayerTest is DSTest {
         assertTrue(cd2.functionSelector == IOracle.update.selector);
     }
 
-    function test_Execute_UpdatesRatesInCollybus() public {
-        MockProvider oracle2 = new MockProvider();
+    function test_Execute_UpdateDiscountRateInCollybus() public {
+        relayer.execute();
+
+        assertTrue(
+            collybus.valueForToken(mockTokenId1) ==
+                uint256(oracle1InitialValue),
+            "Invalid discount rate relayer rate value"
+        );
+    }
+
+    function test_Execute_UpdateSpotPriceInCollybus() public {
+        // Create a spot price relayer and check the spot prices in the Collybus
+        Relayer spotPriceRelayer = new Relayer(
+            address(collybus),
+            IRelayer.RelayerType.SpotPrice
+        );
+        MockProvider spotPriceOracle = new MockProvider();
+        int256 value = int256(1 * 10**18);
+
+        bytes32 mockSpotTokenAddress = bytes32(uint256(1));
 
         // Set the value returned by the Oracle.
-        oracle2.givenQueryReturnResponse(
+        spotPriceOracle.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(int256(10 * 10**18), true)
+                data: abi.encode(value, true)
             }),
             false
         );
 
-        uint256 mockTokenId2 = mockTokenId1 + 1;
-        uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
-        // Add oracle with rate id.
-        cdrr.oracleAdd(
-            address(oracle2),
-            mockTokenId2,
-            mockTokenId2MinThreshold
+        // Add oracle with rate id
+        spotPriceRelayer.oracleAdd(
+            address(spotPriceOracle),
+            mockSpotTokenAddress,
+            1
         );
-        hevm.warp(oracleTimeUpdateWindow);
 
-        // Execute must call update on all oracles before pushing the values to Collybus
-        // Check should trigger an update because the value delta is bigger than the minimum for both oracles
-        bool mustUpdate = cdrr.check();
-        assertTrue(mustUpdate);
-
-        cdrr.execute();
+        // Update the rates in collybus
+        spotPriceRelayer.execute();
 
         assertTrue(
-            collybus.rateForTokenId(mockTokenId1) == uint256(100 * 10**18)
-        );
-        assertTrue(
-            collybus.rateForTokenId(mockTokenId2) == uint256(10 * 10**18)
+            collybus.valueForToken(mockSpotTokenAddress) == uint256(value),
+            "Invalid spot price relayer spot value"
         );
     }
 
     function test_Execute_DoesNotUpdatesRatesInCollybusWhenDeltaIsBelowThreshold()
         public
     {
-        MockProvider oracle2 = new MockProvider();
+        // Threshold percentage
+        uint256 thresholdPercentage = 50_00; // 50%
 
-        int256 oracle2InitialValue = int256(10 * 10**18);
+        // TokenId
+        bytes32 localTokenId = bytes32("percentage_threshold_token_test");
+
+        // Create a local relayer
+        Relayer localRelayer = new Relayer(address(collybus), relayerType);
+
+        // Create a local oracle
+        MockProvider localOracle = new MockProvider();
+
         // Set the value returned by the Oracle.
-        oracle2.givenQueryReturnResponse(
+        int256 initialValue = 100;
+        localOracle.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(oracle2InitialValue, true)
+                data: abi.encode(initialValue, true)
             }),
             false
         );
 
-        uint256 mockTokenId2 = mockTokenId1 + 1;
-        uint256 mockTokenId2MinThreshold = 1 * 10**18;
-        // Add oracle with rate id
-        cdrr.oracleAdd(
-            address(oracle2),
-            mockTokenId2,
-            mockTokenId2MinThreshold
+        // Add oracle with a thresold percentage
+        localRelayer.oracleAdd(
+            address(localOracle),
+            localTokenId,
+            thresholdPercentage
         );
-        hevm.warp(oracleTimeUpdateWindow);
 
-        // Execute must call update on all oracles before pushing the values to Collybus
-        cdrr.check();
-        cdrr.execute();
+        // Make sure the values are updated, start clean
+        localRelayer.execute();
 
-        // Make the second value returned by the oracle to be just lower than the minimum threshold
-        int256 oracle2NewValue = oracle2InitialValue +
-            int256(mockTokenId2MinThreshold) -
+        // The initial value is the value we just defined
+        assertEq(
+            collybus.valueForToken(localTokenId),
+            uint256(initialValue),
+            "We should have the initial value"
+        );
+
+        // Update the oracle with a new value under the threshold limit
+        int256 secondValue = initialValue +
+            (initialValue * int256(thresholdPercentage)) /
+            100_00 -
             1;
-
-        oracle2.givenQueryReturnResponse(
+        localOracle.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(oracle2NewValue, true)
+                data: abi.encode(secondValue, true)
             }),
             false
         );
 
-        hevm.warp(oracleTimeUpdateWindow);
+        // Relayer should not need to update values since it's below the thresold
+        assertTrue(localRelayer.check() == false, "Should not update values");
 
-        cdrr.execute();
+        // Execute the relayer
+        localRelayer.execute();
 
-        // The rate will NOT be updated because the delta is smaller than the threshold
-        assertTrue(
-            collybus.rateForTokenId(mockTokenId2) ==
-                uint256(oracle2InitialValue)
+        // Make sure the new value was not pushed into Collybus
+        assertEq(
+            collybus.valueForToken(localTokenId),
+            uint256(initialValue),
+            "Collybus should not have been updated"
+        );
+    }
+
+    function test_Execute_UpdatesRatesInCollybusWhenDeltaIsAboveThreshold()
+        public
+    {
+        // Threshold percentage
+        uint256 thresholdPercentage = 50_00; // 50%
+
+        // TokenId
+        bytes32 localTokenId = bytes32("percentage_threshold_token_test");
+
+        // Create a local relayer
+        Relayer localRelayer = new Relayer(address(collybus), relayerType);
+
+        // Create a local oracle
+        MockProvider localOracle = new MockProvider();
+
+        // Set the value returned by the Oracle.
+        int256 initialValue = 100;
+        localOracle.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(initialValue, true)
+            }),
+            false
+        );
+
+        // Add oracle with a thresold percentage
+        localRelayer.oracleAdd(
+            address(localOracle),
+            localTokenId,
+            thresholdPercentage
+        );
+
+        // Make sure the values are updated, start from `initialValue`
+        localRelayer.execute();
+
+        // The initial value is the value we just defined
+        assertEq(
+            collybus.valueForToken(localTokenId),
+            uint256(initialValue),
+            "We should have the initial value"
+        );
+
+        // Update the oracle with a new value above the threshold limit
+        int256 secondValue = initialValue +
+            (initialValue * int256(thresholdPercentage)) /
+            100_00 +
+            1;
+        localOracle.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.value.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(secondValue, true)
+            }),
+            false
+        );
+
+        // Relayer should need to update values since it's above the thresold
+        assertTrue(localRelayer.check() == true, "Should update values");
+
+        // Execute the relayer
+        localRelayer.execute();
+
+        // Make sure the new value was pushed into Collybus
+        assertEq(
+            collybus.valueForToken(localTokenId),
+            uint256(secondValue),
+            "Collybus should have the new value"
         );
     }
 
     function test_executeWithRevert() public {
         // Call should not revert
-        cdrr.executeWithRevert();
+        relayer.executeWithRevert();
     }
 
     function test_executeWithRevert_checkWillReturnFalseAfter() public {
         // Call should not revert because check will return true
-        cdrr.executeWithRevert();
+        relayer.executeWithRevert();
 
         assertTrue(
-            cdrr.check() == false,
+            relayer.check() == false,
             "Check should return false after executeWithRevert was called"
         );
     }
 
     function testFail_executeWithRevert_failsWhenCheckReturnsFalse() public {
         // Update oracles and rates
-        cdrr.execute();
+        relayer.execute();
 
         // Execute with revert should fail because check will return false
-        cdrr.executeWithRevert();
+        relayer.executeWithRevert();
     }
 }

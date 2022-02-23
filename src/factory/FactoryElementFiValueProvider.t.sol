@@ -38,30 +38,21 @@ contract FactoryElementFiValueProviderTest is DSTest {
         MockProvider underlierMock = new MockProvider();
         underlierMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(uint8(18))
-            }),
+            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
             false
         );
 
         MockProvider ePTokenBondMock = new MockProvider();
         ePTokenBondMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(uint8(18))
-            }),
+            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
             false
         );
 
         MockProvider poolToken = new MockProvider();
         poolToken.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(uint8(18))
-            }),
+            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
             false
         );
 
@@ -90,30 +81,21 @@ contract FactoryElementFiValueProviderTest is DSTest {
         MockProvider underlierMock = new MockProvider();
         underlierMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(uint8(18))
-            }),
+            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
             false
         );
 
         MockProvider ePTokenBondMock = new MockProvider();
         ePTokenBondMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(uint8(18))
-            }),
+            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
             false
         );
 
         MockProvider poolTokenMock = new MockProvider();
         poolTokenMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(uint8(18))
-            }),
+            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
             false
         );
 

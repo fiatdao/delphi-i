@@ -81,28 +81,19 @@ contract ElementFiValueProviderTest is DSTest {
 
         underlierMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(uint8(18))
-            }),
+            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
             false
         );
 
         ePTokenBondMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(uint8(18))
-            }),
+            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
             false
         );
 
         poolToken.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(uint8(18))
-            }),
+            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
             false
         );
 
@@ -110,7 +101,7 @@ contract ElementFiValueProviderTest is DSTest {
             abi.encodeWithSelector(IERC20.totalSupply.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(uint256(874253869672828123816))
+                data: abi.encode(874253869672828123816)
             }),
             false
         );

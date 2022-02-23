@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IVault} from "src/oracle_implementations/discount_rate/ElementFi/IVault.sol";
-import {RelayerDeployData, SpotPriceAggregatorData, OracleData, ChainlinkVPData, Factory} from "src/factory/Factory.sol";
+import {RelayerDeployData, AggregatorData, OracleData, ChainlinkVPData, Factory} from "src/factory/Factory.sol";
 
 import "lib/prb-math/contracts/PRBMathSD59x18.sol";
 
@@ -25,15 +25,14 @@ contract SpotPriceDeploy {
             valueProviderType: uint8(Factory.ValueProviderType.Chainlink)
         });
 
-        SpotPriceAggregatorData
-            memory chainlinkAggregator = SpotPriceAggregatorData({
-                tokenAddress: address(
-                    0x78dEca24CBa286C0f8d56370f5406B48cFCE2f86
-                ),
-                oracleData: new bytes[](1),
-                requiredValidValues: 1,
-                minimumThresholdValue: 1
-            });
+        AggregatorData memory chainlinkAggregator = AggregatorData({
+            encodedTokenId: bytes32(
+                uint256(uint160(0x78dEca24CBa286C0f8d56370f5406B48cFCE2f86))
+            ),
+            oracleData: new bytes[](1),
+            requiredValidValues: 1,
+            minimumPercentageDeltaValue: 1
+        });
 
         chainlinkAggregator.oracleData[0] = abi.encode(chainlinkOracleData);
 
