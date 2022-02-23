@@ -384,7 +384,9 @@ contract RelayerTest is DSTest {
 
         // The initial value is the value we just defined
         assertEq(
-            collybus.valueForToken(localTokenId), uint256(initialValue), "We should have the initial value"
+            collybus.valueForToken(localTokenId),
+            uint256(initialValue),
+            "We should have the initial value"
         );
 
         // Update the oracle with a new value under the threshold limit
