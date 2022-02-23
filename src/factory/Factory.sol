@@ -54,7 +54,7 @@ struct YieldVPData {
 /// @dev The Factory will revert if the providerType is not found
 struct OracleData {
     bytes valueProviderData;
-    uint8 valueProviderType;
+    uint256 valueProviderType;
     uint256 timeWindow;
     uint256 maxValidTime;
     int256 alpha;
@@ -89,7 +89,7 @@ contract Factory is Guarded {
     error Factory__deployRelayer_invalidCollybusAddress();
 
     // @notice Emitted if no value provider is found for given providerType
-    error Factory__deployOracle_invalidValueProviderType(uint8);
+    error Factory__deployOracle_invalidValueProviderType(uint256);
 
     // Supported value provider oracle types
     enum ValueProviderType {
@@ -254,21 +254,23 @@ contract Factory is Guarded {
 
         // Create the value provider based on valueProviderType
         // Revert if no match match is found
-        if (oracleData.valueProviderType == uint8(ValueProviderType.Element)) {
+        if (
+            oracleData.valueProviderType == uint256(ValueProviderType.Element)
+        ) {
             // Create the value provider
             oracleAddress = deployElementFiValueProvider(oracleData);
         } else if (
-            oracleData.valueProviderType == uint8(ValueProviderType.Notional)
+            oracleData.valueProviderType == uint256(ValueProviderType.Notional)
         ) {
             // Create the value provider
             oracleAddress = deployNotionalFinanceValueProvider(oracleData);
         } else if (
-            oracleData.valueProviderType == uint8(ValueProviderType.Chainlink)
+            oracleData.valueProviderType == uint256(ValueProviderType.Chainlink)
         ) {
             // Create the value provider
             oracleAddress = deployChainlinkValueProvider(oracleData);
         } else if (
-            oracleData.valueProviderType == uint8(ValueProviderType.Yield)
+            oracleData.valueProviderType == uint256(ValueProviderType.Yield)
         ) {
             // Create the value provider
             oracleAddress = deployYieldValueProvider(oracleData);
