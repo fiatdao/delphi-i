@@ -82,19 +82,28 @@ contract ElementFiValueProviderTest is DSTest {
 
         underlierMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
-            MockProvider.ReturnData({success: true, data: abi.encode(_decimals)}),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(_decimals)
+            }),
             false
         );
 
         ePTokenBondMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
-            MockProvider.ReturnData({success: true, data: abi.encode(_decimals)}),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(_decimals)
+            }),
             false
         );
 
         poolToken.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
-            MockProvider.ReturnData({success: true, data: abi.encode(_decimals)}),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(_decimals)
+            }),
             false
         );
 
@@ -199,8 +208,7 @@ contract ElementFiValueProviderTest is DSTest {
         assertTrue(value == computedExpectedValue);
     }
 
-    function testFail_getValue_revertsOnOrAfterMaturityDate() public
-    {
+    function testFail_getValue_revertsOnOrAfterMaturityDate() public {
         hevm.warp(efValueProvider.maturity());
         efValueProvider.getValue();
     }
