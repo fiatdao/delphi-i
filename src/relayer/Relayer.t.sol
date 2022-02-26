@@ -101,7 +101,7 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function test_CheckExistenceOfOracle() public {
+    function test_checkExistenceOfOracle() public {
         // Check that oracle was added
         assertTrue(
             relayer.oracleExists(address(oracle1)),
@@ -109,7 +109,7 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function test_ReturnNumberOfOracles() public {
+    function test_returnNumberOfOracles() public {
         // Check the number of existing oracles
         assertTrue(
             relayer.oracleCount() == 1,
@@ -117,7 +117,7 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function test_AddOracle() public {
+    function test_addOracle() public {
         // Create a new address that differs from the oracle already added
         address newOracle = address(0x1);
         bytes32 mockTokenId2 = bytes32(uint256(mockTokenId1) + 1);
@@ -135,7 +135,7 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function testFail_AddOracle_ShouldNotAllowDuplicateOracles() public {
+    function testFail_addOracle_shouldNotAllowDuplicateOracles() public {
         // Attempt to add the same oracle again but use a different token id.
         bytes32 mockTokenId2 = bytes32(uint256(mockTokenId1) + 1);
 
@@ -146,7 +146,7 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function testFail_AddOracle_ShouldNotAllowDuplicateTokenIds() public {
+    function testFail_addOracle_shouldNotAllowDuplicateTokenIds() public {
         // We can use any address, the oracle will not be interrogated on add.
         address newOracle = address(0x1);
         // Add a new oracle that has the same token id as the previously added oracle.
@@ -157,7 +157,7 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function test_AddOracle_OnlyAuthorizedUserShouldBeAbleToAdd() public {
+    function test_addOracle_onlyAuthorizedUserShouldBeAbleToAdd() public {
         Caller user = new Caller();
 
         address newOracle = address(0x1);
@@ -179,25 +179,41 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function test_RemoveOracle_DeletesOracle() public {
+    function test_addOracle_tokenIdMarkedAsUsed() public {
+        // Check that the added oracle id is correctly marked as used
+        assertTrue(relayer.encodedTokenIds(mockTokenId1),"Token Id not marked as used");
+    }
+
+    function test_removeOracle_deletesOracle() public {
         // Remove the only oracle.
         relayer.oracleRemove(address(oracle1));
 
         // Oracle should not exist
         assertTrue(
             relayer.oracleExists(address(oracle1)) == false,
-            "CollybusDiscountRateRelayer oracle should be deleted"
+            "Relayer oracle should be deleted"
         );
     }
 
-    function testFail_RemoveOracle_ShouldFailIfOracleDoesNotExist() public {
+    function test_removeOracle_resetsTokenIdUsedFlag() public{
+        // Remove the only oracle.
+        relayer.oracleRemove(address(oracle1));
+
+        // Token id should be unused
+        assertTrue(
+            relayer.encodedTokenIds(mockTokenId1) == false,
+            "Relayer oracle should be deleted"
+        );
+    }
+
+    function testFail_removeOracle_shouldFailIfOracleDoesNotExist() public {
         address newOracle = address(0x1);
 
         // Attempt to remove oracle that does not exist.
         relayer.oracleRemove(newOracle);
     }
 
-    function test_RemoveOracle_OnlyAuthorizedUserShouldBeAbleToRemove() public {
+    function test_removeOracle_onlyAuthorizedUserShouldBeAbleToRemove() public {
         Caller user = new Caller();
 
         // Add the oracle
@@ -219,7 +235,7 @@ contract RelayerTest is DSTest {
         assertTrue(mustUpdate);
     }
 
-    function test_CheckCallsUpdate_OnlyOnFirstUpdatableOracle() public {
+    function test_checkCallsUpdate_onlyOnFirstUpdatableOracle() public {
         MockProvider oracle2 = new MockProvider();
         // Set the value returned by the Oracle.
         oracle2.givenQueryReturnResponse(
@@ -253,7 +269,7 @@ contract RelayerTest is DSTest {
         assertTrue(cd2.functionSelector == bytes4(0));
     }
 
-    function test_Check_ReturnsFalseAfterExecute() public {
+    function test_check_returnsFalseAfterExecute() public {
         bool checkBeforeUpdate = relayer.check();
         assertTrue(checkBeforeUpdate);
 
@@ -263,7 +279,7 @@ contract RelayerTest is DSTest {
         assertTrue(checkAfterUpdate == false);
     }
 
-    function test_ExecuteCalls_UpdateOnAllOracles() public {
+    function test_executeCalls_updateOnAllOracles() public {
         MockProvider oracle2 = new MockProvider();
         // Set the value returned by the Oracle.
         oracle2.givenQueryReturnResponse(
@@ -295,7 +311,7 @@ contract RelayerTest is DSTest {
         assertTrue(cd2.functionSelector == IOracle.update.selector);
     }
 
-    function test_Execute_UpdateDiscountRateInCollybus() public {
+    function test_execute_updateDiscountRateInCollybus() public {
         relayer.execute();
 
         assertTrue(
@@ -305,7 +321,7 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function test_Execute_UpdateSpotPriceInCollybus() public {
+    function test_execute_updateSpotPriceInCollybus() public {
         // Create a spot price relayer and check the spot prices in the Collybus
         Relayer spotPriceRelayer = new Relayer(
             address(collybus),
@@ -342,7 +358,7 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function test_Execute_DoesNotUpdatesRatesInCollybusWhenDeltaIsBelowThreshold()
+    function test_execute_doesNotUpdatesRatesInCollybusWhenDeltaIsBelowThreshold()
         public
     {
         // Threshold percentage
@@ -413,7 +429,7 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function test_Execute_UpdatesRatesInCollybusWhenDeltaIsAboveThreshold()
+    function test_execute_updatesRatesInCollybusWhenDeltaIsAboveThreshold()
         public
     {
         // Threshold percentage
