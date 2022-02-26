@@ -181,7 +181,10 @@ contract RelayerTest is DSTest {
 
     function test_addOracle_tokenIdMarkedAsUsed() public {
         // Check that the added oracle id is correctly marked as used
-        assertTrue(relayer.encodedTokenIds(mockTokenId1),"Token Id not marked as used");
+        assertTrue(
+            relayer.encodedTokenIds(mockTokenId1),
+            "Token Id not marked as used"
+        );
     }
 
     function test_removeOracle_deletesOracle() public {
@@ -195,7 +198,7 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function test_removeOracle_resetsTokenIdUsedFlag() public{
+    function test_removeOracle_resetsTokenIdUsedFlag() public {
         // Remove the only oracle.
         relayer.oracleRemove(address(oracle1));
 
