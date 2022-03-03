@@ -30,7 +30,7 @@ contract TestCollybus is ICollybus {
 
 contract StaticRelayerTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
-    
+
     TestCollybus internal collybus;
 
     function setUp() public {
@@ -38,7 +38,12 @@ contract StaticRelayerTest is DSTest {
     }
 
     function test_deploy() public {
-        StaticRelayer staticRelayer = new StaticRelayer(address(collybus),IRelayer.RelayerType.DiscountRate,bytes32(uint256(1)), 1e18);
+        StaticRelayer staticRelayer = new StaticRelayer(
+            address(collybus),
+            IRelayer.RelayerType.DiscountRate,
+            bytes32(uint256(1)),
+            1e18
+        );
 
         assertTrue(
             address(staticRelayer) != address(0),
@@ -48,24 +53,32 @@ contract StaticRelayerTest is DSTest {
 
     function test_execute_updates_DiscountRateInCollybus() public {
         bytes32 encodedTokenId = bytes32(uint256(1));
-        StaticRelayer staticRelayer = new StaticRelayer(address(collybus),IRelayer.RelayerType.DiscountRate, encodedTokenId, 1e18);
+        StaticRelayer staticRelayer = new StaticRelayer(
+            address(collybus),
+            IRelayer.RelayerType.DiscountRate,
+            encodedTokenId,
+            1e18
+        );
         staticRelayer.execute();
 
         assertTrue(
-            collybus.valueForToken(encodedTokenId) ==
-            1e18,
+            collybus.valueForToken(encodedTokenId) == 1e18,
             "Invalid discount rate in Collybus"
         );
     }
 
     function test_execute_updates_SpotPriceInCollybus() public {
         bytes32 encodedTokenId = bytes32(bytes20(address(0x1234)));
-        StaticRelayer staticRelayer = new StaticRelayer(address(collybus),IRelayer.RelayerType.SpotPrice, encodedTokenId, 1e18);
+        StaticRelayer staticRelayer = new StaticRelayer(
+            address(collybus),
+            IRelayer.RelayerType.SpotPrice,
+            encodedTokenId,
+            1e18
+        );
         staticRelayer.execute();
 
         assertTrue(
-            collybus.valueForToken(encodedTokenId) ==
-            1e18,
+            collybus.valueForToken(encodedTokenId) == 1e18,
             "Invalid spot price in Collybus"
         );
     }
@@ -73,14 +86,17 @@ contract StaticRelayerTest is DSTest {
     function test_execute_OnlyAuthorizedUsers() public {
         Caller user = new Caller();
         bytes32 encodedTokenId = bytes32(uint256(1));
-        StaticRelayer staticRelayer = new StaticRelayer(address(collybus),IRelayer.RelayerType.DiscountRate, encodedTokenId, 1e18);
+        StaticRelayer staticRelayer = new StaticRelayer(
+            address(collybus),
+            IRelayer.RelayerType.DiscountRate,
+            encodedTokenId,
+            1e18
+        );
 
         // Add the oracle
         (bool ok, ) = user.externalCall(
             address(staticRelayer),
-            abi.encodeWithSelector(
-                StaticRelayer.execute.selector
-            )
+            abi.encodeWithSelector(StaticRelayer.execute.selector)
         );
         assertTrue(
             ok == false,
