@@ -128,4 +128,9 @@ contract YieldValueProviderTest is DSTest, Convert {
         int256 value = yieldVP.getValue();
         assertTrue(value == expectedValue);
     }
+
+    function testFail_getValue_revertsOnOrAfterMaturityDate() public {
+        hevm.warp(yieldVP.maturity());
+        yieldVP.getValue();
+    }
 }

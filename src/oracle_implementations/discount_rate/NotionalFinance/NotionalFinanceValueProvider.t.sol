@@ -107,4 +107,9 @@ contract NotionalFinanceValueProviderTest is DSTest {
         int256 value = notionalVP.getValue();
         assertTrue(value == expectedValue);
     }
+
+    function testFail_getValue_revertsOnOrAfterMaturityDate() public {
+        hevm.warp(notionalVP.maturityDate());
+        notionalVP.getValue();
+    }
 }
