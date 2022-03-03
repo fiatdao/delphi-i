@@ -45,16 +45,16 @@ abstract contract Oracle is Pausable, IOracle {
 
     modifier nonReentrant() {
         // Check if the guard is set
-        if(_reentrantGuard != 1) {
+        if (_reentrantGuard != 1) {
             revert Oracle__nonReentrant();
-        } 
+        }
 
         // Set the guard
         _reentrantGuard = 2;
 
         // Allow execution
         _;
-        
+
         // Reset the guard
         _reentrantGuard = 1;
     }
@@ -94,7 +94,7 @@ abstract contract Oracle is Pausable, IOracle {
 
     function getValue() external virtual returns (int256);
 
-    function update() public override(IOracle) nonReentrant() {
+    function update() public override(IOracle) nonReentrant {
         // Not enough time has passed since the last update
         if (lastTimestamp + timeUpdateWindow > block.timestamp) {
             // Exit early if no update is needed
