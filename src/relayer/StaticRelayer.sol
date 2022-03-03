@@ -50,6 +50,6 @@ contract StaticRelayer is Guarded {
 
         emit UpdatedCollybus(encodedTokenId, value, relayerType);
 
-        selfdestruct(payable(0));
+        selfdestruct(payable(address(0)));
     }
 }
