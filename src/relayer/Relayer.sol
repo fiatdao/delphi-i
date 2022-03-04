@@ -182,41 +182,6 @@ contract Relayer is Guarded, IRelayer {
         return _oraclesData[oracle_];
     }
 
-    /// @notice Iterates and updates each oracle until it finds one that should push data
-    ///         in the Collybus, more exactly, the delta change in value is bigger than the minimum
-    ///         threshold value set for that oracle.
-    /// @dev    Oracles that return invalid values are skipped.
-    /// @return Returns 'true' if at least one oracle should update data in the Collybus
-    function check() public override(IRelayer) returns (bool) {
-        uint256 arrayLength = _oracleList.length();
-        for (uint256 i = 0; i < arrayLength; i++) {
-            // Cache oracle address
-            address localOracle = _oracleList.at(i);
-
-            // Trigger the oracle to update its data
-            IOracle(localOracle).update();
-
-            (int256 rate, bool isValid) = IOracle(localOracle).value();
-
-            emit UpdateOracle(localOracle, rate, isValid);
-            if (!isValid) continue;
-
-            if (
-                checkDeviation(
-                    _oraclesData[localOracle].lastUpdateValue,
-                    rate,
-                    _oraclesData[localOracle].minimumPercentageDeltaValue
-                )
-            ) {
-                emit ShouldUpdate(true);
-                return true;
-            }
-        }
-
-        emit ShouldUpdate(false);
-        return false;
-    }
-
     /// @notice Iterates and updates all the oracles and pushes the updated data to Collybus for the
     ///         oracles that have delta changes in value bigger than the minimum threshold values.
     /// @dev    Oracles that return invalid values are skipped.
@@ -270,11 +235,11 @@ contract Relayer is Guarded, IRelayer {
     /// @notice The function will call `execute()` if `check()` returns `true`, otherwise it will revert
     /// @dev This method is needed for services that try to updates the oracles on each block and only call the method if it doesn't fail
     function executeWithRevert() public override(IRelayer) {
-        if (check()) {
-            execute();
-        } else {
-            revert Relayer__executeWithRevert_checkFailed(relayerType);
-        }
+        // if (check()) {
+        //     execute();
+        // } else {
+        //     revert Relayer__executeWithRevert_checkFailed(relayerType);
+        // }
     }
 
     /// @notice             Returns true if the percentage difference between the two values is bigger than the `percentage`
