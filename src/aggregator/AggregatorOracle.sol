@@ -134,7 +134,7 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
     }
 
     /// @notice Update values from oracles and return aggregated value
-    function update() public override(IOracle) {
+    function update() public override(IOracle) returns (bool) {
         // Call all oracles to update and get values
         uint256 oracleLength = _oracles.length();
         int256[] memory values = new int256[](oracleLength);
@@ -142,12 +142,21 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
         // Count how many oracles have a valid value
         uint256 validValues = 0;
 
+        // Save a flag if at least one oracle updated successfully
+        bool updated = false;
+
         // Update each oracle and get its value
         for (uint256 i = 0; i < oracleLength; i++) {
             IOracle oracle = IOracle(_oracles.at(i));
 
-            try oracle.update() {
+            try oracle.update() returns (bool localUpdated) {
                 emit OracleUpdated(true, address(oracle));
+
+                // If at least one oracle updated successfully, set the flag
+                if (localUpdated) {
+                    updated = true;
+                }
+
                 try oracle.value() returns (
                     int256 returnedValue,
                     bool isValid
@@ -177,6 +186,8 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
         _aggregatedValidValues = validValues;
 
         emit AggregatedValue(_aggregatedValue, validValues);
+
+        return updated;
     }
 
     /// @notice Returns the aggregated value

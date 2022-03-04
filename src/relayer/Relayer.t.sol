@@ -64,6 +64,13 @@ contract RelayerTest is DSTest {
             false
         );
 
+        // Set update to return a boolean
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            true
+        );
+
         // Add oracle with rate id
         relayer.oracleAdd(
             address(oracle1),
@@ -244,6 +251,11 @@ contract RelayerTest is DSTest {
             }),
             false
         );
+        oracle2.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            true
+        );
 
         bytes32 mockTokenId2 = bytes32(uint256(mockTokenId1) + 1);
         uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
@@ -295,6 +307,11 @@ contract RelayerTest is DSTest {
             }),
             false
         );
+        spotPriceOracle.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
 
         // Add oracle with rate id
         spotPriceRelayer.oracleAdd(
@@ -335,6 +352,11 @@ contract RelayerTest is DSTest {
                 success: true,
                 data: abi.encode(initialValue, true)
             }),
+            false
+        );
+        localOracle.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             false
         );
 
@@ -405,6 +427,11 @@ contract RelayerTest is DSTest {
             }),
             false
         );
+        localOracle.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
 
         // Add oracle with a thresold percentage
         localRelayer.oracleAdd(
@@ -452,5 +479,4 @@ contract RelayerTest is DSTest {
         // Call should not revert
         relayer.executeWithRevert();
     }
-
 }

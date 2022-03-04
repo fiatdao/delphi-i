@@ -438,4 +438,26 @@ contract OracleTest is DSTest {
             1 * 10**18 + 1
         );
     }
+
+    function test_update_returnsTrue_WhenSuccessful() public {
+        bool updated;
+        updated = oracle.update();
+
+        assertTrue(updated, "Should return `true` no successful update");
+    }
+
+    function test_update_retrurnsFalse_WhenUpdateDoesNotChangeAnything()
+        public
+    {
+        bool updated;
+        updated = oracle.update();
+
+        // Second update should return false since it doesn't change anything
+        updated = oracle.update();
+
+        assertTrue(
+            updated == false,
+            "Should return `true` no successful update"
+        );
+    }
 }
