@@ -53,7 +53,6 @@ contract StaticRelayerTest is DSTest {
     }
 
     function test_execute_updates_DiscountRateInCollybus() public {
-
         // Create the static relayer with a tokenId and a value
         uint256 tokenId = 1;
         StaticRelayer staticRelayer = new StaticRelayer(
@@ -108,7 +107,7 @@ contract StaticRelayerTest is DSTest {
             address(staticRelayer),
             abi.encodeWithSelector(StaticRelayer.execute.selector)
         );
-        
+
         assertTrue(
             ok == false,
             "Only authorized users should be able to call execute()"
