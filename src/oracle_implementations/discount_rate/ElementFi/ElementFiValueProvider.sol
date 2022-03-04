@@ -70,6 +70,12 @@ contract ElementFiValueProvider is Oracle, Convert {
     /// @dev Returns if called after the maturity date
     /// @return result The result as an signed 59.18-decimal fixed-point number
     function getValue() external view override(Oracle) returns (int256) {
+        // We want to allow only self-execution for the getValue function
+        // By doing this make sure that the update flow can be triggered only by whitelisted actors
+        if (msg.sender != address(this)) {
+            revert Oracle__getValue_notAuthorized();
+        }
+
         // No values for matured pools
         if (block.timestamp >= maturity) {
             revert ElementFiValueProvider__value_maturityLessThanBlocktime(

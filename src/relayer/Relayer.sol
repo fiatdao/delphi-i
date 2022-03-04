@@ -220,7 +220,7 @@ contract Relayer is Guarded, IRelayer {
     /// @notice Iterates and updates all the oracles and pushes the updated data to Collybus for the
     ///         oracles that have delta changes in value bigger than the minimum threshold values.
     /// @dev    Oracles that return invalid values are skipped.
-    function execute() public override(IRelayer) {
+    function execute() public override(IRelayer) checkCaller {
         // Update Collybus all tokenIds with the new discount rate
         uint256 arrayLength = _oracleList.length();
         for (uint256 i = 0; i < arrayLength; i++) {
@@ -269,7 +269,7 @@ contract Relayer is Guarded, IRelayer {
 
     /// @notice The function will call `execute()` if `check()` returns `true`, otherwise it will revert
     /// @dev This method is needed for services that try to updates the oracles on each block and only call the method if it doesn't fail
-    function executeWithRevert() public override(IRelayer) {
+    function executeWithRevert() public override(IRelayer) checkCaller {
         if (check()) {
             execute();
         } else {

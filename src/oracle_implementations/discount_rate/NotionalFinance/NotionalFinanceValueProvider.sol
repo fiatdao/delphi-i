@@ -57,6 +57,12 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     /// https://github.com/notional-finance/contracts-v2/blob/b8e3792e39486b2719c6153acc270199377cc6b9/contracts/internal/markets/Market.sol#L495
     /// @return result The result as an signed 59.18-decimal fixed-point number
     function getValue() external view override(Oracle) returns (int256) {
+        // We want to allow only self-execution for the getValue function
+        // By doing this make sure that the update flow can be triggered only by whitelisted actors
+        if (msg.sender != address(this)) {
+            revert Oracle__getValue_notAuthorized();
+        }
+
         // No values for matured pools
         if (block.timestamp >= maturityDate) {
             revert NotionalFinanceValueProvider__value_maturityLessThanBlocktime(

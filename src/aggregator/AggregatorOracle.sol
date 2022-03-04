@@ -134,7 +134,7 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
     }
 
     /// @notice Update values from oracles and return aggregated value
-    function update() public override(IOracle) {
+    function update() public override(IOracle) checkCaller {
         // Call all oracles to update and get values
         uint256 oracleLength = _oracles.length();
         int256[] memory values = new int256[](oracleLength);

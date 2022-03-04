@@ -58,6 +58,12 @@ contract YieldValueProvider is Oracle, Convert {
     /// @dev Reverts if the block time exceeds or is equal to pool maturity.
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function getValue() external override(Oracle) returns (int256) {
+        // We want to allow only self-execution for the getValue function
+        // By doing this make sure that the update flow can be triggered only by whitelisted actors
+        if (msg.sender != address(this)) {
+            revert Oracle__getValue_notAuthorized();
+        }
+
         // No values for matured pools
         if (block.timestamp >= maturity) {
             revert YieldProtocolValueProvider__getValue_maturityLessThanBlocktime(

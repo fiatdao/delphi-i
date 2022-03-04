@@ -6,6 +6,9 @@ import {IOracle} from "src/oracle/IOracle.sol";
 import {Pausable} from "src/pausable/Pausable.sol";
 
 abstract contract Oracle is Pausable, IOracle {
+    // @notice Emitted when getValue is called from by an unauthorized actor
+    error Oracle__getValue_notAuthorized();
+
     /// @notice Emitted when alpha value is invalid
     error Oracle__constructor_alphaInvalid(int256 alpha);
 
@@ -70,7 +73,7 @@ abstract contract Oracle is Pausable, IOracle {
 
     function getValue() external virtual returns (int256);
 
-    function update() public override(IOracle) {
+    function update() public override(IOracle) checkCaller {
         // Not enough time has passed since the last update
         if (lastTimestamp + timeUpdateWindow > block.timestamp) {
             // Exit early if no update is needed
