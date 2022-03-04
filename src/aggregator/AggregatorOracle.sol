@@ -102,8 +102,7 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
         override(IAggregatorOracle)
         checkCaller
     {
-
-        if (!Guarded(oracle).canCall(IOracle.update.selector,address(this))){
+        if (!Guarded(oracle).canCall(IOracle.update.selector, address(this))) {
             revert AggregatorOracle__unauthorizedToCallUpdateOracle(oracle);
         }
 

@@ -314,7 +314,10 @@ contract AggregatorOracleTest is DSTest {
         localAggregatorOracle.update();
 
         // Whitelist the aggregator
-        localAggregatorOracle.allowCaller(localAggregatorOracle.ANY_SIG(),address(aggregatorOracle));
+        localAggregatorOracle.allowCaller(
+            localAggregatorOracle.ANY_SIG(),
+            address(aggregatorOracle)
+        );
         // Add the local aggregator to the aggregator (as an oracle)
         aggregatorOracle.oracleAdd(address(localAggregatorOracle));
 
@@ -334,7 +337,7 @@ contract AggregatorOracleTest is DSTest {
             MockProvider.ReturnData({success: false, data: ""}),
             true
         );
-        
+
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(Oracle.value.selector),
             MockProvider.ReturnData({
