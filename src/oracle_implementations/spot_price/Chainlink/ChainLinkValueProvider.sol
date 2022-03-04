@@ -32,12 +32,6 @@ contract ChainLinkValueProvider is Oracle, Convert {
     /// @notice Retrieves the price from the chainlink aggregator
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function getValue() external view override(Oracle) returns (int256) {
-        // We want to allow only self-execution for the getValue function
-        // By doing this make sure that the update flow can be triggered only by whitelisted actors
-        if (msg.sender != address(this)) {
-            revert Oracle__getValue_notAuthorized();
-        }
-
         // The returned annual rate is in 1e9 precision so we need to convert it to 1e18 precision.
         (, int256 answer, , , ) = IChainlinkAggregatorV3Interface(
             chainlinkAggregatorAddress

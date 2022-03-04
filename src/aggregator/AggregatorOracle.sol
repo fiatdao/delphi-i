@@ -33,6 +33,10 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
 
     // @notice Emitted when trying to set a parameter that does not exist
     error AggregatorOracle__setParam_unrecognizedParam(bytes32 param);
+
+    // @notice Emitted when trying to add a Oracle to the Aggregator but the Aggregator is not whitelisted in the Oracle
+    //         The Aggregator needs to be able to call Update on all Oracles
+    error AggregatorOracle__unauthorizedToCallUpdateOracle(address oracle);
     /// ======== Events ======== ///
 
     event OracleAdded(address oracleAddress);
@@ -98,6 +102,11 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
         override(IAggregatorOracle)
         checkCaller
     {
+
+        if (!Guarded(oracle).canCall(IOracle.update.selector,address(this))){
+            revert AggregatorOracle__unauthorizedToCallUpdateOracle(oracle);
+        }
+
         bool added = _oracles.add(oracle);
         if (added == false) {
             revert AggregatorOracle__addOracle_oracleAlreadyRegistered(oracle);

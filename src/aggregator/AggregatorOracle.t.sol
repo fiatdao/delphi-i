@@ -6,6 +6,7 @@ import "ds-test/test.sol";
 import {Hevm} from "src/test/utils/Hevm.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {Caller} from "src/test/utils/Caller.sol";
+import {Guarded} from "src/guarded/Guarded.sol";
 
 import {Oracle} from "src/oracle/Oracle.sol";
 import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
@@ -34,6 +35,13 @@ contract AggregatorOracleTest is DSTest {
             MockProvider.ReturnData({success: true, data: ""}),
             true
         );
+
+        oracle.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
+
         aggregatorOracle.oracleAdd(address(oracle));
     }
 
@@ -46,11 +54,16 @@ contract AggregatorOracleTest is DSTest {
     }
 
     function test_AddOracle() public {
-        // Create a new address since the oracle is not checked for validity in anyway
-        address newOracle = address(0x1);
+        // Create a mock oracle
+        MockProvider newOracle = new MockProvider();
+        newOracle.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
 
         // Add the oracle
-        aggregatorOracle.oracleAdd(newOracle);
+        aggregatorOracle.oracleAdd(address(newOracle));
     }
 
     function testFail_AddOracle_ShouldNotAllowDuplicates() public {
@@ -178,6 +191,11 @@ contract AggregatorOracleTest is DSTest {
             MockProvider.ReturnData({success: true, data: ""}),
             true
         );
+        oracle1.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
         aggregatorOracle.oracleAdd(address(oracle1));
 
         // Add oracle2
@@ -194,6 +212,11 @@ contract AggregatorOracleTest is DSTest {
             abi.encodePacked(Oracle.update.selector),
             MockProvider.ReturnData({success: true, data: ""}),
             true
+        );
+        oracle2.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
         );
         aggregatorOracle.oracleAdd(address(oracle2));
 
@@ -247,6 +270,8 @@ contract AggregatorOracleTest is DSTest {
         // Create user
         Caller user = new Caller();
 
+        aggregatorOracle.allowCaller(aggregatorOracle.ANY_SIG(), address(user));
+
         // Should fail trying to get value
         bool success;
         (success, ) = user.externalCall(
@@ -278,11 +303,18 @@ contract AggregatorOracleTest is DSTest {
             MockProvider.ReturnData({success: true, data: ""}),
             true
         );
+        localOracle.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
 
         // Add the new oracle to the new aggregator
         localAggregatorOracle.oracleAdd(address(localOracle));
         localAggregatorOracle.update();
 
+        // Whitelist the aggregator
+        localAggregatorOracle.allowCaller(localAggregatorOracle.ANY_SIG(),address(aggregatorOracle));
         // Add the local aggregator to the aggregator (as an oracle)
         aggregatorOracle.oracleAdd(address(localAggregatorOracle));
 
@@ -302,13 +334,18 @@ contract AggregatorOracleTest is DSTest {
             MockProvider.ReturnData({success: false, data: ""}),
             true
         );
-        // value() fails
+        
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(Oracle.value.selector),
             MockProvider.ReturnData({
                 success: false,
                 data: abi.encode(int256(100 * 10**18), true)
             }),
+            false
+        );
+        oracle1.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             false
         );
 
@@ -329,13 +366,17 @@ contract AggregatorOracleTest is DSTest {
             MockProvider.ReturnData({success: true, data: ""}),
             true
         );
-        // value() fails
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(Oracle.value.selector),
             MockProvider.ReturnData({
                 success: false,
                 data: abi.encode(int256(300 * 10**18), true)
             }),
+            false
+        );
+        oracle1.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             false
         );
 
@@ -442,6 +483,11 @@ contract AggregatorOracleTest is DSTest {
                 success: true,
                 data: abi.encode(int256(300 * 10**18), false)
             }),
+            false
+        );
+        oracle1.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             false
         );
 

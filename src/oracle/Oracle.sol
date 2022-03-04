@@ -6,9 +6,6 @@ import {IOracle} from "src/oracle/IOracle.sol";
 import {Pausable} from "src/pausable/Pausable.sol";
 
 abstract contract Oracle is Pausable, IOracle {
-    // @notice Emitted when getValue is called from by an unauthorized actor
-    error Oracle__getValue_notAuthorized();
-
     /// @notice Emitted when alpha value is invalid
     error Oracle__constructor_alphaInvalid(int256 alpha);
 

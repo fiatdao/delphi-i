@@ -21,6 +21,8 @@ contract OracleImplementation is Oracle {
     // This will not be used in the actual implementation
     int256 internal _returnValue;
 
+    bool internal _updateWasCalled;
+
     function setValue(int256 value_) public {
         _returnValue = value_;
     }
