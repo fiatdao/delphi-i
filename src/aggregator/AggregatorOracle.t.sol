@@ -498,9 +498,7 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(updated, "Should return `true` no successful update");
     }
 
-    function test_update_retrurnsFalse_WhenOracleUpdateReturnsFalse()
-        public
-    {
+    function test_update_retrurnsFalse_WhenOracleUpdateReturnsFalse() public {
         // Make the oracle return false on update
         oracle.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),

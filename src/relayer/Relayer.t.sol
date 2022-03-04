@@ -495,20 +495,21 @@ contract RelayerTest is DSTest {
         executed = relayer.execute();
 
         assertTrue(executed == false, "The relayer should return false");
-    }    
+    }
 
-    function test_executeWithRevert_ShouldBeSuccessful_WhenAtLeastOneOracleIsUpdated() public {
+    function test_executeWithRevert_ShouldBeSuccessful_WhenAtLeastOneOracleIsUpdated()
+        public
+    {
         // Call should not revert
         relayer.executeWithRevert();
     }
 
-    function testFail_executeWithRevert_ShouldNotBeSuccessful_WhenNoOracleIsUpdated() public {
+    function testFail_executeWithRevert_ShouldNotBeSuccessful_WhenNoOracleIsUpdated()
+        public
+    {
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(IOracle.update.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(false)
-            }),
+            MockProvider.ReturnData({success: true, data: abi.encode(false)}),
             false
         );
 
