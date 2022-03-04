@@ -7,7 +7,7 @@ interface IRelayer {
         SpotPrice
     }
 
-    function execute() external;
+    function execute() external returns (bool);
 
     function executeWithRevert() external;
 
