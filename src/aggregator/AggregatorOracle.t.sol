@@ -65,6 +65,19 @@ contract AggregatorOracleTest is DSTest {
         aggregatorOracle.oracleAdd(address(newOracle));
     }
 
+    function testFail_addOracle_shouldNotAllowNonPreAuthorizedOracles() public {
+        // Create a mock oracle
+        MockProvider newOracle = new MockProvider();
+        newOracle.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(false)}),
+            false
+        );
+
+        // Should fail because the Aggregator can not update the oracle
+        aggregatorOracle.oracleAdd(address(newOracle));
+    }
+
     function testFail_addOracle_shouldNotAllowDuplicates() public {
         // Create a couple of oracles
         MockProvider oracle1 = new MockProvider();
