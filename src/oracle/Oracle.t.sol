@@ -324,6 +324,9 @@ contract OracleTest is DSTest {
         // Create user
         Caller user = new Caller();
 
+        // Allow user to call update on the oracle
+        oracle.allowCaller(oracle.ANY_SIG(), address(user));
+
         // Should not fail trying to get update
         bool success;
         (success, ) = user.externalCall(
