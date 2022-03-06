@@ -134,10 +134,17 @@ contract RelayerTest is DSTest {
         bytes32 mockTokenId2 = bytes32(uint256(mockTokenId1) + 1);
 
         // Add the oracle for a new token ID.
-        relayer.oracleAdd(address(newOracle), mockTokenId2, mockTokenId1MinThreshold);
+        relayer.oracleAdd(
+            address(newOracle),
+            mockTokenId2,
+            mockTokenId1MinThreshold
+        );
 
         // Check that oracle was added
-        assertTrue(relayer.oracleExists(address(newOracle)), "Oracle should be added");
+        assertTrue(
+            relayer.oracleExists(address(newOracle)),
+            "Oracle should be added"
+        );
 
         // Check the number of existing oracles
         assertTrue(
