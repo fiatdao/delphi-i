@@ -197,6 +197,14 @@ contract RelayerTest is DSTest {
         );
     }
 
+    function test_addOracle_tokenIdMarkedAsUsed() public {
+        // Check that the added oracle id is correctly marked as used
+        assertTrue(
+            relayer.encodedTokenIds(mockTokenId1),
+            "Token Id not marked as used"
+        );
+    }
+
     function test_removeOracle_deletesOracle() public {
         // Remove the only oracle.
         relayer.oracleRemove(address(oracle1));
@@ -204,7 +212,18 @@ contract RelayerTest is DSTest {
         // Oracle should not exist
         assertTrue(
             relayer.oracleExists(address(oracle1)) == false,
-            "CollybusDiscountRateRelayer oracle should be deleted"
+            "Relayer oracle should be deleted"
+        );
+    }
+
+    function test_removeOracle_resetsTokenIdUsedFlag() public {
+        // Remove the only oracle.
+        relayer.oracleRemove(address(oracle1));
+
+        // Token id should be unused
+        assertTrue(
+            relayer.encodedTokenIds(mockTokenId1) == false,
+            "Relayer oracle should be deleted"
         );
     }
 

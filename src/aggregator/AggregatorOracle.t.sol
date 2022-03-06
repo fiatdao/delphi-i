@@ -44,15 +44,15 @@ contract AggregatorOracleTest is DSTest {
         aggregatorOracle.oracleAdd(address(oracle));
     }
 
-    function test_Deploy() public {
+    function test_deploy() public {
         assertTrue(address(aggregatorOracle) != address(0));
     }
 
-    function test_ReturnsNumberOfOracles() public {
+    function test_returnsNumberOfOracles() public {
         assertEq(aggregatorOracle.oracleCount(), 1);
     }
 
-    function test_AddOracle() public {
+    function test_addOracle() public {
         // Create a mock oracle
         MockProvider newOracle = new MockProvider();
         newOracle.givenSelectorReturnResponse(
@@ -65,7 +65,7 @@ contract AggregatorOracleTest is DSTest {
         aggregatorOracle.oracleAdd(address(newOracle));
     }
 
-    function testFail_AddOracle_ShouldNotAllowDuplicates() public {
+    function testFail_addOracle_shouldNotAllowDuplicates() public {
         // Create a couple of oracles
         MockProvider oracle1 = new MockProvider();
 
@@ -74,7 +74,7 @@ contract AggregatorOracleTest is DSTest {
         aggregatorOracle.oracleAdd(address(oracle1));
     }
 
-    function test_AddOracle_OnlyAuthorizedUserShouldBeAbleToAdd() public {
+    function test_addOracle_onlyAuthorizedUserShouldBeAbleToAdd() public {
         Caller user = new Caller();
 
         // Create an oracle
@@ -100,7 +100,7 @@ contract AggregatorOracleTest is DSTest {
         );
     }
 
-    function test_CheckExistenceOfOracle() public {
+    function test_checkExistenceOfOracle() public {
         // Oracle exists
         assertTrue(aggregatorOracle.oracleExists(address(oracle)));
 
@@ -111,7 +111,7 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(aggregatorOracle.oracleExists(address(oracle1)) == false);
     }
 
-    function test_RemoveOracle_DeletesOracle() public {
+    function test_removeOracle_deletesOracle() public {
         // Remove the oracle
         aggregatorOracle.oracleRemove(address(oracle));
 
@@ -119,7 +119,7 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(aggregatorOracle.oracleExists(address(oracle)) == false);
     }
 
-    function testFail_RemoveOracle_ShouldFailIfOracleDoesNotExist() public {
+    function testFail_removeOracle_shouldFailIfOracleDoesNotExist() public {
         // Create a couple of oracles
         MockProvider oracle1 = new MockProvider();
 
@@ -127,7 +127,7 @@ contract AggregatorOracleTest is DSTest {
         aggregatorOracle.oracleRemove(address(oracle1));
     }
 
-    function test_RemoveOracle_OnlyAuthorizedUserShouldBeAbleToRemove() public {
+    function test_removeOracle_onlyAuthorizedUserShouldBeAbleToRemove() public {
         // Create a user without permissions
         Caller user = new Caller();
 
@@ -145,7 +145,7 @@ contract AggregatorOracleTest is DSTest {
         );
     }
 
-    function testFail_RemoveOracle_PossibleIf_MinimumRequiredNumberOfValidValues_CanStillBeMet()
+    function testFail_removeOracle_possibleIf_minimumRequiredNumberOfValidValues_canStillBeMet()
         public
     {
         // Set minimum number of required values to match the number of oracles
@@ -158,7 +158,30 @@ contract AggregatorOracleTest is DSTest {
         aggregatorOracle.oracleRemove(address(oracle));
     }
 
-    function test_TriggerUpdate_ShouldCallOracle() public {
+    function test_oracleAt_returnsCorrectAddress() public {
+        // Create a new address since the oracle is not checked for validity in anyway
+        address newOracle = address(0x1);
+
+        // Cache the current oracle count
+        uint256 oracleCount = aggregatorOracle.oracleCount();
+
+        // Add the oracle
+        aggregatorOracle.oracleAdd(newOracle);
+
+        assertEq(
+            newOracle,
+            aggregatorOracle.oracleAt(oracleCount),
+            "Invalid oracleAt address"
+        );
+    }
+
+    function testFail_oracleAt_shouldFailWithInvalidIndex() public {
+        uint256 outOfBoundsIndex = aggregatorOracle.oracleCount();
+        // Try to access oracle
+        aggregatorOracle.oracleAt(outOfBoundsIndex);
+    }
+
+    function test_triggerUpdate_shouldCallOracle() public {
         // Trigger the update
         aggregatorOracle.update();
 
@@ -171,7 +194,7 @@ contract AggregatorOracleTest is DSTest {
         // and view functions are called with STATICCALL that do not allow state change
     }
 
-    function test_GetAggregatedValue_WillReturnAverage() public {
+    function test_getAggregatedValue_willReturnAverage() public {
         // Remove existing oracle
         aggregatorOracle.oracleRemove(address(oracle));
 
@@ -230,7 +253,7 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(valid);
     }
 
-    function test_Update_WithoutOracles_ReturnsZeroAndInvalid() public {
+    function test_update_withoutOracles_returnsZeroAndInvalid() public {
         // Remove existing oracle
         aggregatorOracle.oracleRemove(address(oracle));
 
@@ -245,7 +268,7 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(valid == false);
     }
 
-    function test_Paused_Stops_ReturnValue() public {
+    function test_paused_stops_returnValue() public {
         // Pause aggregator
         aggregatorOracle.pause();
 
@@ -262,7 +285,7 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(success == false, "value() should fail when paused");
     }
 
-    function test_Paused_DoesNotStop_Update() public {
+    function test_paused_doesNotStop_update() public {
         // Pause aggregator
         aggregatorOracle.pause();
 
@@ -281,7 +304,7 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(success, "update() should not fail when paused");
     }
 
-    function test_AggregatorOracle_CanUseAnother_AggregatorOracle_AsAnOracle()
+    function test_aggregatorOracle_canUseAnother_aggregatorOracle_asAnOracle()
         public
     {
         // Create a new aggregator
@@ -327,7 +350,7 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(valid);
     }
 
-    function test_Update_DoesNotFail_IfOracleFails() public {
+    function test_update_doesNotFail_ifOracleFails() public {
         // Create a failing oracle
         MockProvider oracle1 = new MockProvider();
         // update() fails
@@ -359,7 +382,7 @@ contract AggregatorOracleTest is DSTest {
         aggregatorOracle.update();
     }
 
-    function test_Update_IgnoresInvalidValues() public {
+    function test_update_ignoresInvalidValues() public {
         // Create a failing oracle
         MockProvider oracle1 = new MockProvider();
         // update() succeeds
@@ -396,7 +419,7 @@ contract AggregatorOracleTest is DSTest {
         assertEq(value, 100 * 10**18);
     }
 
-    function test_CanSetParam_requiredValidValues() public {
+    function test_canSetParam_requiredValidValues() public {
         // Set the minimum required valid values
         aggregatorOracle.setParam("requiredValidValues", 1);
 
@@ -404,11 +427,11 @@ contract AggregatorOracleTest is DSTest {
         assertEq(aggregatorOracle.requiredValidValues(), 1);
     }
 
-    function testFail_ShouldNotBeAbleToSet_InvalidParam() public {
+    function testFail_shouldNotBeAbleToSet_invalidParam() public {
         aggregatorOracle.setParam("invalidParam", 1);
     }
 
-    function test_NonAuthorizedUser_ShouldNotBeAbleTo_SetRequiredValidValues()
+    function test_nonAuthorizedUser_shouldNotBeAbleTo_setRequiredValidValues()
         public
     {
         // Create user
@@ -431,7 +454,7 @@ contract AggregatorOracleTest is DSTest {
         );
     }
 
-    function test_AuthorizedUser_ShouldBeAbleTo_SetRequiredValidValues()
+    function test_authorizedUser_shouldBeAbleTo_setRequiredValidValues()
         public
     {
         // Create user
@@ -458,7 +481,7 @@ contract AggregatorOracleTest is DSTest {
         );
     }
 
-    function testFail_ShouldNot_SetRequiredValidValues_HigherThanOracleCount()
+    function testFail_shouldNot_setRequiredValidValues_higherThanOracleCount()
         public
     {
         // Set the minimum required valid values to (number of oracles + 1)
@@ -468,7 +491,7 @@ contract AggregatorOracleTest is DSTest {
         );
     }
 
-    function test_Aggregator_ReturnsInvalid_IfMinimumNumberOfValidValuesIsNotMet()
+    function test_aggregator_returnsInvalid_ifMinimumNumberOfValidValuesIsNotMet()
         public
     {
         // Create an oracle that returns an invalid value

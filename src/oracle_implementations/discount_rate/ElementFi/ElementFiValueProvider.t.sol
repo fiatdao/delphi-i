@@ -32,6 +32,7 @@ contract ElementFiValueProviderTest is DSTest {
     uint256 internal _timeUpdateWindow = 100; // seconds
     uint256 internal _maxValidTime = 300;
     int256 internal _alpha = 2 * 10**17; // 0.2
+    uint256 internal _decimals = 18;
 
     function setUp() public {
         mockBalancerVault = new MockProvider();
@@ -81,19 +82,28 @@ contract ElementFiValueProviderTest is DSTest {
 
         underlierMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
-            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(_decimals)
+            }),
             false
         );
 
         ePTokenBondMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
-            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(_decimals)
+            }),
             false
         );
 
         poolToken.givenQueryReturnResponse(
             abi.encodeWithSelector(ERC20.decimals.selector),
-            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(_decimals)
+            }),
             false
         );
 
@@ -152,12 +162,28 @@ contract ElementFiValueProviderTest is DSTest {
         );
     }
 
+    function test_check_poolToken() public {
+        assertEq(efValueProvider.poolToken(), address(poolToken));
+    }
+
+    function test_check_poolTokenDecimals() public {
+        assertEq(efValueProvider.poolTokenDecimals(), _decimals);
+    }
+
     function test_check_underlier() public {
         assertEq(efValueProvider.underlier(), address(underlierMock));
     }
 
+    function test_check_underlierDecimals() public {
+        assertEq(efValueProvider.underlierDecimals(), _decimals);
+    }
+
     function test_check_ePTokenBond() public {
         assertEq(efValueProvider.ePTokenBond(), address(ePTokenBondMock));
+    }
+
+    function test_check_ePTokenBondDecimals() public {
+        assertEq(efValueProvider.ePTokenBondDecimals(), _decimals);
     }
 
     function test_check_timeScale() public {
@@ -180,5 +206,10 @@ contract ElementFiValueProviderTest is DSTest {
         int256 value = efValueProvider.getValue();
 
         assertTrue(value == computedExpectedValue);
+    }
+
+    function testFail_getValue_revertsOnOrAfterMaturityDate() public {
+        hevm.warp(efValueProvider.maturity());
+        efValueProvider.getValue();
     }
 }

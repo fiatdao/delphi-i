@@ -59,7 +59,7 @@ contract Relayer is Guarded, IRelayer {
     mapping(address => OracleData) private _oraclesData;
 
     // Mapping used tokenId's
-    mapping(bytes32 => bool) public _encodedTokenIds;
+    mapping(bytes32 => bool) public encodedTokenIds;
 
     // Array used for iterating the oracles.
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -125,7 +125,7 @@ contract Relayer is Guarded, IRelayer {
         }
 
         // Make sure there are no existing oracles registered for this rate Id
-        if (_encodedTokenIds[encodedTokenId_]) {
+        if (encodedTokenIds[encodedTokenId_]) {
             revert Relayer__addOracle_tokenIdHasOracleRegistered(
                 oracle_,
                 encodedTokenId_,
@@ -137,7 +137,7 @@ contract Relayer is Guarded, IRelayer {
         _oracleList.add(oracle_);
 
         // Mark the token Id as used
-        _encodedTokenIds[encodedTokenId_] = true;
+        encodedTokenIds[encodedTokenId_] = true;
 
         // Update the oracle address => data mapping with the oracle parameters.
         _oraclesData[oracle_] = OracleData({
@@ -167,7 +167,7 @@ contract Relayer is Guarded, IRelayer {
         }
 
         // Reset the tokenId Mapping
-        _encodedTokenIds[_oraclesData[oracle_].tokenId] = false;
+        encodedTokenIds[_oraclesData[oracle_].tokenId] = false;
 
         // Remove the oracle from the list
         // This returns true/false depending on if the oracle was removed
