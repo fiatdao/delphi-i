@@ -48,6 +48,10 @@ contract FactoryNotionalFinanceValueProvider is
                 settlementDate_
             );
 
+        notionalFinanceValueProvider.allowCaller(
+            notionalFinanceValueProvider.ANY_SIG(),
+            msg.sender
+        );
         return address(notionalFinanceValueProvider);
     }
 }

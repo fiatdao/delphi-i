@@ -36,6 +36,10 @@ contract FactoryYieldValueProvider is IFactoryYieldValueProvider {
             timeScale_
         );
 
+        yieldValueProvider.allowCaller(
+            yieldValueProvider.ANY_SIG(),
+            msg.sender
+        );
         return address(yieldValueProvider);
     }
 }

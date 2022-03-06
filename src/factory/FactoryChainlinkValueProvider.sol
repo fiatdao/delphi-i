@@ -30,6 +30,10 @@ contract FactoryChainlinkValueProvider is IFactoryChainlinkValueProvider {
                 chainlinkAggregatorAddress_
             );
 
+        chainlinkValueProvider.allowCaller(
+            chainlinkValueProvider.ANY_SIG(),
+            msg.sender
+        );
         return address(chainlinkValueProvider);
     }
 }

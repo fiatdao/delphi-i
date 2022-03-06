@@ -48,6 +48,10 @@ contract FactoryElementFiValueProvider is IFactoryElementFiValueProvider {
                 maturity_
             );
 
+        elementFiValueProvider.allowCaller(
+            elementFiValueProvider.ANY_SIG(),
+            msg.sender
+        );
         return address(elementFiValueProvider);
     }
 }
