@@ -153,7 +153,7 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function testFail_addOracle_shouldNotAllowNonPreAuthorizedOracles() public{
+    function testFail_addOracle_shouldNotAllowNonPreAuthorizedOracles() public {
         // Create a new mock oracle
         MockProvider newOracle = new MockProvider();
         // Set response to canCall guard function to false
