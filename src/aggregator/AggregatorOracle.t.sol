@@ -35,7 +35,6 @@ contract AggregatorOracleTest is DSTest {
             MockProvider.ReturnData({success: true, data: ""}),
             true
         );
-
         oracle.givenSelectorReturnResponse(
             Guarded.canCall.selector,
             MockProvider.ReturnData({success: true, data: abi.encode(true)}),

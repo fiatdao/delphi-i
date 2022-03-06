@@ -30,6 +30,10 @@ contract Relayer is Guarded, IRelayer {
     // @notice Emitter when check() returns false
     error Relayer__executeWithRevert_checkFailed(RelayerType relayerType);
 
+    // @notice Emitted when trying to add a Oracle to the Relayer but the Relayer is not whitelisted in the Oracle
+    //         The Relayer needs to be able to call Update on all Oracles
+    error Relayer__unauthorizedToCallUpdateOracle(address oracleAddress);
+
     struct OracleData {
         bool exists;
         bytes32 tokenId;
@@ -108,6 +112,10 @@ contract Relayer is Guarded, IRelayer {
         bytes32 encodedTokenId_,
         uint256 minimumPercentageDeltaValue_
     ) public override(IRelayer) checkCaller {
+        if (!Guarded(oracle_).canCall(IOracle.update.selector, address(this))) {
+            revert Relayer__unauthorizedToCallUpdateOracle(oracle_);
+        }
+
         // Make sure the oracle was not added previously
         if (oracleExists(oracle_)) {
             revert Relayer__addOracle_oracleAlreadyRegistered(
