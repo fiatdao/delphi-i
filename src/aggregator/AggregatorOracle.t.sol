@@ -159,23 +159,28 @@ contract AggregatorOracleTest is DSTest {
     }
 
     function test_oracleAt_returnsCorrectAddress() public {
-        // Create a new address since the oracle is not checked for validity in anyway
-        address newOracle = address(0x1);
+        // Create an oracle
+        MockProvider newOracle = new MockProvider();
+        newOracle.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
 
         // Cache the current oracle count
         uint256 oracleCount = aggregatorOracle.oracleCount();
 
         // Add the oracle
-        aggregatorOracle.oracleAdd(newOracle);
+        aggregatorOracle.oracleAdd(address(newOracle));
 
         assertEq(
-            newOracle,
+            address(newOracle),
             aggregatorOracle.oracleAt(oracleCount),
             "Invalid oracleAt address"
         );
     }
 
-    function testFail_oracleAt_shouldFailWithInvalidIndex() public {
+    function testFail_oracleAt_shouldFailWithInvalidIndex() public view {
         uint256 outOfBoundsIndex = aggregatorOracle.oracleCount();
         // Try to access oracle
         aggregatorOracle.oracleAt(outOfBoundsIndex);

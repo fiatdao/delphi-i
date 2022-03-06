@@ -123,7 +123,7 @@ contract RelayerTest is DSTest {
     }
 
     function test_addOracle() public {
-        // Create a new address that differs from the oracle already added
+        // Create a new mock oracle
         MockProvider newOracle = new MockProvider();
 
         newOracle.givenSelectorReturnResponse(
@@ -150,6 +150,26 @@ contract RelayerTest is DSTest {
         assertTrue(
             relayer.oracleCount() == 2,
             "CollybusDiscountRateRelayer should contain 2 oracles"
+        );
+    }
+
+    function testFail_addOracle_shouldNotAllowNonPreAuthorizedOracles() public{
+        // Create a new mock oracle
+        MockProvider newOracle = new MockProvider();
+        // Set response to canCall guard function to false
+        newOracle.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(false)}),
+            false
+        );
+
+        bytes32 newMockTokenId = bytes32(uint256(mockTokenId1) + 1);
+
+        // Should fail because the Relayer can not update the oracle
+        relayer.oracleAdd(
+            address(newOracle),
+            newMockTokenId,
+            mockTokenId1MinThreshold
         );
     }
 

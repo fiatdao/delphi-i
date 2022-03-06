@@ -293,7 +293,7 @@ contract Relayer is Guarded, IRelayer {
         int256 baseValue,
         int256 newValue,
         uint256 percentage
-    ) public view returns (bool) {
+    ) public pure returns (bool) {
         int256 deviation = (baseValue * int256(percentage)) / 100_00;
 
         if (
