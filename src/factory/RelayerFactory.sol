@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {Relayer} from "src/relayer/Relayer.sol";
-import {StaticRelayer} from "src/relayer/StaticRelayer.sol";
-import {IRelayer} from "src/relayer/IRelayer.sol";
+import {Relayer} from "../relayer/Relayer.sol";
+import {StaticRelayer} from "../relayer/StaticRelayer.sol";
+import {IRelayer} from "../relayer/IRelayer.sol";
 
 interface IRelayerFactory {
     function create(address collybus_, IRelayer.RelayerType relayerType_)
