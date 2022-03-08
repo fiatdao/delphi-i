@@ -6,12 +6,12 @@ import "ds-test/test.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import {FactoryYieldValueProvider} from "src/factory/FactoryYieldValueProvider.sol";
+import {YieldValueProviderFactory} from "src/factory/YieldValueProviderFactory.sol";
 
 import {IYieldPool} from "src/oracle_implementations/discount_rate/Yield/IYieldPool.sol";
 import {YieldValueProvider} from "src/oracle_implementations/discount_rate/Yield/YieldValueProvider.sol";
 
-contract FactoryYieldValueProviderTest is DSTest {
+contract YieldValueProviderFactoryTest is DSTest {
     uint256 private _oracleUpdateWindow;
     uint256 private _oracleMaxValidTime;
     int256 private _oracleAlpha = 1;
@@ -19,10 +19,10 @@ contract FactoryYieldValueProviderTest is DSTest {
     uint256 private _maturity;
     int256 private _timeScale;
 
-    FactoryYieldValueProvider private _factory;
+    YieldValueProviderFactory private _factory;
 
     function setUp() public {
-        _factory = new FactoryYieldValueProvider();
+        _factory = new YieldValueProviderFactory();
     }
 
     function test_deploy() public {

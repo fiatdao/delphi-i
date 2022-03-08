@@ -3,14 +3,14 @@ pragma solidity ^0.8.0;
 
 import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
 
-interface IFactoryAggregatorOracle {
+interface IAggregatorOracleFactory {
     function create() external returns (address);
 }
 
-contract FactoryAggregatorOracle is IFactoryAggregatorOracle {
+contract AggregatorOracleFactory is IAggregatorOracleFactory {
     function create()
         public
-        override(IFactoryAggregatorOracle)
+        override(IAggregatorOracleFactory)
         returns (address)
     {
         AggregatorOracle aggOracle = new AggregatorOracle();
