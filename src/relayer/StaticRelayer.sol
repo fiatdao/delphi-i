@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {ICollybus} from "src/relayer/ICollybus.sol";
-import {IRelayer} from "src/relayer/IRelayer.sol";
-import {Guarded} from "src/guarded/Guarded.sol";
+import {ICollybus} from "./ICollybus.sol";
+import {IRelayer} from "./IRelayer.sol";
+import {Guarded} from "../guarded/Guarded.sol";
 
 contract StaticRelayer is Guarded {
     /// ======== Events ======== ///
