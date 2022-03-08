@@ -6,11 +6,11 @@ import "ds-test/test.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import {FactoryElementFiValueProvider} from "src/factory/FactoryElementFiValueProvider.sol";
+import {ElementFiValueProviderFactory} from "src/factory/ElementFiValueProviderFactory.sol";
 
 import {ElementFiValueProvider} from "src/oracle_implementations/discount_rate/ElementFi/ElementFiValueProvider.sol";
 
-contract FactoryElementFiValueProviderTest is DSTest {
+contract ElementFiValueProviderFactoryTest is DSTest {
     uint256 private _oracleUpdateWindow;
     uint256 private _oracleMaxValidTime;
     int256 private _oracleAlpha = 1;
@@ -23,10 +23,10 @@ contract FactoryElementFiValueProviderTest is DSTest {
     int256 private _timeScale = 2426396518;
     uint256 private _maturity = 1651275535;
 
-    FactoryElementFiValueProvider private _factory;
+    ElementFiValueProviderFactory private _factory;
 
     function setUp() public {
-        _factory = new FactoryElementFiValueProvider();
+        _factory = new ElementFiValueProviderFactory();
     }
 
     function test_deploy() public {

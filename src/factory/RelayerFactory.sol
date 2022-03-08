@@ -4,16 +4,16 @@ pragma solidity ^0.8.0;
 import {Relayer} from "src/relayer/Relayer.sol";
 import {IRelayer} from "src/relayer/IRelayer.sol";
 
-interface IFactoryRelayer {
+interface IRelayerFactory {
     function create(address collybus_, IRelayer.RelayerType relayerType_)
         external
         returns (address);
 }
 
-contract FactoryRelayer is IFactoryRelayer {
+contract RelayerFactory is IRelayerFactory {
     function create(address collybus_, Relayer.RelayerType relayerType_)
         public
-        override(IFactoryRelayer)
+        override(IRelayerFactory)
         returns (address)
     {
         Relayer relayer = new Relayer(collybus_, relayerType_);

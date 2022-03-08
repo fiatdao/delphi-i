@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {NotionalFinanceValueProvider} from "src/oracle_implementations/discount_rate/NotionalFinance/NotionalFinanceValueProvider.sol";
 
-interface IFactoryNotionalFinanceValueProvider {
+interface INotionalFinanceValueProviderFactory {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
@@ -18,8 +18,8 @@ interface IFactoryNotionalFinanceValueProvider {
     ) external returns (address);
 }
 
-contract FactoryNotionalFinanceValueProvider is
-    IFactoryNotionalFinanceValueProvider
+contract NotionalFinanceValueProviderFactory is
+    INotionalFinanceValueProviderFactory
 {
     function create(
         // Oracle parameters
@@ -34,7 +34,7 @@ contract FactoryNotionalFinanceValueProvider is
         uint256 settlementDate_
     )
         external
-        override(IFactoryNotionalFinanceValueProvider)
+        override(INotionalFinanceValueProviderFactory)
         returns (address)
     {
         NotionalFinanceValueProvider notionalFinanceValueProvider = new NotionalFinanceValueProvider(
