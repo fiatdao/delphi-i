@@ -37,8 +37,9 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
 
     event OracleAdded(address oracleAddress);
     event OracleRemoved(address oracleAddress);
-    event OracleUpdated(bool success, address oracleAddress);
-    event OracleValue(int256 value, bool valid);
+    event OracleUpdated(address oracleAddress);
+    event OracleUpdateFailed(address oracleAddress);
+    event OracleValue(address oracleAddress, int256 value, bool valid);
     event OracleValueFailed(address oracleAddress);
     event AggregatedValue(int256 value, uint256 validValues);
     event SetParam(bytes32 param, uint256 value);
@@ -147,7 +148,7 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
             IOracle oracle = IOracle(_oracles.at(i));
 
             try oracle.update() {
-                emit OracleUpdated(true, address(oracle));
+                emit OracleUpdated(address(oracle));
                 try oracle.value() returns (
                     int256 returnedValue,
                     bool isValid
@@ -159,13 +160,13 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
                         // Increase count of valid values
                         validValues++;
                     }
-                    emit OracleValue(returnedValue, isValid);
+                    emit OracleValue(address(oracle), returnedValue, isValid);
                 } catch {
                     emit OracleValueFailed(address(oracle));
                     continue;
                 }
             } catch {
-                emit OracleUpdated(false, address(oracle));
+                emit OracleUpdateFailed(address(oracle));
                 continue;
             }
         }
