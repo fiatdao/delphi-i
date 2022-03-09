@@ -595,13 +595,16 @@ contract AggregatorOracleTest is DSTest {
             ok == false,
             "Non permissioned user should not be able to call update"
         );
-    }  
+    }
 
     function test_update_AuthorizedUserCanCall_update() public {
         Caller user = new Caller();
 
         // Give permission to the usre
-        aggregatorOracle.allowCaller(aggregatorOracle.update.selector, address(user));
+        aggregatorOracle.allowCaller(
+            aggregatorOracle.update.selector,
+            address(user)
+        );
 
         // A non permissioned user should not be able to call
         bool ok;
@@ -610,5 +613,5 @@ contract AggregatorOracleTest is DSTest {
             abi.encodeWithSelector(aggregatorOracle.update.selector)
         );
         assertTrue(ok, "Permissioned user should be able to call update");
-    }      
+    }
 }

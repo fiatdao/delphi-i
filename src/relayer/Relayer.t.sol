@@ -580,7 +580,6 @@ contract RelayerTest is DSTest {
         relayer.executeWithRevert();
     }
 
-
     function test_execute_ReturnsTrue_WhenAtLeastOneOracleIsUpdated() public {
         bool executed;
 
@@ -588,7 +587,6 @@ contract RelayerTest is DSTest {
 
         assertTrue(executed, "The relayer should return true");
     }
-
 
     function test_execute_ReturnsFalse_WhenNoOracleIsUpdated() public {
         bool executed;
