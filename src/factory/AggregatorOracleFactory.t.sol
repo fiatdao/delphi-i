@@ -5,15 +5,15 @@ import "ds-test/test.sol";
 
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 
-import {FactoryAggregatorOracle} from "src/factory/FactoryAggregatorOracle.sol";
+import {AggregatorOracleFactory} from "src/factory/AggregatorOracleFactory.sol";
 
 import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
 
-contract FactoryAggregatorOracleTest is DSTest {
-    FactoryAggregatorOracle private _factory;
+contract AggregatorOracleFactoryTest is DSTest {
+    AggregatorOracleFactory private _factory;
 
     function setUp() public {
-        _factory = new FactoryAggregatorOracle();
+        _factory = new AggregatorOracleFactory();
     }
 
     function test_deploy() public {

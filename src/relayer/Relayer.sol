@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IRelayer} from "src/relayer/IRelayer.sol";
-import {IOracle} from "src/oracle/IOracle.sol";
-import {ICollybus} from "src/relayer/ICollybus.sol";
-import {Guarded} from "src/guarded/Guarded.sol";
+import {IRelayer} from "./IRelayer.sol";
+import {IOracle} from "../oracle/IOracle.sol";
+import {ICollybus} from "./ICollybus.sol";
+import {Guarded} from "../guarded/Guarded.sol";
 
 contract Relayer is Guarded, IRelayer {
     // @notice Emitted when trying to add an oracle that already exists
