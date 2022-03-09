@@ -30,6 +30,10 @@ contract Relayer is Guarded, IRelayer {
     // @notice Emitter when execute() does not update any oracle
     error Relayer__executeWithRevert_noUpdates(RelayerType relayerType);
 
+    // @notice Emitted when trying to add a Oracle to the Relayer but the Relayer is not whitelisted in the Oracle
+    //         The Relayer needs to be able to call Update on all Oracles
+    error Relayer__unauthorizedToCallUpdateOracle(address oracleAddress);
+
     struct OracleData {
         bool exists;
         bytes32 tokenId;
@@ -108,6 +112,10 @@ contract Relayer is Guarded, IRelayer {
         bytes32 encodedTokenId_,
         uint256 minimumPercentageDeltaValue_
     ) public override(IRelayer) checkCaller {
+        if (!Guarded(oracle_).canCall(IOracle.update.selector, address(this))) {
+            revert Relayer__unauthorizedToCallUpdateOracle(oracle_);
+        }
+
         // Make sure the oracle was not added previously
         if (oracleExists(oracle_)) {
             revert Relayer__addOracle_oracleAlreadyRegistered(
@@ -185,7 +193,7 @@ contract Relayer is Guarded, IRelayer {
     /// @notice Iterates and updates all the oracles and pushes the updated data to Collybus for the
     ///         oracles that have delta changes in value bigger than the minimum threshold values.
     /// @dev    Oracles that return invalid values are skipped.
-    function execute() public override(IRelayer) returns (bool) {
+    function execute() public override(IRelayer) checkCaller returns (bool) {
         bool updated;
 
         // Update Collybus all tokenIds with the new discount rate
@@ -241,7 +249,7 @@ contract Relayer is Guarded, IRelayer {
 
     /// @notice The function will call `execute()` and will revert if no oracle was updated
     /// @dev This method is needed for services that try to updates the oracles on each block and only call the method if it doesn't fail
-    function executeWithRevert() public override(IRelayer) {
+    function executeWithRevert() public override(IRelayer) checkCaller {
         if (!execute()) {
             revert Relayer__executeWithRevert_noUpdates(relayerType);
         }
@@ -255,7 +263,7 @@ contract Relayer is Guarded, IRelayer {
         int256 baseValue,
         int256 newValue,
         uint256 percentage
-    ) public view returns (bool) {
+    ) public pure returns (bool) {
         int256 deviation = (baseValue * int256(percentage)) / 100_00;
 
         if (

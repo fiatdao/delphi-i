@@ -281,6 +281,11 @@ contract Factory is Guarded {
             );
         }
 
+        // Whitelist the aggregator so it can Update the oracle
+        Guarded(oracleAddress).allowCaller(
+            Guarded(oracleAddress).ANY_SIG(),
+            aggregatorAddress_
+        );
         // Add the oracle to the Aggregator Oracle
         IAggregatorOracle(aggregatorAddress_).oracleAdd(oracleAddress);
         emit OracleDeployed(oracleAddress);
@@ -328,6 +333,12 @@ contract Factory is Guarded {
         IAggregatorOracle(aggregatorOracleAddress).setParam(
             "requiredValidValues",
             aggData.requiredValidValues
+        );
+
+        // Whitelist the relayer so it can Update the aggregator
+        Guarded(aggregatorOracleAddress).allowCaller(
+            Guarded(aggregatorOracleAddress).ANY_SIG(),
+            relayerAddress_
         );
 
         // Add the aggregator to the relayer

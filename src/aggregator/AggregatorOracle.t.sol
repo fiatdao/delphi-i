@@ -6,6 +6,7 @@ import "ds-test/test.sol";
 import {Hevm} from "src/test/utils/Hevm.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {Caller} from "src/test/utils/Caller.sol";
+import {Guarded} from "src/guarded/Guarded.sol";
 
 import {Oracle} from "src/oracle/Oracle.sol";
 import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
@@ -34,6 +35,12 @@ contract AggregatorOracleTest is DSTest {
             MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
         );
+        oracle.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
+
         aggregatorOracle.oracleAdd(address(oracle));
     }
 
@@ -46,11 +53,29 @@ contract AggregatorOracleTest is DSTest {
     }
 
     function test_addOracle() public {
-        // Create a new address since the oracle is not checked for validity in anyway
-        address newOracle = address(0x1);
+        // Create a mock oracle
+        MockProvider newOracle = new MockProvider();
+        newOracle.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
 
         // Add the oracle
-        aggregatorOracle.oracleAdd(newOracle);
+        aggregatorOracle.oracleAdd(address(newOracle));
+    }
+
+    function testFail_addOracle_shouldNotAllowNonPreAuthorizedOracles() public {
+        // Create a mock oracle
+        MockProvider newOracle = new MockProvider();
+        newOracle.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(false)}),
+            false
+        );
+
+        // Should fail because the Aggregator can not update the oracle
+        aggregatorOracle.oracleAdd(address(newOracle));
     }
 
     function testFail_addOracle_shouldNotAllowDuplicates() public {
@@ -147,23 +172,28 @@ contract AggregatorOracleTest is DSTest {
     }
 
     function test_oracleAt_returnsCorrectAddress() public {
-        // Create a new address since the oracle is not checked for validity in anyway
-        address newOracle = address(0x1);
+        // Create an oracle
+        MockProvider newOracle = new MockProvider();
+        newOracle.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
 
         // Cache the current oracle count
         uint256 oracleCount = aggregatorOracle.oracleCount();
 
         // Add the oracle
-        aggregatorOracle.oracleAdd(newOracle);
+        aggregatorOracle.oracleAdd(address(newOracle));
 
         assertEq(
-            newOracle,
+            address(newOracle),
             aggregatorOracle.oracleAt(oracleCount),
             "Invalid oracleAt address"
         );
     }
 
-    function testFail_oracleAt_shouldFailWithInvalidIndex() public {
+    function testFail_oracleAt_shouldFailWithInvalidIndex() public view {
         uint256 outOfBoundsIndex = aggregatorOracle.oracleCount();
         // Try to access oracle
         aggregatorOracle.oracleAt(outOfBoundsIndex);
@@ -201,6 +231,11 @@ contract AggregatorOracleTest is DSTest {
             MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
         );
+        oracle1.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
         aggregatorOracle.oracleAdd(address(oracle1));
 
         // Add oracle2
@@ -217,6 +252,11 @@ contract AggregatorOracleTest is DSTest {
             abi.encodePacked(Oracle.update.selector),
             MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
+        );
+        oracle2.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
         );
         aggregatorOracle.oracleAdd(address(oracle2));
 
@@ -270,6 +310,8 @@ contract AggregatorOracleTest is DSTest {
         // Create user
         Caller user = new Caller();
 
+        aggregatorOracle.allowCaller(aggregatorOracle.ANY_SIG(), address(user));
+
         // Should not fail on update
         bool success;
         (success, ) = user.externalCall(
@@ -301,11 +343,21 @@ contract AggregatorOracleTest is DSTest {
             MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
         );
+        localOracle.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
 
         // Add the new oracle to the new aggregator
         localAggregatorOracle.oracleAdd(address(localOracle));
         localAggregatorOracle.update();
 
+        // Whitelist the aggregator
+        localAggregatorOracle.allowCaller(
+            localAggregatorOracle.ANY_SIG(),
+            address(aggregatorOracle)
+        );
         // Add the local aggregator to the aggregator (as an oracle)
         aggregatorOracle.oracleAdd(address(localAggregatorOracle));
 
@@ -325,13 +377,18 @@ contract AggregatorOracleTest is DSTest {
             MockProvider.ReturnData({success: false, data: ""}),
             true
         );
-        // value() fails
+
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(Oracle.value.selector),
             MockProvider.ReturnData({
                 success: false,
                 data: abi.encode(int256(100 * 10**18), true)
             }),
+            false
+        );
+        oracle1.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             false
         );
 
@@ -352,13 +409,17 @@ contract AggregatorOracleTest is DSTest {
             MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
         );
-        // value() fails
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(Oracle.value.selector),
             MockProvider.ReturnData({
                 success: false,
                 data: abi.encode(int256(300 * 10**18), true)
             }),
+            false
+        );
+        oracle1.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             false
         );
 
@@ -467,6 +528,11 @@ contract AggregatorOracleTest is DSTest {
             }),
             false
         );
+        oracle1.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
 
         // Add the invalid value oracle
         aggregatorOracle.oracleAdd(address(oracle1));
@@ -514,5 +580,38 @@ contract AggregatorOracleTest is DSTest {
             updated == false,
             "Should return `true` no successful update"
         );
+    }
+
+    function test_update_NonAuthorizedUserCanNotCall_update() public {
+        Caller user = new Caller();
+
+        // A non permissioned user should not be able to call
+        bool ok;
+        (ok, ) = user.externalCall(
+            address(aggregatorOracle),
+            abi.encodeWithSelector(aggregatorOracle.update.selector)
+        );
+        assertTrue(
+            ok == false,
+            "Non permissioned user should not be able to call update"
+        );
+    }
+
+    function test_update_AuthorizedUserCanCall_update() public {
+        Caller user = new Caller();
+
+        // Give permission to the usre
+        aggregatorOracle.allowCaller(
+            aggregatorOracle.update.selector,
+            address(user)
+        );
+
+        // A non permissioned user should not be able to call
+        bool ok;
+        (ok, ) = user.externalCall(
+            address(aggregatorOracle),
+            abi.encodeWithSelector(aggregatorOracle.update.selector)
+        );
+        assertTrue(ok, "Permissioned user should be able to call update");
     }
 }

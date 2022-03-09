@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Merged the CollybusDiscountRateRelayer and CollybusSpotPriceRelayer into a more generic Relayer contract. Issue [#68](https://github.com/fiatdao/delphi/issues/68) 
 - Added reentrancy guard for `Oracle.update()`
 - Updated AggregatorOracle and Oracle Contracts tests for full coverage. Fix for issue[#74](https://github.com/fiatdao/delphi/issues/74)
+- Added guard checks to the Oracle update flow. Fix for issue[#81](https://github.com/fiatdao/delphi/issues/81)
 - Redesigned some events in `AggregatorOracle` to also emit the oracle's address. Issue [#79](https://github.com/fiatdao/delphi/issues/79)
 - Upgrade Solidity version from 0.8.7 to 0.8.12. Issue [#73](https://github.com/fiatdao/delphi/issues/73)
 - Changed execution flow for `executeWithRevert` to allow for oracle updates even if no update to Collybus was performed. Issue [#83](https://github.com/fiatdao/delphi/issues/83)

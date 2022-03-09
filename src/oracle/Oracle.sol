@@ -94,7 +94,13 @@ abstract contract Oracle is Pausable, IOracle {
 
     function getValue() external virtual returns (int256);
 
-    function update() public override(IOracle) nonReentrant returns (bool) {
+    function update()
+        public
+        override(IOracle)
+        checkCaller
+        nonReentrant
+        returns (bool)
+    {
         // Not enough time has passed since the last update
         if (lastTimestamp + timeUpdateWindow > block.timestamp) {
             // Exit early if no update is needed

@@ -343,6 +343,9 @@ contract OracleTest is DSTest {
         // Create user
         Caller user = new Caller();
 
+        // Allow user to call update on the oracle
+        oracle.allowCaller(oracle.ANY_SIG(), address(user));
+
         // Should not fail trying to get update
         bool success;
         (success, ) = user.externalCall(
@@ -492,5 +495,35 @@ contract OracleTest is DSTest {
             updated == false,
             "Should return `true` no successful update"
         );
+    }
+
+    function test_update_NonAuthorizedUserCanNotCall_update() public {
+        Caller user = new Caller();
+
+        // A non permissioned user should not be able to call
+        bool ok;
+        (ok, ) = user.externalCall(
+            address(oracle),
+            abi.encodeWithSelector(oracle.update.selector)
+        );
+        assertTrue(
+            ok == false,
+            "Non permissioned user should not be able to call update"
+        );
+    }
+
+    function test_update_AuthorizedUserCanCall_update() public {
+        Caller user = new Caller();
+
+        // Give permission to the usre
+        oracle.allowCaller(oracle.update.selector, address(user));
+
+        // A non permissioned user should not be able to call
+        bool ok;
+        (ok, ) = user.externalCall(
+            address(oracle),
+            abi.encodeWithSelector(oracle.update.selector)
+        );
+        assertTrue(ok, "Permissioned user should be able to call update");
     }
 }

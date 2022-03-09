@@ -5,7 +5,7 @@ import {Hevm} from "src/test/utils/Hevm.sol";
 import {DSTest} from "lib/ds-test/src/test.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {Caller} from "src/test/utils/Caller.sol";
-
+import {Guarded} from "src/guarded/Guarded.sol";
 import {ICollybus} from "src/relayer/ICollybus.sol";
 import {Relayer} from "src/relayer/Relayer.sol";
 import {IRelayer} from "src/relayer/IRelayer.sol";
@@ -62,6 +62,18 @@ contract RelayerTest is DSTest {
                 data: abi.encode(oracle1InitialValue, true)
             }),
             false
+        );
+        oracle1.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
+
+        // Set update to return a boolean
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            true
         );
 
         // Set update to return a boolean
@@ -125,20 +137,53 @@ contract RelayerTest is DSTest {
     }
 
     function test_addOracle() public {
-        // Create a new address that differs from the oracle already added
-        address newOracle = address(0x1);
+        // Create a new mock oracle
+        MockProvider newOracle = new MockProvider();
+
+        newOracle.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
         bytes32 mockTokenId2 = bytes32(uint256(mockTokenId1) + 1);
 
         // Add the oracle for a new token ID.
-        relayer.oracleAdd(newOracle, mockTokenId2, mockTokenId1MinThreshold);
+        relayer.oracleAdd(
+            address(newOracle),
+            mockTokenId2,
+            mockTokenId1MinThreshold
+        );
 
         // Check that oracle was added
-        assertTrue(relayer.oracleExists(newOracle), "Oracle should be added");
+        assertTrue(
+            relayer.oracleExists(address(newOracle)),
+            "Oracle should be added"
+        );
 
         // Check the number of existing oracles
         assertTrue(
             relayer.oracleCount() == 2,
             "CollybusDiscountRateRelayer should contain 2 oracles"
+        );
+    }
+
+    function testFail_addOracle_shouldNotAllowNonPreAuthorizedOracles() public {
+        // Create a new mock oracle
+        MockProvider newOracle = new MockProvider();
+        // Set response to canCall guard function to false
+        newOracle.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(false)}),
+            false
+        );
+
+        bytes32 newMockTokenId = bytes32(uint256(mockTokenId1) + 1);
+
+        // Should fail because the Relayer can not update the oracle
+        relayer.oracleAdd(
+            address(newOracle),
+            newMockTokenId,
+            mockTokenId1MinThreshold
         );
     }
 
@@ -256,6 +301,11 @@ contract RelayerTest is DSTest {
             MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
         );
+        oracle2.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
 
         bytes32 mockTokenId2 = bytes32(uint256(mockTokenId1) + 1);
         uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
@@ -307,6 +357,11 @@ contract RelayerTest is DSTest {
             }),
             false
         );
+        spotPriceOracle.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
         spotPriceOracle.givenQueryReturnResponse(
             abi.encodePacked(IOracle.update.selector),
             MockProvider.ReturnData({success: true, data: abi.encode(true)}),
@@ -354,13 +409,18 @@ contract RelayerTest is DSTest {
             }),
             false
         );
+        localOracle.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
         localOracle.givenQueryReturnResponse(
             abi.encodePacked(IOracle.update.selector),
             MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             false
         );
 
-        // Add oracle with a thresold percentage
+        // Add oracle with a threshold percentage
         localRelayer.oracleAdd(
             address(localOracle),
             localTokenId,
@@ -427,6 +487,11 @@ contract RelayerTest is DSTest {
             }),
             false
         );
+        localOracle.givenSelectorReturnResponse(
+            Guarded.canCall.selector,
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
         localOracle.givenQueryReturnResponse(
             abi.encodePacked(IOracle.update.selector),
             MockProvider.ReturnData({success: true, data: abi.encode(true)}),
@@ -473,6 +538,46 @@ contract RelayerTest is DSTest {
             uint256(secondValue),
             "Collybus should have the new value"
         );
+    }
+
+    function test_execute_NonAuthorizedUserCanNotCall_executeWithRevert()
+        public
+    {
+        Caller user = new Caller();
+
+        // A non permissioned user should not be able to call this
+        bool ok;
+        (ok, ) = user.externalCall(
+            address(relayer),
+            abi.encodeWithSelector(relayer.executeWithRevert.selector)
+        );
+        assertTrue(
+            ok == false,
+            "Non permissioned user should not be able to call executeWithRevert"
+        );
+    }
+
+    function test_execute_AuthorizedUserCanCall_executeWithRevert() public {
+        Caller user = new Caller();
+
+        // Give permission to the user
+        relayer.allowCaller(relayer.executeWithRevert.selector, address(user));
+
+        // A permissioned user should be able to call this
+        bool ok;
+        (ok, ) = user.externalCall(
+            address(relayer),
+            abi.encodeWithSelector(relayer.executeWithRevert.selector)
+        );
+        assertTrue(
+            ok,
+            "Permissioned user should be able to call executeWithRevert"
+        );
+    }
+
+    function test_executeWithRevert() public {
+        // Call should not revert
+        relayer.executeWithRevert();
     }
 
     function test_execute_ReturnsTrue_WhenAtLeastOneOracleIsUpdated() public {
