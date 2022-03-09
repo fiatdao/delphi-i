@@ -43,6 +43,27 @@ contract OracleImplementation is Oracle {
     }
 }
 
+contract OracleReenter is Oracle {
+    constructor(
+        uint256 timeUpdateWindow_,
+        uint256 maxValidTime_,
+        int256 alpha_
+    ) Oracle(timeUpdateWindow_, maxValidTime_, alpha_) {
+        this;
+    }
+
+    bool public reentered = false;
+
+    function getValue() external override(Oracle) returns (int256) {
+        if (reentered) {
+            return 42;
+        } else {
+            reentered = true;
+            super.update();
+        }
+    }
+}
+
 contract OracleTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
 
@@ -437,5 +458,17 @@ contract OracleTest is DSTest {
             maxValidTime,
             1 * 10**18 + 1
         );
+    }
+
+    function testFail_update_cannotBeReentered() public {
+        OracleReenter oracleReenter = new OracleReenter(
+            timeUpdateWindow,
+            maxValidTime,
+            alpha
+        );
+
+        oracleReenter.update();
+
+        assertTrue(oracleReenter.reentered());
     }
 }
