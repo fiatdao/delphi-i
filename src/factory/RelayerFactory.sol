@@ -20,9 +20,15 @@ interface IRelayerFactory {
 
 contract RelayerFactory is IRelayerFactory {
     // Emitted when a Relayer is created
-    event RelayerDeployed(address relayerAddress, IRelayer.RelayerType relayerType);
+    event RelayerDeployed(
+        address relayerAddress,
+        IRelayer.RelayerType relayerType
+    );
     // Emitted when a Static Relayer is created
-    event StaticRelayerDeployed(address relayerAddress, IRelayer.RelayerType relayerType);
+    event StaticRelayerDeployed(
+        address relayerAddress,
+        IRelayer.RelayerType relayerType
+    );
 
     function create(address collybus_, Relayer.RelayerType relayerType_)
         public
