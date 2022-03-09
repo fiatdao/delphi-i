@@ -7,7 +7,6 @@ import {Oracle} from "src/oracle/Oracle.sol";
 
 contract ChainLinkValueProvider is Oracle, Convert {
     uint8 public immutable underlierDecimals;
-    address public underlierAddress;
     address public chainlinkAggregatorAddress;
 
     /// @notice                             Constructs the Value provider contracts with the needed Chainlink.

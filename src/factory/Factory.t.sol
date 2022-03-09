@@ -13,12 +13,12 @@ import {Oracle} from "src/oracle/Oracle.sol";
 import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
 
 // Contract Deployers and dependencies
-import {FactoryElementFiValueProvider} from "src/factory/FactoryElementFiValueProvider.sol";
-import {FactoryNotionalFinanceValueProvider} from "src/factory/FactoryNotionalFinanceValueProvider.sol";
-import {FactoryYieldValueProvider} from "src/factory/FactoryYieldValueProvider.sol";
-import {FactoryChainlinkValueProvider} from "src/factory/FactoryChainlinkValueProvider.sol";
-import {FactoryAggregatorOracle} from "src/factory/FactoryAggregatorOracle.sol";
-import {FactoryRelayer} from "src/factory/FactoryRelayer.sol";
+import {ElementFiValueProviderFactory} from "src/factory/ElementFiValueProviderFactory.sol";
+import {NotionalFinanceValueProviderFactory} from "src/factory/NotionalFinanceValueProviderFactory.sol";
+import {YieldValueProviderFactory} from "src/factory/YieldValueProviderFactory.sol";
+import {ChainlinkValueProviderFactory} from "src/factory/ChainlinkValueProviderFactory.sol";
+import {AggregatorOracleFactory} from "src/factory/AggregatorOracleFactory.sol";
+import {RelayerFactory} from "src/factory/RelayerFactory.sol";
 import {ChainlinkMockProvider} from "src/deploy/ChainlinkMockProvider.sol";
 
 import {IYieldPool} from "src/oracle_implementations/discount_rate/Yield/IYieldPool.sol";
@@ -34,22 +34,22 @@ contract FactoryTest is DSTest {
 
     Factory internal factory;
 
-    FactoryElementFiValueProvider internal elementFiValueProviderFactoryMock;
-    FactoryNotionalFinanceValueProvider
+    ElementFiValueProviderFactory internal elementFiValueProviderFactoryMock;
+    NotionalFinanceValueProviderFactory
         internal notionalValueProviderFactoryMock;
-    FactoryYieldValueProvider internal yieldValueProviderFactoryMock;
-    FactoryChainlinkValueProvider internal chainlinkValueProviderFactoryMock;
-    FactoryAggregatorOracle internal aggregatorOracleFactoryMock;
-    FactoryRelayer internal relayerFactoryMock;
+    YieldValueProviderFactory internal yieldValueProviderFactoryMock;
+    ChainlinkValueProviderFactory internal chainlinkValueProviderFactoryMock;
+    AggregatorOracleFactory internal aggregatorOracleFactoryMock;
+    RelayerFactory internal relayerFactoryMock;
 
     function setUp() public {
         // Create all the contract factories needed by the main factory
-        elementFiValueProviderFactoryMock = new FactoryElementFiValueProvider();
-        notionalValueProviderFactoryMock = new FactoryNotionalFinanceValueProvider();
-        yieldValueProviderFactoryMock = new FactoryYieldValueProvider();
-        chainlinkValueProviderFactoryMock = new FactoryChainlinkValueProvider();
-        aggregatorOracleFactoryMock = new FactoryAggregatorOracle();
-        relayerFactoryMock = new FactoryRelayer();
+        elementFiValueProviderFactoryMock = new ElementFiValueProviderFactory();
+        notionalValueProviderFactoryMock = new NotionalFinanceValueProviderFactory();
+        yieldValueProviderFactoryMock = new YieldValueProviderFactory();
+        chainlinkValueProviderFactoryMock = new ChainlinkValueProviderFactory();
+        aggregatorOracleFactoryMock = new AggregatorOracleFactory();
+        relayerFactoryMock = new RelayerFactory();
 
         factory = new Factory(
             address(elementFiValueProviderFactoryMock),
