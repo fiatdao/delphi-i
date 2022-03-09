@@ -19,6 +19,11 @@ interface IRelayerFactory {
 }
 
 contract RelayerFactory is IRelayerFactory {
+    // Emitted when a Relayer is created
+    event RelayerDeployed(address relayerAddress, IRelayer.RelayerType relayerType);
+    // Emitted when a Static Relayer is created
+    event StaticRelayerDeployed(address relayerAddress, IRelayer.RelayerType relayerType);
+
     function create(address collybus_, Relayer.RelayerType relayerType_)
         public
         override(IRelayerFactory)
@@ -26,6 +31,8 @@ contract RelayerFactory is IRelayerFactory {
     {
         Relayer relayer = new Relayer(collybus_, relayerType_);
         relayer.allowCaller(relayer.ANY_SIG(), msg.sender);
+
+        emit RelayerDeployed(address(relayer), relayerType_);
         return address(relayer);
     }
 
@@ -46,6 +53,8 @@ contract RelayerFactory is IRelayerFactory {
         // Pass permissions to the intended contract owner
         staticRelayer.allowCaller(staticRelayer.ANY_SIG(), msg.sender);
         staticRelayer.blockCaller(staticRelayer.ANY_SIG(), address(this));
+
+        emit StaticRelayerDeployed(address(staticRelayer), relayerType_);
         return address(staticRelayer);
     }
 }
