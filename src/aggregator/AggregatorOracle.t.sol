@@ -582,7 +582,6 @@ contract AggregatorOracleTest is DSTest {
         );
     }
 
-
     function test_update_NonAuthorizedUserCanNotCall_update() public {
         Caller user = new Caller();
 

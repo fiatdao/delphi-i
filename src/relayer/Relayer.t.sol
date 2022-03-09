@@ -76,6 +76,13 @@ contract RelayerTest is DSTest {
             true
         );
 
+        // Set update to return a boolean
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            true
+        );
+
         // Add oracle with rate id
         relayer.oracleAdd(
             address(oracle1),
@@ -282,17 +289,17 @@ contract RelayerTest is DSTest {
         MockProvider oracle2 = new MockProvider();
         // Set the value returned by the Oracle.
         oracle2.givenQueryReturnResponse(
-            abi.encodePacked(IOracle.update.selector),
-            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
-            true
-        );
-        oracle2.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(oracle1InitialValue, true)
+                data: abi.encode(int256(100 * 10**18), true)
             }),
             false
+        );
+        oracle2.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            true
         );
         oracle2.givenSelectorReturnResponse(
             Guarded.canCall.selector,
@@ -573,6 +580,7 @@ contract RelayerTest is DSTest {
         relayer.executeWithRevert();
     }
 
+
     function test_execute_ReturnsTrue_WhenAtLeastOneOracleIsUpdated() public {
         bool executed;
 
@@ -580,6 +588,7 @@ contract RelayerTest is DSTest {
 
         assertTrue(executed, "The relayer should return true");
     }
+
 
     function test_execute_ReturnsFalse_WhenNoOracleIsUpdated() public {
         bool executed;
