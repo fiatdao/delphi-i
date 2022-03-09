@@ -21,8 +21,6 @@ contract OracleImplementation is Oracle {
     // This will not be used in the actual implementation
     int256 internal _returnValue;
 
-    bool internal _updateWasCalled;
-
     function setValue(int256 value_) public {
         _returnValue = value_;
     }
@@ -41,6 +39,27 @@ contract OracleImplementation is Oracle {
             return _returnValue;
         } else {
             revert("Oracle failed");
+        }
+    }
+}
+
+contract OracleReenter is Oracle {
+    constructor(
+        uint256 timeUpdateWindow_,
+        uint256 maxValidTime_,
+        int256 alpha_
+    ) Oracle(timeUpdateWindow_, maxValidTime_, alpha_) {
+        this;
+    }
+
+    bool public reentered = false;
+
+    function getValue() external override(Oracle) returns (int256) {
+        if (reentered) {
+            return 42;
+        } else {
+            reentered = true;
+            super.update();
         }
     }
 }
@@ -442,5 +461,69 @@ contract OracleTest is DSTest {
             maxValidTime,
             1 * 10**18 + 1
         );
+    }
+
+    function testFail_update_cannotBeReentered() public {
+        OracleReenter oracleReenter = new OracleReenter(
+            timeUpdateWindow,
+            maxValidTime,
+            alpha
+        );
+
+        oracleReenter.update();
+
+        assertTrue(oracleReenter.reentered());
+    }
+
+    function test_update_returnsTrue_WhenSuccessful() public {
+        bool updated;
+        updated = oracle.update();
+
+        assertTrue(updated, "Should return `true` no successful update");
+    }
+
+    function test_update_retrurnsFalse_WhenUpdateDoesNotChangeAnything()
+        public
+    {
+        bool updated;
+        updated = oracle.update();
+
+        // Second update should return false since it doesn't change anything
+        updated = oracle.update();
+
+        assertTrue(
+            updated == false,
+            "Should return `true` no successful update"
+        );
+    }
+
+    function test_update_NonAuthorizedUserCanNotCall_update() public {
+        Caller user = new Caller();
+
+        // A non permissioned user should not be able to call
+        bool ok;
+        (ok, ) = user.externalCall(
+            address(oracle),
+            abi.encodeWithSelector(oracle.update.selector)
+        );
+        assertTrue(
+            ok == false,
+            "Non permissioned user should not be able to call update"
+        );
+    }
+
+    function test_update_AuthorizedUserCanCall_update() public {
+        Caller user = new Caller();
+
+        // Give permission to the usre
+        oracle.allowCaller(oracle.update.selector, address(user));
+
+        // A non permissioned user should not be able to call
+        bool ok;
+        (ok, ) = user.externalCall(
+            address(oracle),
+            abi.encodeWithSelector(oracle.update.selector)
+        );
+        assertTrue(ok, "Permissioned user should be able to call update");
     }
 }

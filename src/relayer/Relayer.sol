@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IRelayer} from "src/relayer/IRelayer.sol";
-import {IOracle} from "src/oracle/IOracle.sol";
-import {ICollybus} from "src/relayer/ICollybus.sol";
-import {Guarded} from "src/guarded/Guarded.sol";
+import {IRelayer} from "./IRelayer.sol";
+import {IOracle} from "../oracle/IOracle.sol";
+import {ICollybus} from "./ICollybus.sol";
+import {Guarded} from "../guarded/Guarded.sol";
 
 contract Relayer is Guarded, IRelayer {
     // @notice Emitted when trying to add an oracle that already exists
@@ -27,8 +27,8 @@ contract Relayer is Guarded, IRelayer {
         RelayerType relayerType
     );
 
-    // @notice Emitter when check() returns false
-    error Relayer__executeWithRevert_checkFailed(RelayerType relayerType);
+    // @notice Emitter when execute() does not update any oracle
+    error Relayer__executeWithRevert_noUpdates(RelayerType relayerType);
 
     // @notice Emitted when trying to add a Oracle to the Relayer but the Relayer is not whitelisted in the Oracle
     //         The Relayer needs to be able to call Update on all Oracles
@@ -190,45 +190,12 @@ contract Relayer is Guarded, IRelayer {
         return _oraclesData[oracle_];
     }
 
-    /// @notice Iterates and updates each oracle until it finds one that should push data
-    ///         in the Collybus, more exactly, the delta change in value is bigger than the minimum
-    ///         threshold value set for that oracle.
-    /// @dev    Oracles that return invalid values are skipped.
-    /// @return Returns 'true' if at least one oracle should update data in the Collybus
-    function check() public override(IRelayer) returns (bool) {
-        uint256 arrayLength = _oracleList.length();
-        for (uint256 i = 0; i < arrayLength; i++) {
-            // Cache oracle address
-            address localOracle = _oracleList.at(i);
-
-            // Trigger the oracle to update its data
-            IOracle(localOracle).update();
-
-            (int256 rate, bool isValid) = IOracle(localOracle).value();
-
-            emit UpdateOracle(localOracle, rate, isValid);
-            if (!isValid) continue;
-
-            if (
-                checkDeviation(
-                    _oraclesData[localOracle].lastUpdateValue,
-                    rate,
-                    _oraclesData[localOracle].minimumPercentageDeltaValue
-                )
-            ) {
-                emit ShouldUpdate(true);
-                return true;
-            }
-        }
-
-        emit ShouldUpdate(false);
-        return false;
-    }
-
     /// @notice Iterates and updates all the oracles and pushes the updated data to Collybus for the
     ///         oracles that have delta changes in value bigger than the minimum threshold values.
     /// @dev    Oracles that return invalid values are skipped.
-    function execute() public override(IRelayer) checkCaller {
+    function execute() public override(IRelayer) checkCaller returns (bool) {
+        bool updated;
+
         // Update Collybus all tokenIds with the new discount rate
         uint256 arrayLength = _oracleList.length();
         for (uint256 i = 0; i < arrayLength; i++) {
@@ -236,7 +203,10 @@ contract Relayer is Guarded, IRelayer {
             address localOracle = _oracleList.at(i);
 
             // We always update the oracles before retrieving the rates
-            IOracle(localOracle).update();
+            bool oracleUpdated = IOracle(localOracle).update();
+            if (oracleUpdated) {
+                updated = true;
+            }
             (int256 oracleValue, bool isValid) = IOracle(localOracle).value();
 
             if (!isValid) continue;
@@ -273,15 +243,15 @@ contract Relayer is Guarded, IRelayer {
                 );
             }
         }
+
+        return updated;
     }
 
-    /// @notice The function will call `execute()` if `check()` returns `true`, otherwise it will revert
+    /// @notice The function will call `execute()` and will revert if no oracle was updated
     /// @dev This method is needed for services that try to updates the oracles on each block and only call the method if it doesn't fail
     function executeWithRevert() public override(IRelayer) checkCaller {
-        if (check()) {
-            execute();
-        } else {
-            revert Relayer__executeWithRevert_checkFailed(relayerType);
+        if (!execute()) {
+            revert Relayer__executeWithRevert_noUpdates(relayerType);
         }
     }
 

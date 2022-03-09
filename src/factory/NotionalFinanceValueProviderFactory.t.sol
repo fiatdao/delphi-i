@@ -6,11 +6,11 @@ import "ds-test/test.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import {FactoryNotionalFinanceValueProvider} from "src/factory/FactoryNotionalFinanceValueProvider.sol";
+import {NotionalFinanceValueProviderFactory} from "src/factory/NotionalFinanceValueProviderFactory.sol";
 
 import {NotionalFinanceValueProvider} from "src/oracle_implementations/discount_rate/NotionalFinance/NotionalFinanceValueProvider.sol";
 
-contract FactoryNotionalFinanceValueProviderTest is DSTest {
+contract NotionalFinanceValueProviderFactoryTest is DSTest {
     uint256 private _oracleUpdateWindow;
     uint256 private _oracleMaxValidTime;
     int256 private _oracleAlpha = 1;
@@ -21,10 +21,10 @@ contract FactoryNotionalFinanceValueProviderTest is DSTest {
     uint256 private _settlementDate;
     uint256 private _oracleRateDecimals;
 
-    FactoryNotionalFinanceValueProvider private _factory;
+    NotionalFinanceValueProviderFactory private _factory;
 
     function setUp() public {
-        _factory = new FactoryNotionalFinanceValueProvider();
+        _factory = new NotionalFinanceValueProviderFactory();
     }
 
     function test_deploy() public {

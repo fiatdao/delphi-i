@@ -5,12 +5,12 @@ import {IOracle} from "src/oracle/IOracle.sol";
 import {IAggregatorOracle} from "src/aggregator/IAggregatorOracle.sol";
 
 // Contract Deployers
-import {IFactoryElementFiValueProvider} from "src/factory/FactoryElementFiValueProvider.sol";
-import {IFactoryNotionalFinanceValueProvider} from "src/factory/FactoryNotionalFinanceValueProvider.sol";
-import {IFactoryYieldValueProvider} from "src/factory/FactoryYieldValueProvider.sol";
-import {IFactoryChainlinkValueProvider} from "src/factory/FactoryChainlinkValueProvider.sol";
-import {IFactoryAggregatorOracle} from "src/factory/FactoryAggregatorOracle.sol";
-import {IFactoryRelayer} from "src/factory/FactoryRelayer.sol";
+import {IElementFiValueProviderFactory} from "src/factory/ElementFiValueProviderFactory.sol";
+import {INotionalFinanceValueProviderFactory} from "src/factory/NotionalFinanceValueProviderFactory.sol";
+import {IYieldValueProviderFactory} from "src/factory/YieldValueProviderFactory.sol";
+import {IChainlinkValueProviderFactory} from "src/factory/ChainlinkValueProviderFactory.sol";
+import {IAggregatorOracleFactory} from "src/factory/AggregatorOracleFactory.sol";
+import {IRelayerFactory} from "src/factory/RelayerFactory.sol";
 
 // Relayers
 import {IRelayer} from "src/relayer/IRelayer.sol";
@@ -136,7 +136,7 @@ contract Factory is Guarded {
             (ElementVPData)
         );
 
-        address elementFiValueProviderAddress = IFactoryElementFiValueProvider(
+        address elementFiValueProviderAddress = IElementFiValueProviderFactory(
             elementFiValueProviderFactory
         ).create(
                 oracleParams_.timeWindow,
@@ -167,7 +167,7 @@ contract Factory is Guarded {
             (NotionalVPData)
         );
 
-        address notionalFinanceValueProviderAddress = IFactoryNotionalFinanceValueProvider(
+        address notionalFinanceValueProviderAddress = INotionalFinanceValueProviderFactory(
                 notionalValueProviderFactory
             ).create(
                     oracleParams_.timeWindow,
@@ -196,7 +196,7 @@ contract Factory is Guarded {
             (YieldVPData)
         );
 
-        address yieldValueProviderAddress = IFactoryYieldValueProvider(
+        address yieldValueProviderAddress = IYieldValueProviderFactory(
             yieldValueProviderFactory
         ).create(
                 oracleParams.timeWindow,
@@ -223,7 +223,7 @@ contract Factory is Guarded {
             (ChainlinkVPData)
         );
 
-        address chainlinkValueProviderAddress = IFactoryChainlinkValueProvider(
+        address chainlinkValueProviderAddress = IChainlinkValueProviderFactory(
             chainlinkValueProviderFactory
         ).create(
                 oracleParams_.timeWindow,
@@ -303,7 +303,7 @@ contract Factory is Guarded {
         address relayerAddress_
     ) public checkCaller returns (address) {
         // Create aggregator contract
-        address aggregatorOracleAddress = IFactoryAggregatorOracle(
+        address aggregatorOracleAddress = IAggregatorOracleFactory(
             aggregatorOracleFactory
         ).create();
 
@@ -368,7 +368,7 @@ contract Factory is Guarded {
             revert Factory__deployRelayer_invalidCollybusAddress();
         }
 
-        address relayerAddress = IFactoryRelayer(relayerFactory).create(
+        address relayerAddress = IRelayerFactory(relayerFactory).create(
             collybus_,
             type_
         );

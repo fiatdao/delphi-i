@@ -69,6 +69,13 @@ contract RelayerTest is DSTest {
             false
         );
 
+        // Set update to return a boolean
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            true
+        );
+
         // Add oracle with rate id
         relayer.oracleAdd(
             address(oracle1),
@@ -271,68 +278,19 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function test_check_returnsTrueWhenUpdateNeeded() public {
-        bool mustUpdate = relayer.check();
-        assertTrue(mustUpdate);
-    }
-
-    function test_checkCallsUpdate_onlyOnFirstUpdatableOracle() public {
-        MockProvider oracle2 = new MockProvider();
-        // Set the value returned by the Oracle.
-        oracle2.givenQueryReturnResponse(
-            abi.encodePacked(IOracle.value.selector),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(int256(100 * 10**18), true)
-            }),
-            false
-        );
-        oracle2.givenSelectorReturnResponse(
-            Guarded.canCall.selector,
-            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
-            false
-        );
-
-        bytes32 mockTokenId2 = bytes32(uint256(mockTokenId1) + 1);
-        uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
-        // Add oracle with rate id
-        relayer.oracleAdd(
-            address(oracle2),
-            mockTokenId2,
-            mockTokenId2MinThreshold
-        );
-
-        // Check will search for at least one updatable oracle, which in our case is the first one in the list
-        // therefore, the first oracle will be updated but the second will not
-        relayer.check();
-
-        // Update should be the first called function
-        MockProvider.CallData memory cd1 = oracle1.getCallData(0);
-        assertTrue(cd1.functionSelector == IOracle.update.selector);
-
-        // No function calls for our second oracle
-        MockProvider.CallData memory cd2 = oracle2.getCallData(0);
-        assertTrue(cd2.functionSelector == bytes4(0));
-    }
-
-    function test_check_returnsFalseAfterExecute() public {
-        bool checkBeforeUpdate = relayer.check();
-        assertTrue(checkBeforeUpdate);
-
-        relayer.execute();
-
-        bool checkAfterUpdate = relayer.check();
-        assertTrue(checkAfterUpdate == false);
-    }
-
     function test_executeCalls_updateOnAllOracles() public {
         MockProvider oracle2 = new MockProvider();
         // Set the value returned by the Oracle.
         oracle2.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            true
+        );
+        oracle2.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(int256(100 * 10**18), true)
+                data: abi.encode(oracle1InitialValue, true)
             }),
             false
         );
@@ -397,6 +355,11 @@ contract RelayerTest is DSTest {
             MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             false
         );
+        spotPriceOracle.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
 
         // Add oracle with rate id
         spotPriceRelayer.oracleAdd(
@@ -444,6 +407,11 @@ contract RelayerTest is DSTest {
             MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             false
         );
+        localOracle.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
 
         // Add oracle with a threshold percentage
         localRelayer.oracleAdd(
@@ -475,9 +443,6 @@ contract RelayerTest is DSTest {
             }),
             false
         );
-
-        // Relayer should not need to update values since it's below the thresold
-        assertTrue(localRelayer.check() == false, "Should not update values");
 
         // Execute the relayer
         localRelayer.execute();
@@ -520,6 +485,11 @@ contract RelayerTest is DSTest {
             MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             false
         );
+        localOracle.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
+            false
+        );
 
         // Add oracle with a thresold percentage
         localRelayer.oracleAdd(
@@ -552,9 +522,6 @@ contract RelayerTest is DSTest {
             false
         );
 
-        // Relayer should need to update values since it's above the thresold
-        assertTrue(localRelayer.check() == true, "Should update values");
-
         // Execute the relayer
         localRelayer.execute();
 
@@ -566,28 +533,85 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function test_execute_onlyAuthorizedUsersCanCall() public {}
+    function test_execute_NonAuthorizedUserCanNotCall_executeWithRevert()
+        public
+    {
+        Caller user = new Caller();
+
+        // A non permissioned user should not be able to call this
+        bool ok;
+        (ok, ) = user.externalCall(
+            address(relayer),
+            abi.encodeWithSelector(relayer.executeWithRevert.selector)
+        );
+        assertTrue(
+            ok == false,
+            "Non permissioned user should not be able to call executeWithRevert"
+        );
+    }
+
+    function test_execute_AuthorizedUserCanCall_executeWithRevert() public {
+        Caller user = new Caller();
+
+        // Give permission to the user
+        relayer.allowCaller(relayer.executeWithRevert.selector, address(user));
+
+        // A permissioned user should be able to call this
+        bool ok;
+        (ok, ) = user.externalCall(
+            address(relayer),
+            abi.encodeWithSelector(relayer.executeWithRevert.selector)
+        );
+        assertTrue(
+            ok,
+            "Permissioned user should be able to call executeWithRevert"
+        );
+    }
 
     function test_executeWithRevert() public {
         // Call should not revert
         relayer.executeWithRevert();
     }
 
-    function test_executeWithRevert_checkWillReturnFalseAfter() public {
-        // Call should not revert because check will return true
-        relayer.executeWithRevert();
+    function test_execute_ReturnsTrue_WhenAtLeastOneOracleIsUpdated() public {
+        bool executed;
 
-        assertTrue(
-            relayer.check() == false,
-            "Check should return false after executeWithRevert was called"
-        );
+        executed = relayer.execute();
+
+        assertTrue(executed, "The relayer should return true");
     }
 
-    function testFail_executeWithRevert_failsWhenCheckReturnsFalse() public {
-        // Update oracles and rates
-        relayer.execute();
+    function test_execute_ReturnsFalse_WhenNoOracleIsUpdated() public {
+        bool executed;
 
-        // Execute with revert should fail because check will return false
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(false)}),
+            false
+        );
+
+        executed = relayer.execute();
+
+        assertTrue(executed == false, "The relayer should return false");
+    }
+
+    function test_executeWithRevert_ShouldBeSuccessful_WhenAtLeastOneOracleIsUpdated()
+        public
+    {
+        // Call should not revert
+        relayer.executeWithRevert();
+    }
+
+    function testFail_executeWithRevert_ShouldNotBeSuccessful_WhenNoOracleIsUpdated()
+        public
+    {
+        oracle1.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(false)}),
+            false
+        );
+
+        // Call should not revert
         relayer.executeWithRevert();
     }
 }

@@ -32,7 +32,7 @@ contract AggregatorOracleTest is DSTest {
         );
         oracle.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({success: true, data: ""}),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
         );
         oracle.givenSelectorReturnResponse(
@@ -228,7 +228,7 @@ contract AggregatorOracleTest is DSTest {
         );
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({success: true, data: ""}),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
         );
         oracle1.givenSelectorReturnResponse(
@@ -250,7 +250,7 @@ contract AggregatorOracleTest is DSTest {
         );
         oracle2.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({success: true, data: ""}),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
         );
         oracle2.givenSelectorReturnResponse(
@@ -312,7 +312,7 @@ contract AggregatorOracleTest is DSTest {
 
         aggregatorOracle.allowCaller(aggregatorOracle.ANY_SIG(), address(user));
 
-        // Should fail trying to get value
+        // Should not fail on update
         bool success;
         (success, ) = user.externalCall(
             address(aggregatorOracle),
@@ -340,7 +340,7 @@ contract AggregatorOracleTest is DSTest {
         );
         localOracle.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({success: true, data: ""}),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
         );
         localOracle.givenSelectorReturnResponse(
@@ -406,7 +406,7 @@ contract AggregatorOracleTest is DSTest {
         // update() succeeds
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({success: true, data: ""}),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
         );
         oracle1.givenQueryReturnResponse(
@@ -516,7 +516,7 @@ contract AggregatorOracleTest is DSTest {
         MockProvider oracle1 = new MockProvider();
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({success: true, data: ""}),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
         );
         // value() returns invalid value
@@ -556,4 +556,60 @@ contract AggregatorOracleTest is DSTest {
 
         assertEq(aggregatorOracle.requiredValidValues(), 1);
     }
+
+    function test_update_returnsTrue_WhenSuccessful() public {
+        bool updated;
+        updated = aggregatorOracle.update();
+
+        assertTrue(updated, "Should return `true` no successful update");
+    }
+
+    function test_update_retrurnsFalse_WhenOracleUpdateReturnsFalse() public {
+        // Make the oracle return false on update
+        oracle.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(false)}),
+            true
+        );
+
+        // Update should return false when oracle returns false
+        bool updated;
+        updated = aggregatorOracle.update();
+
+        assertTrue(
+            updated == false,
+            "Should return `true` no successful update"
+        );
+    }
+
+
+    function test_update_NonAuthorizedUserCanNotCall_update() public {
+        Caller user = new Caller();
+
+        // A non permissioned user should not be able to call
+        bool ok;
+        (ok, ) = user.externalCall(
+            address(aggregatorOracle),
+            abi.encodeWithSelector(aggregatorOracle.update.selector)
+        );
+        assertTrue(
+            ok == false,
+            "Non permissioned user should not be able to call update"
+        );
+    }  
+
+    function test_update_AuthorizedUserCanCall_update() public {
+        Caller user = new Caller();
+
+        // Give permission to the usre
+        aggregatorOracle.allowCaller(aggregatorOracle.update.selector, address(user));
+
+        // A non permissioned user should not be able to call
+        bool ok;
+        (ok, ) = user.externalCall(
+            address(aggregatorOracle),
+            abi.encodeWithSelector(aggregatorOracle.update.selector)
+        );
+        assertTrue(ok, "Permissioned user should be able to call update");
+    }      
 }

@@ -9,6 +9,9 @@ abstract contract Oracle is Pausable, IOracle {
     /// @notice Emitted when alpha value is invalid
     error Oracle__constructor_alphaInvalid(int256 alpha);
 
+    /// @notice Emitted when a method is reentered
+    error Oracle__nonReentrant();
+
     /// ======== Events ======== ///
 
     event ValueInvalid();
@@ -34,6 +37,27 @@ abstract contract Oracle is Pausable, IOracle {
     // current EMA value and its validity
     int256 private _currentValue;
     bool private _validReturnedValue;
+
+    // reentrancy guard flag
+    uint256 private _reentrantGuard = 1;
+
+    /// ======== Modifiers ======== ///
+
+    modifier nonReentrant() {
+        // Check if the guard is set
+        if (_reentrantGuard != 1) {
+            revert Oracle__nonReentrant();
+        }
+
+        // Set the guard
+        _reentrantGuard = 2;
+
+        // Allow execution
+        _;
+
+        // Reset the guard
+        _reentrantGuard = 1;
+    }
 
     constructor(
         uint256 timeUpdateWindow_,
@@ -70,11 +94,17 @@ abstract contract Oracle is Pausable, IOracle {
 
     function getValue() external virtual returns (int256);
 
-    function update() public override(IOracle) checkCaller {
+    function update()
+        public
+        override(IOracle)
+        checkCaller
+        nonReentrant
+        returns (bool)
+    {
         // Not enough time has passed since the last update
         if (lastTimestamp + timeUpdateWindow > block.timestamp) {
             // Exit early if no update is needed
-            return;
+            return false;
         }
 
         // Oracle update should not fail even if the value provider fails to return a value
@@ -103,12 +133,16 @@ abstract contract Oracle is Pausable, IOracle {
             _validReturnedValue = true;
 
             emit ValueUpdated(_currentValue, nextValue);
+
+            return true;
         } catch {
             // When a value provider fails, we update the valid flag which will
             // invalidate the value instantly
             _validReturnedValue = false;
             emit ValueInvalid();
         }
+
+        return false;
     }
 
     function pause() public checkCaller {

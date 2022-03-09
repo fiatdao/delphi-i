@@ -41,8 +41,9 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
 
     event OracleAdded(address oracleAddress);
     event OracleRemoved(address oracleAddress);
-    event OracleUpdated(bool success, address oracleAddress);
-    event OracleValue(int256 value, bool valid);
+    event OracleUpdated(address oracleAddress);
+    event OracleUpdateFailed(address oracleAddress);
+    event OracleValue(address oracleAddress, int256 value, bool valid);
     event OracleValueFailed(address oracleAddress);
     event AggregatedValue(int256 value, uint256 validValues);
     event SetParam(bytes32 param, uint256 value);
@@ -142,7 +143,7 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
     }
 
     /// @notice Update values from oracles and return aggregated value
-    function update() public override(IOracle) checkCaller {
+    function update() public override(IOracle) checkCaller returns (bool) {
         // Call all oracles to update and get values
         uint256 oracleLength = _oracles.length();
         int256[] memory values = new int256[](oracleLength);
@@ -150,12 +151,21 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
         // Count how many oracles have a valid value
         uint256 validValues = 0;
 
+        // Save a flag if at least one oracle updated successfully
+        bool updated = false;
+
         // Update each oracle and get its value
         for (uint256 i = 0; i < oracleLength; i++) {
             IOracle oracle = IOracle(_oracles.at(i));
 
-            try oracle.update() {
-                emit OracleUpdated(true, address(oracle));
+            try oracle.update() returns (bool localUpdated) {
+                emit OracleUpdated(address(oracle));
+
+                // If at least one oracle updated successfully, set the flag
+                if (localUpdated) {
+                    updated = true;
+                }
+
                 try oracle.value() returns (
                     int256 returnedValue,
                     bool isValid
@@ -167,13 +177,13 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
                         // Increase count of valid values
                         validValues++;
                     }
-                    emit OracleValue(returnedValue, isValid);
+                    emit OracleValue(address(oracle), returnedValue, isValid);
                 } catch {
                     emit OracleValueFailed(address(oracle));
                     continue;
                 }
             } catch {
-                emit OracleUpdated(false, address(oracle));
+                emit OracleUpdateFailed(address(oracle));
                 continue;
             }
         }
@@ -185,6 +195,8 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
         _aggregatedValidValues = validValues;
 
         emit AggregatedValue(_aggregatedValue, validValues);
+
+        return updated;
     }
 
     /// @notice Returns the aggregated value
