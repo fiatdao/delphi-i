@@ -94,11 +94,11 @@ abstract contract Oracle is Pausable, IOracle {
 
     function getValue() external virtual returns (int256);
 
-    function update() public override(IOracle) nonReentrant {
+    function update() public override(IOracle) nonReentrant returns (bool) {
         // Not enough time has passed since the last update
         if (lastTimestamp + timeUpdateWindow > block.timestamp) {
             // Exit early if no update is needed
-            return;
+            return false;
         }
 
         // Oracle update should not fail even if the value provider fails to return a value
@@ -127,12 +127,16 @@ abstract contract Oracle is Pausable, IOracle {
             _validReturnedValue = true;
 
             emit ValueUpdated(_currentValue, nextValue);
+
+            return true;
         } catch {
             // When a value provider fails, we update the valid flag which will
             // invalidate the value instantly
             _validReturnedValue = false;
             emit ValueInvalid();
         }
+
+        return false;
     }
 
     function pause() public checkCaller {
