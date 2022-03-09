@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added StaticRelayer contract which is used to update a pre-determined rate for a predefined token id to Collybus once and only once
 
 ### Changed
 

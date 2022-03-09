@@ -6,20 +6,20 @@ import "ds-test/test.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import {FactoryChainlinkValueProvider} from "src/factory/FactoryChainlinkValueProvider.sol";
+import {ChainlinkValueProviderFactory} from "src/factory/ChainlinkValueProviderFactory.sol";
 
 import {ChainLinkValueProvider} from "src/oracle_implementations/spot_price/Chainlink/ChainLinkValueProvider.sol";
 import {IChainlinkAggregatorV3Interface} from "src/oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
 
-contract FactoryChainlinkValueProviderTest is DSTest {
+contract ChainlinkValueProviderFactoryTest is DSTest {
     uint256 private _oracleUpdateWindow;
     uint256 private _oracleMaxValidTime;
     int256 private _oracleAlpha = 1;
 
-    FactoryChainlinkValueProvider private _factory;
+    ChainlinkValueProviderFactory private _factory;
 
     function setUp() public {
-        _factory = new FactoryChainlinkValueProvider();
+        _factory = new ChainlinkValueProviderFactory();
     }
 
     function test_deploy() public {
