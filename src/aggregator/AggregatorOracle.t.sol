@@ -31,7 +31,7 @@ contract AggregatorOracleTest is DSTest {
         );
         oracle.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({success: true, data: ""}),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
         );
         aggregatorOracle.oracleAdd(address(oracle));
@@ -198,7 +198,7 @@ contract AggregatorOracleTest is DSTest {
         );
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({success: true, data: ""}),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
         );
         aggregatorOracle.oracleAdd(address(oracle1));
@@ -215,7 +215,7 @@ contract AggregatorOracleTest is DSTest {
         );
         oracle2.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({success: true, data: ""}),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
         );
         aggregatorOracle.oracleAdd(address(oracle2));
@@ -270,7 +270,7 @@ contract AggregatorOracleTest is DSTest {
         // Create user
         Caller user = new Caller();
 
-        // Should fail trying to get value
+        // Should not fail on update
         bool success;
         (success, ) = user.externalCall(
             address(aggregatorOracle),
@@ -298,7 +298,7 @@ contract AggregatorOracleTest is DSTest {
         );
         localOracle.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({success: true, data: ""}),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
         );
 
@@ -349,7 +349,7 @@ contract AggregatorOracleTest is DSTest {
         // update() succeeds
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({success: true, data: ""}),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
         );
         // value() fails
@@ -455,7 +455,7 @@ contract AggregatorOracleTest is DSTest {
         MockProvider oracle1 = new MockProvider();
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
-            MockProvider.ReturnData({success: true, data: ""}),
+            MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             true
         );
         // value() returns invalid value
@@ -489,5 +489,30 @@ contract AggregatorOracleTest is DSTest {
         aggregatorOracle.setParam("requiredValidValues", 1);
 
         assertEq(aggregatorOracle.requiredValidValues(), 1);
+    }
+
+    function test_update_returnsTrue_WhenSuccessful() public {
+        bool updated;
+        updated = aggregatorOracle.update();
+
+        assertTrue(updated, "Should return `true` no successful update");
+    }
+
+    function test_update_retrurnsFalse_WhenOracleUpdateReturnsFalse() public {
+        // Make the oracle return false on update
+        oracle.givenQueryReturnResponse(
+            abi.encodePacked(Oracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(false)}),
+            true
+        );
+
+        // Update should return false when oracle returns false
+        bool updated;
+        updated = aggregatorOracle.update();
+
+        assertTrue(
+            updated == false,
+            "Should return `true` no successful update"
+        );
     }
 }
