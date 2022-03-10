@@ -15,6 +15,8 @@ interface IChainlinkValueProviderFactory {
 }
 
 contract ChainlinkValueProviderFactory is IChainlinkValueProviderFactory {
+    event ChainlinkValueProviderDeployed(address oracleAddress);
+
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
@@ -30,10 +32,18 @@ contract ChainlinkValueProviderFactory is IChainlinkValueProviderFactory {
                 chainlinkAggregatorAddress_
             );
 
+        // Transfer permissions to the intended owner
         chainlinkValueProvider.allowCaller(
             chainlinkValueProvider.ANY_SIG(),
             msg.sender
         );
+
+        chainlinkValueProvider.blockCaller(
+            chainlinkValueProvider.ANY_SIG(),
+            address(this)
+        );
+
+        emit ChainlinkValueProviderDeployed(address(chainlinkValueProvider));
         return address(chainlinkValueProvider);
     }
 }
