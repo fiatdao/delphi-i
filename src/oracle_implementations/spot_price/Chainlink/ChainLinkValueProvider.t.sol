@@ -3,12 +3,12 @@ pragma solidity ^0.8.0;
 
 import "ds-test/test.sol";
 
-import "src/test/utils/Caller.sol";
-import {Hevm} from "src/test/utils/Hevm.sol";
+import "../../../test/utils/Caller.sol";
+import {Hevm} from "../../../test/utils/Hevm.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 
-import {IChainlinkAggregatorV3Interface} from "src/oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
-import {ChainLinkValueProvider} from "src/oracle_implementations/spot_price/Chainlink/ChainLinkValueProvider.sol";
+import {IChainlinkAggregatorV3Interface} from "./ChainlinkAggregatorV3Interface.sol";
+import {ChainLinkValueProvider} from "./ChainLinkValueProvider.sol";
 
 contract ChainLinkValueProviderTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);

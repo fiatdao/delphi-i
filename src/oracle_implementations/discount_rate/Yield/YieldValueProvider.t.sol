@@ -2,10 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "ds-test/test.sol";
-import "src/test/utils/Caller.sol";
-
-import {Convert} from "src/oracle_implementations/discount_rate/utils/Convert.sol";
-import {Hevm} from "src/test/utils/Hevm.sol";
+import "../../../test/utils/Caller.sol";
+import {Hevm} from "../../../test/utils/Hevm.sol";
+import {Convert} from "../utils/Convert.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {YieldValueProvider} from "./YieldValueProvider.sol";
 import {IYieldPool} from "./IYieldPool.sol";

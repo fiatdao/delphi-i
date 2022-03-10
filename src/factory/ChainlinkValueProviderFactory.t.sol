@@ -6,10 +6,10 @@ import "ds-test/test.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import {ChainlinkValueProviderFactory} from "src/factory/ChainlinkValueProviderFactory.sol";
+import {ChainlinkValueProviderFactory} from "./ChainlinkValueProviderFactory.sol";
 
-import {ChainLinkValueProvider} from "src/oracle_implementations/spot_price/Chainlink/ChainLinkValueProvider.sol";
-import {IChainlinkAggregatorV3Interface} from "src/oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
+import {ChainLinkValueProvider} from "../oracle_implementations/spot_price/Chainlink/ChainLinkValueProvider.sol";
+import {IChainlinkAggregatorV3Interface} from "../oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
 
 contract ChainlinkValueProviderFactoryTest is DSTest {
     uint256 private _oracleUpdateWindow;

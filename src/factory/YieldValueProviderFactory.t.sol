@@ -2,14 +2,11 @@
 pragma solidity ^0.8.0;
 
 import "ds-test/test.sol";
-
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-import {YieldValueProviderFactory} from "src/factory/YieldValueProviderFactory.sol";
-
-import {IYieldPool} from "src/oracle_implementations/discount_rate/Yield/IYieldPool.sol";
-import {YieldValueProvider} from "src/oracle_implementations/discount_rate/Yield/YieldValueProvider.sol";
+import {YieldValueProviderFactory} from "./YieldValueProviderFactory.sol";
+import {IYieldPool} from "../oracle_implementations/discount_rate/Yield/IYieldPool.sol";
+import {YieldValueProvider} from "../oracle_implementations/discount_rate/Yield/YieldValueProvider.sol";
 
 contract YieldValueProviderFactoryTest is DSTest {
     uint256 private _oracleUpdateWindow;

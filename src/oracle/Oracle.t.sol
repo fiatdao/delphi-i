@@ -2,10 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "ds-test/test.sol";
-
-import "src/test/utils/Caller.sol";
-import {Hevm} from "src/test/utils/Hevm.sol";
-
+import "../test/utils/Caller.sol";
+import {Hevm} from "../test/utils/Hevm.sol";
 import {Oracle} from "./Oracle.sol";
 
 contract OracleImplementation is Oracle {

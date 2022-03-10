@@ -2,31 +2,30 @@
 pragma solidity ^0.8.0;
 
 import "ds-test/test.sol";
-import {Hevm} from "src/test/utils/Hevm.sol";
+import {Hevm} from "../test/utils/Hevm.sol";
 import {Caller} from "src/test/utils/Caller.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import "src/factory/Factory.sol";
-import {Guarded} from "src/guarded/Guarded.sol";
-import {Oracle} from "src/oracle/Oracle.sol";
-import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
+import "./Factory.sol";
+import {Guarded} from "../guarded/Guarded.sol";
+import {Oracle} from "../oracle/Oracle.sol";
 
+import {AggregatorOracle} from "../aggregator/AggregatorOracle.sol";
 // Contract Deployers and dependencies
-import {ElementFiValueProviderFactory} from "src/factory/ElementFiValueProviderFactory.sol";
-import {NotionalFinanceValueProviderFactory} from "src/factory/NotionalFinanceValueProviderFactory.sol";
-import {YieldValueProviderFactory} from "src/factory/YieldValueProviderFactory.sol";
-import {ChainlinkValueProviderFactory} from "src/factory/ChainlinkValueProviderFactory.sol";
-import {AggregatorOracleFactory} from "src/factory/AggregatorOracleFactory.sol";
-import {RelayerFactory} from "src/factory/RelayerFactory.sol";
-import {ChainlinkMockProvider} from "src/deploy/ChainlinkMockProvider.sol";
-
-import {IYieldPool} from "src/oracle_implementations/discount_rate/Yield/IYieldPool.sol";
-import {IChainlinkAggregatorV3Interface} from "src/oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
+import {ElementFiValueProviderFactory} from "./ElementFiValueProviderFactory.sol";
+import {NotionalFinanceValueProviderFactory} from "./NotionalFinanceValueProviderFactory.sol";
+import {YieldValueProviderFactory} from "./YieldValueProviderFactory.sol";
+import {ChainlinkValueProviderFactory} from "./ChainlinkValueProviderFactory.sol";
+import {AggregatorOracleFactory} from "./AggregatorOracleFactory.sol";
+import {RelayerFactory} from "./RelayerFactory.sol";
+import {ChainlinkMockProvider} from "../deploy/ChainlinkMockProvider.sol";
+import {IYieldPool} from "../oracle_implementations/discount_rate/Yield/IYieldPool.sol";
+import {IChainlinkAggregatorV3Interface} from "../oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
 
 // Relayers
-import {IRelayer} from "src/relayer/IRelayer.sol";
-import {Relayer} from "src/relayer/Relayer.sol";
+import {IRelayer} from "../relayer/IRelayer.sol";
+import {Relayer} from "../relayer/Relayer.sol";
 
 contract FactoryTest is DSTest {
     error FactoryTest__invalidDiscountRateAggregatorType(uint256 valueType);

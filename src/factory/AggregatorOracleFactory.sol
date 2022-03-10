@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
+import {AggregatorOracle} from "../aggregator/AggregatorOracle.sol";
 
 interface IAggregatorOracleFactory {
     function create() external returns (address);
