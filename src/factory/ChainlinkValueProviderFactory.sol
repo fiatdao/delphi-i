@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {ChainLinkValueProvider} from "src/oracle_implementations/spot_price/Chainlink/ChainLinkValueProvider.sol";
+import {ChainLinkValueProvider} from "../oracle_implementations/spot_price/Chainlink/ChainLinkValueProvider.sol";
 
 interface IChainlinkValueProviderFactory {
     function create(

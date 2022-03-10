@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {Convert} from "src/oracle_implementations/discount_rate/utils/Convert.sol";
-import {IChainlinkAggregatorV3Interface} from "src/oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
-import {Oracle} from "src/oracle/Oracle.sol";
+import {Oracle} from "../../../oracle/Oracle.sol";
+import {Convert} from "../../discount_rate/utils/Convert.sol";
+import {IChainlinkAggregatorV3Interface} from "./ChainlinkAggregatorV3Interface.sol";
 
 contract ChainLinkValueProvider is Oracle, Convert {
     uint8 public immutable underlierDecimals;

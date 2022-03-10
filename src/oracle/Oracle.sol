@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {IOracle} from "src/oracle/IOracle.sol";
+import {IOracle} from "./IOracle.sol";
 
-import {Pausable} from "src/pausable/Pausable.sol";
+import {Pausable} from "../pausable/Pausable.sol";
 
 abstract contract Oracle is Pausable, IOracle {
     /// @notice Emitted when alpha value is invalid
