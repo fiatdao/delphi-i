@@ -76,10 +76,10 @@ contract Relayer is Guarded, IRelayer {
         return _oracleList.length();
     }
 
-    /// @notice         Returns the address of an oracle at index
-    /// @dev            Reverts if the index is out of bounds
-    /// @param index_   The internal index of the oracle
-    /// @return         Returns the address pf the oracle
+    /// @notice Returns the address of an oracle at index
+    /// @dev Reverts if the index is out of bounds
+    /// @param index_ The internal index of the oracle
+    /// @return Returns the address pf the oracle
     function oracleAt(uint256 index_)
         external
         view
@@ -89,9 +89,9 @@ contract Relayer is Guarded, IRelayer {
         return _oracleList.at(index_);
     }
 
-    /// @notice         Checks whether an oracle is registered.
-    /// @param oracle_  The address of the oracle.
-    /// @return         Returns 'true' if the oracle is registered.
+    /// @notice Checks whether an oracle is registered.
+    /// @param oracle_ The address of the oracle.
+    /// @return Returns 'true' if the oracle is registered.
     function oracleExists(address oracle_)
         public
         view
@@ -101,12 +101,12 @@ contract Relayer is Guarded, IRelayer {
         return _oraclesData[oracle_].exists;
     }
 
-    /// @notice                                 Registers an oracle to a token id and set the minimum threshold delta value
-    ///                                         calculate the annual rate.
-    /// @param oracle_                          The address of the oracle.
-    /// @param encodedTokenId_                  The unique token id for which this oracle will update rate values.
-    /// @param minimumPercentageDeltaValue_     The minimum value delta threshold needed in order to push values to the Collybus
-    /// @dev                                    Reverts if the oracle is already registered or if the rate id is taken by another oracle.
+    /// @notice Registers an oracle to a token id and set the minimum threshold delta value
+    /// calculate the annual rate.
+    /// @param oracle_ The address of the oracle.
+    /// @param encodedTokenId_ The unique token id for which this oracle will update rate values.
+    /// @param minimumPercentageDeltaValue_ The minimum value delta threshold needed in order to push values to the Collybus
+    /// @dev Reverts if the oracle is already registered or if the rate id is taken by another oracle.
     function oracleAdd(
         address oracle_,
         bytes32 encodedTokenId_,
@@ -150,9 +150,9 @@ contract Relayer is Guarded, IRelayer {
         emit OracleAdded(oracle_);
     }
 
-    /// @notice         Unregisters an oracle.
-    /// @param oracle_  The address of the oracle.
-    /// @dev            Reverts if the oracle is not registered
+    /// @notice Unregisters an oracle.
+    /// @param oracle_ The address of the oracle.
+    /// @dev Reverts if the oracle is not registered
     function oracleRemove(address oracle_)
         public
         override(IRelayer)
@@ -191,8 +191,8 @@ contract Relayer is Guarded, IRelayer {
     }
 
     /// @notice Iterates and updates all the oracles and pushes the updated data to Collybus for the
-    ///         oracles that have delta changes in value bigger than the minimum threshold values.
-    /// @dev    Oracles that return invalid values are skipped.
+    /// oracles that have delta changes in value bigger than the minimum threshold values.
+    /// @dev Oracles that return invalid values are skipped.
     function execute() public override(IRelayer) checkCaller returns (bool) {
         bool updated;
 
@@ -255,20 +255,20 @@ contract Relayer is Guarded, IRelayer {
         }
     }
 
-    /// @notice             Returns true if the percentage difference between the two values is bigger than the `percentage`
-    /// @param baseValue    The value that the percentage is based on
-    /// @param newValue     The new value
-    /// @param percentage   The percentage threshold value (100% = 100_00, 50% = 50_00, etc)
+    /// @notice Returns true if the percentage difference between the two values is bigger than the `percentage`
+    /// @param baseValue_ The value that the percentage is based on
+    /// @param newValue_ The new value
+    /// @param percentage_ The percentage threshold value (100% = 100_00, 50% = 50_00, etc)
     function checkDeviation(
-        int256 baseValue,
-        int256 newValue,
-        uint256 percentage
+        int256 baseValue_,
+        int256 newValue_,
+        uint256 percentage_
     ) public pure returns (bool) {
-        int256 deviation = (baseValue * int256(percentage)) / 100_00;
+        int256 deviation = (baseValue_ * int256(percentage_)) / 100_00;
 
         if (
-            baseValue + deviation <= newValue ||
-            baseValue - deviation >= newValue
+            baseValue_ + deviation <= newValue_ ||
+            baseValue_ - deviation >= newValue_
         ) return true;
 
         return false;

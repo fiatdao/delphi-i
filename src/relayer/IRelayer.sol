@@ -23,5 +23,5 @@ interface IRelayer {
 
     function oracleExists(address oracle_) external view returns (bool);
 
-    function oracleAt(uint256 index) external view returns (address);
+    function oracleAt(uint256 index_) external view returns (address);
 }
