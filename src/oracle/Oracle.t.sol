@@ -108,14 +108,14 @@ contract OracleTest is DSTest {
         assertTrue(oracle.alpha() == alpha, "Invalid oracle alpha");
     }
 
-    function test_update_Updates_timestamp() public {
+    function test_update_updates_timestamp() public {
         oracle.update();
 
         // Check if the timestamp was updated
         assertEq(oracle.lastTimestamp(), block.timestamp);
     }
 
-    function test_update_ShouldNotUpdatePreviousValues_IfNotEnoughTimePassed()
+    function test_update_shouldNotUpdatePreviousValues_ifNotEnoughTimePassed()
         public
     {
         // Get current timestamp
@@ -138,7 +138,7 @@ contract OracleTest is DSTest {
         assertEq(oracle.lastTimestamp(), blockTimestamp);
     }
 
-    function test_update_ShouldUpdatePreviousValues_IfEnoughTimePassed()
+    function test_update_shouldUpdatePreviousValues_ifEnoughTimePassed()
         public
     {
         // Get current timestamp
@@ -155,7 +155,7 @@ contract OracleTest is DSTest {
         assertEq(oracle.lastTimestamp(), blockTimestamp + timeUpdateWindow);
     }
 
-    function test_update_UpdateDoesNotChangeTheValue_InTheSameWindow() public {
+    function test_update_updateDoesNotChangeTheValue_inTheSameWindow() public {
         oracle.setValue(int256(100 * 10**18));
 
         // Update the oracle
@@ -183,18 +183,18 @@ contract OracleTest is DSTest {
         assertEq(nextValue2, 100 * 10**18);
     }
 
-    function test_update_ShouldNotFailWhenValueProviderFails() public {
+    function test_update_shouldNotFail_whenValueProviderFails() public {
         oracle.setSuccess(false);
 
         // Update the oracle
         oracle.update();
     }
 
-    function test_value_ShouldBeInvalidAfterValueProviderFails() public {
+    function test_value_shouldBeInvalid_afterValueProviderFails() public {
         // We first successfully update the value to make sure the lastTimestamp is updated
         // After that, we wait for the required amount of time and try update the value again
         // The second update will fail and the value should be invalid because of the flag only.
-        // (time check is still corect because maxValidTime >= timeUpdateWindow)
+        // (time check is still correct because maxValidTime >= timeUpdateWindow)
 
         oracle.setValue(10**18);
 
@@ -213,7 +213,7 @@ contract OracleTest is DSTest {
         assertTrue(isValid == false);
     }
 
-    function test_value_ShouldBecomeValidAfterSuccesfullUpdate() public {
+    function test_value_shouldBecomeValid_afterSuccessfulUpdate() public {
         oracle.setSuccess(false);
 
         oracle.update();
@@ -229,7 +229,7 @@ contract OracleTest is DSTest {
         assertTrue(isValid2 == true);
     }
 
-    function test_update_Recalculates_MovingAverage() public {
+    function test_update_recalculates_movingAverage() public {
         // Set the value to 100
         oracle.setValue(100 * 10**18);
         // Update the oracle
@@ -278,13 +278,13 @@ contract OracleTest is DSTest {
         assertEq(nextValue3, 108 * 10**18);
     }
 
-    function test_ValueReturned_ShouldNotBeValid_IfNeverUpdated() public {
+    function test_valueReturned_shouldNotBeValid_ifNeverUpdated() public {
         // Initially the value should be considered stale
         (, bool valid) = oracle.value();
         assertTrue(valid == false);
     }
 
-    function test_ValueReturned_ShouldNotBeValid_IfNotUpdatedForTooLong()
+    function test_valueReturned_shouldNotBeValid_ifNotUpdatedForTooLong()
         public
     {
         // Set the value to 100
@@ -308,7 +308,7 @@ contract OracleTest is DSTest {
         assertTrue(valid2 == false);
     }
 
-    function test_ValueReturned_ShouldBeValid_IfJustUpdated() public {
+    function test_valueReturned_shouldBeValid_ifJustUpdated() public {
         // Update the oracle
         oracle.update();
 
@@ -317,7 +317,7 @@ contract OracleTest is DSTest {
         assertTrue(valid);
     }
 
-    function test_Paused_Stops_ReturnValue() public {
+    function test_paused_stops_returnValue() public {
         // Pause oracle
         oracle.pause();
 
@@ -334,7 +334,7 @@ contract OracleTest is DSTest {
         assertTrue(success == false, "value() should fail when paused");
     }
 
-    function test_Paused_DoesNotStop_Update() public {
+    function test_paused_doesNotStop_update() public {
         // Pause oracle
         oracle.pause();
 
@@ -354,7 +354,7 @@ contract OracleTest is DSTest {
         assertTrue(success, "update() should not fail when paused");
     }
 
-    function test_Reset_ResetsContract() public {
+    function test_reset_resetsContract() public {
         // Make sure there are some values in there
         oracle.update();
 
@@ -389,7 +389,7 @@ contract OracleTest is DSTest {
         assertEq(oracle.nextValue(), 0);
     }
 
-    function test_Reset_ShouldBePossible_IfPaused() public {
+    function test_reset_shouldBePossible_ifPaused() public {
         // Pause oracle
         oracle.pause();
 
@@ -397,7 +397,7 @@ contract OracleTest is DSTest {
         oracle.reset();
     }
 
-    function testFail_Reset_ShouldNotBePossible_IfNotPaused() public {
+    function testFail_reset_shouldNotBePossible_ifNotPaused() public {
         // Oracle is not paused
         assertTrue(oracle.paused() == false);
 
@@ -405,7 +405,7 @@ contract OracleTest is DSTest {
         oracle.reset();
     }
 
-    function test_AuthorizedUser_ShouldBeAble_ToReset() public {
+    function test_authorizedUser_shouldBeAble_toReset() public {
         // Create user
         Caller user = new Caller();
 
@@ -428,7 +428,7 @@ contract OracleTest is DSTest {
         );
     }
 
-    function test_NonAuthorizedUser_ShouldNotBeAble_ToReset() public {
+    function test_nonAuthorizedUser_shouldNotBeAble_toReset() public {
         // Create user
         // Do not authorize user
         Caller user = new Caller();
@@ -473,16 +473,14 @@ contract OracleTest is DSTest {
         assertTrue(oracleReenter.reentered());
     }
 
-    function test_update_returnsTrue_WhenSuccessful() public {
+    function test_update_returnsTrue_whenSuccessful() public {
         bool updated;
         updated = oracle.update();
 
         assertTrue(updated, "Should return `true` no successful update");
     }
 
-    function test_update_retrurnsFalse_WhenUpdateDoesNotChangeAnything()
-        public
-    {
+    function test_update_returnsFalse_whenUpdateDoesNotChangeAnything() public {
         bool updated;
         updated = oracle.update();
 
@@ -495,7 +493,7 @@ contract OracleTest is DSTest {
         );
     }
 
-    function test_update_NonAuthorizedUserCanNotCall_update() public {
+    function test_update_nonAuthorizedUserCanNotCall_update() public {
         Caller user = new Caller();
 
         // A non permissioned user should not be able to call
@@ -510,10 +508,10 @@ contract OracleTest is DSTest {
         );
     }
 
-    function test_update_AuthorizedUserCanCall_update() public {
+    function test_update_authorizedUserCanCall_update() public {
         Caller user = new Caller();
 
-        // Give permission to the usre
+        // Give permission to the user
         oracle.allowCaller(oracle.update.selector, address(user));
 
         // A non permissioned user should not be able to call
