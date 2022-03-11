@@ -19,21 +19,21 @@ contract YieldValueProviderTest is DSTest, Convert {
     // Values take from contract
     // https://etherscan.io/token/0x3771c99c087a81df4633b50d8b149afaa83e3c9e
     // at block 13911954
-    uint256 internal maturity = 1648177200;
-    int256 internal timeScale = 3168808781; // 58454204609 in 64.64 format
-    uint112 internal cumulativeBalancesRatio =
+    uint256 private _maturity = 1648177200;
+    int256 private _timeScale = 3168808781; // 58454204609 in 64.64 format
+    uint112 private _cumulativeBalancesRatio =
         5141501570599198210548627855691773;
-    uint32 internal blockTime = 1639432842;
+    uint32 private _blockTime = 1639432842;
 
     // Default oracle parameters
-    uint256 internal _timeUpdateWindow = 100; // seconds
-    uint256 internal _maxValidTime = 300;
-    int256 internal _alpha = 2 * 10**17; // 0.2
+    uint256 private _timeUpdateWindow = 100; // seconds
+    uint256 private _maxValidTime = 300;
+    int256 private _alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
         mockValueProvider = new MockProvider();
 
-        setMockValues(mockValueProvider, cumulativeBalancesRatio, blockTime);
+        setMockValues(mockValueProvider, _cumulativeBalancesRatio, _blockTime);
 
         yieldVP = new YieldValueProvider(
             // Oracle arguments
@@ -45,8 +45,8 @@ contract YieldValueProviderTest is DSTest, Convert {
             _alpha,
             // Yield arguments
             address(mockValueProvider),
-            uint256(maturity),
-            int256(timeScale)
+            uint256(_maturity),
+            int256(_timeScale)
         );
     }
 
@@ -91,17 +91,17 @@ contract YieldValueProviderTest is DSTest, Convert {
     }
 
     function test_check_maturity() public {
-        assertEq(yieldVP.maturity(), maturity, "Invalid maturity date");
+        assertEq(yieldVP.maturity(), _maturity, "Invalid maturity date");
     }
 
     function test_check_timeScale() public {
-        assertEq(yieldVP.timeScale(), timeScale, "Invalid time scale value");
+        assertEq(yieldVP.timeScale(), _timeScale, "Invalid time scale value");
     }
 
     function test_check_cumulativeBalanceRatioLast() public {
         assertEq(
             yieldVP.cumulativeBalanceRatioLast(),
-            uconvert(cumulativeBalancesRatio, 27, 18),
+            uconvert(_cumulativeBalancesRatio, 27, 18),
             "Invalid cumulativeBalanceRatioLast"
         );
     }
@@ -109,7 +109,7 @@ contract YieldValueProviderTest is DSTest, Convert {
     function test_check_blockTimestampLast() public {
         assertEq(
             yieldVP.blockTimestampLast(),
-            blockTime,
+            _blockTime,
             "Invalid blockTimestampLast"
         );
     }

@@ -20,14 +20,14 @@ contract YieldValueProvider is Oracle, Convert {
     uint256 public immutable maturity;
     int256 public immutable timeScale;
 
-    /// @notice                     Constructs the Value provider contracts with the needed Element data in order to
-    ///                             calculate the annual rate.
-    /// @param timeUpdateWindow_    Minimum time between updates of the value
-    /// @param maxValidTime_        Maximum time for which the value is valid
-    /// @param alpha_               Alpha parameter for EMA
-    /// @param poolAddress_         Address of the pool
-    /// @param maturity_            Expiration of the pool
-    /// @param timeScale_           Time scale used on this pool (i.e. 1/(timeStretch*secondsPerYear)) in 59x18 fixed point
+    /// @notice Constructs the Value provider contracts with the needed Element data in order to
+    /// calculate the annual rate.
+    /// @param timeUpdateWindow_ Minimum time between updates of the value
+    /// @param maxValidTime_ Maximum time for which the value is valid
+    /// @param alpha_ Alpha parameter for EMA
+    /// @param poolAddress_ Address of the pool
+    /// @param maturity_ Expiration of the pool
+    /// @param timeScale_ Time scale used on this pool (i.e. 1/(timeStretch*secondsPerYear)) in 59x18 fixed point
     constructor(
         // Oracle parameters
         uint256 timeUpdateWindow_,
