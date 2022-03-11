@@ -59,6 +59,8 @@ contract OracleReenter is Oracle {
             reentered = true;
             super.update();
         }
+
+        return 0;
     }
 }
 
