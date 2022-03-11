@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {Hevm} from "src/test/utils/Hevm.sol";
-import {DSTest} from "lib/ds-test/src/test.sol";
+import {Hevm} from "../test/utils/Hevm.sol";
+import {DSTest} from "ds-test/test.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
-import {Caller} from "src/test/utils/Caller.sol";
-import {Guarded} from "src/guarded/Guarded.sol";
-import {ICollybus} from "src/relayer/ICollybus.sol";
-import {Relayer} from "src/relayer/Relayer.sol";
-import {IRelayer} from "src/relayer/IRelayer.sol";
-import {IOracle} from "src/oracle/IOracle.sol";
+import {Caller} from "../test/utils/Caller.sol";
+import {Guarded} from "../guarded/Guarded.sol";
+import {ICollybus} from "./ICollybus.sol";
+import {Relayer} from "./Relayer.sol";
+import {IRelayer} from "./IRelayer.sol";
+import {IOracle} from "../oracle/IOracle.sol";
 
 contract TestCollybus is ICollybus {
     mapping(bytes32 => uint256) public valueForToken;

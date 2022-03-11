@@ -6,9 +6,9 @@ import "ds-test/test.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import {ElementFiValueProviderFactory} from "src/factory/ElementFiValueProviderFactory.sol";
+import {ElementFiValueProviderFactory} from "./ElementFiValueProviderFactory.sol";
 
-import {ElementFiValueProvider} from "src/oracle_implementations/discount_rate/ElementFi/ElementFiValueProvider.sol";
+import {ElementFiValueProvider} from "../oracle_implementations/discount_rate/ElementFi/ElementFiValueProvider.sol";
 
 contract ElementFiValueProviderFactoryTest is DSTest {
     uint256 private _oracleUpdateWindow;

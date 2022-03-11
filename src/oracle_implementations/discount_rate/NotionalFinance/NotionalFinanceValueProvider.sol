@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {Convert} from "src/oracle_implementations/discount_rate/utils/Convert.sol";
-import {INotionalView, MarketParameters} from "src/oracle_implementations/discount_rate/NotionalFinance/INotionalView.sol";
-import {Oracle} from "src/oracle/Oracle.sol";
-import "lib/prb-math/contracts/PRBMathSD59x18.sol";
+import {Convert} from "../utils/Convert.sol";
+import {INotionalView, MarketParameters} from "./INotionalView.sol";
+import {Oracle} from "../../../oracle/Oracle.sol";
+import "prb-math/contracts/PRBMathSD59x18.sol";
 
 contract NotionalFinanceValueProvider is Oracle, Convert {
     // @notice Emitted when trying to add pull a value for an expired pool

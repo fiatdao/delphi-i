@@ -2,15 +2,14 @@
 pragma solidity ^0.8.0;
 
 import "ds-test/test.sol";
-
-import "src/test/utils/Caller.sol";
-import "lib/prb-math/contracts/PRBMathSD59x18.sol";
-import {Hevm} from "src/test/utils/Hevm.sol";
+import "../../../test/utils/Caller.sol";
+import {Hevm} from "../../../test/utils/Hevm.sol";
+import "prb-math/contracts/PRBMathSD59x18.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ElementFiValueProvider} from "./ElementFiValueProvider.sol";
-import {IVault} from "src/oracle_implementations/discount_rate/ElementFi/IVault.sol";
+import {IVault} from "./IVault.sol";
 
 contract ElementFiValueProviderTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);

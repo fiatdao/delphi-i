@@ -3,11 +3,11 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {Oracle} from "src/oracle/Oracle.sol";
+import {Oracle} from "../../../oracle/Oracle.sol";
 import {IVault} from "./IVault.sol";
-import {Convert} from "src/oracle_implementations/discount_rate/utils/Convert.sol";
+import {Convert} from "../utils/Convert.sol";
 
-import "lib/prb-math/contracts/PRBMathSD59x18.sol";
+import "prb-math/contracts/PRBMathSD59x18.sol";
 
 contract ElementFiValueProvider is Oracle, Convert {
     // @notice Emitted when trying to add pull a value for an expired pool

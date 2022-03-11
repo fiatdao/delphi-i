@@ -5,9 +5,9 @@ import "ds-test/test.sol";
 
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 
-import {AggregatorOracleFactory} from "src/factory/AggregatorOracleFactory.sol";
+import {AggregatorOracleFactory} from "./AggregatorOracleFactory.sol";
 
-import {AggregatorOracle} from "src/aggregator/AggregatorOracle.sol";
+import {AggregatorOracle} from "../aggregator/AggregatorOracle.sol";
 
 contract AggregatorOracleFactoryTest is DSTest {
     AggregatorOracleFactory private _factory;

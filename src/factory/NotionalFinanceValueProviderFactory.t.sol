@@ -5,10 +5,8 @@ import "ds-test/test.sol";
 
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-import {NotionalFinanceValueProviderFactory} from "src/factory/NotionalFinanceValueProviderFactory.sol";
-
-import {NotionalFinanceValueProvider} from "src/oracle_implementations/discount_rate/NotionalFinance/NotionalFinanceValueProvider.sol";
+import {NotionalFinanceValueProviderFactory} from "./NotionalFinanceValueProviderFactory.sol";
+import {NotionalFinanceValueProvider} from "../oracle_implementations/discount_rate/NotionalFinance/NotionalFinanceValueProvider.sol";
 
 contract NotionalFinanceValueProviderFactoryTest is DSTest {
     uint256 private _oracleUpdateWindow;

@@ -1,21 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {IOracle} from "src/oracle/IOracle.sol";
-import {IAggregatorOracle} from "src/aggregator/IAggregatorOracle.sol";
-
+import {IOracle} from "../oracle/IOracle.sol";
+import {IAggregatorOracle} from "../aggregator/IAggregatorOracle.sol";
 // Contract Deployers
-import {IElementFiValueProviderFactory} from "src/factory/ElementFiValueProviderFactory.sol";
-import {INotionalFinanceValueProviderFactory} from "src/factory/NotionalFinanceValueProviderFactory.sol";
-import {IYieldValueProviderFactory} from "src/factory/YieldValueProviderFactory.sol";
-import {IChainlinkValueProviderFactory} from "src/factory/ChainlinkValueProviderFactory.sol";
-import {IAggregatorOracleFactory} from "src/factory/AggregatorOracleFactory.sol";
-import {IRelayerFactory} from "src/factory/RelayerFactory.sol";
-
-// Relayers
-import {IRelayer} from "src/relayer/IRelayer.sol";
-
-import {Guarded} from "src/guarded/Guarded.sol";
+import {IElementFiValueProviderFactory} from "./ElementFiValueProviderFactory.sol";
+import {INotionalFinanceValueProviderFactory} from "./NotionalFinanceValueProviderFactory.sol";
+import {IYieldValueProviderFactory} from "./YieldValueProviderFactory.sol";
+import {IChainlinkValueProviderFactory} from "./ChainlinkValueProviderFactory.sol";
+import {IAggregatorOracleFactory} from "./AggregatorOracleFactory.sol";
+import {IRelayerFactory} from "./RelayerFactory.sol";
+import {IRelayer} from "../relayer/IRelayer.sol";
+import {Guarded} from "../guarded/Guarded.sol";
 
 /// @notice Data structure that wraps data needed to deploy an Element Value Provider contract
 struct ElementVPData {

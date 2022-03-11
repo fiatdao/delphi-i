@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {IVault} from "src/oracle_implementations/discount_rate/ElementFi/IVault.sol";
-import {RelayerDeployData, AggregatorData, OracleData, ElementVPData, Factory} from "src/factory/Factory.sol";
+import {IVault} from "../oracle_implementations/discount_rate/ElementFi/IVault.sol";
+import {RelayerDeployData, AggregatorData, OracleData, ElementVPData, Factory} from "../factory/Factory.sol";
 
-import "lib/prb-math/contracts/PRBMathSD59x18.sol";
+import "prb-math/contracts/PRBMathSD59x18.sol";
 
 interface IConvergentCurvePool {
     function bond() external view returns (IERC20);

@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 import {DSTest} from "ds-test/test.sol";
 
-import {Caller} from "src/test/utils/Caller.sol";
+import {Caller} from "../test/utils/Caller.sol";
 
-import {Guarded} from "src/guarded/Guarded.sol";
+import {Guarded} from "./Guarded.sol";
 
 contract GuardedInstance is Guarded {
     constructor() Guarded() {
