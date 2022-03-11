@@ -47,35 +47,35 @@ abstract contract Guarded {
 
     /// @notice Grant the right to call method `sig` to `who`
     /// @dev Only the root user (granted `ANY_SIG`) is able to call this method
-    /// @param sig Method signature (4Byte)
-    /// @param who Address of who should be able to call `sig`
-    function allowCaller(bytes32 sig, address who) public callerIsRoot {
-        _canCall[sig][who] = true;
-        emit AllowCaller(sig, who);
+    /// @param sig_ Method signature (4Byte)
+    /// @param who_ Address of who should be able to call `sig`
+    function allowCaller(bytes32 sig_, address who_) public callerIsRoot {
+        _canCall[sig_][who_] = true;
+        emit AllowCaller(sig_, who_);
     }
 
     /// @notice Revoke the right to call method `sig` from `who`
     /// @dev Only the root user (granted `ANY_SIG`) is able to call this method
-    /// @param sig Method signature (4Byte)
-    /// @param who Address of who should not be able to call `sig` anymore
-    function blockCaller(bytes32 sig, address who) public callerIsRoot {
-        _canCall[sig][who] = false;
-        emit BlockCaller(sig, who);
+    /// @param sig_ Method signature (4Byte)
+    /// @param who_ Address of who should not be able to call `sig` anymore
+    function blockCaller(bytes32 sig_, address who_) public callerIsRoot {
+        _canCall[sig_][who_] = false;
+        emit BlockCaller(sig_, who_);
     }
 
     /// @notice Returns if `who` can call `sig`
-    /// @param sig Method signature (4Byte)
-    /// @param who Address of who should be able to call `sig`
-    function canCall(bytes32 sig, address who) public view returns (bool) {
-        return (_canCall[sig][who] ||
-            _canCall[ANY_SIG][who] ||
-            _canCall[sig][ANY_CALLER]);
+    /// @param sig_ Method signature (4Byte)
+    /// @param who_ Address of who should be able to call `sig`
+    function canCall(bytes32 sig_, address who_) public view returns (bool) {
+        return (_canCall[sig_][who_] ||
+            _canCall[ANY_SIG][who_] ||
+            _canCall[sig_][ANY_CALLER]);
     }
 
     /// @notice Sets the root user (granted `ANY_SIG`)
-    /// @param root Address of who should be set as root
-    function _setRoot(address root) internal {
-        _canCall[ANY_SIG][root] = true;
-        emit AllowCaller(ANY_SIG, root);
+    /// @param root_ Address of who should be set as root
+    function _setRoot(address root_) internal {
+        _canCall[ANY_SIG][root_] = true;
+        emit AllowCaller(ANY_SIG, root_);
     }
 }
