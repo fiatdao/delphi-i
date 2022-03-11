@@ -47,8 +47,8 @@ struct MarketParameters {
 interface INotionalView {
     /// @notice Returns a single market
     function getMarket(
-        uint16 currencyId,
-        uint256 maturity,
-        uint256 settlementDate
+        uint16 currencyId_,
+        uint256 maturity_,
+        uint256 settlementDate_
     ) external view returns (MarketParameters memory);
 }
