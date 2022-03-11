@@ -257,7 +257,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_ElementFiValueProvider() public {
+    function test_deploy_elementFiValueProvider() public {
         // Create the oracle data structure
         ElementVPData memory elementValueProvider = createElementVPData();
         OracleData memory elementDataOracle = OracleData({
@@ -279,7 +279,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_ElementFiValueProvider_OnlyAuthrorizedUsers() public {
+    function test_deploy_elementFiValueProvider_onlyAuthorizedUsers() public {
         // Create the oracle data structure
         ElementVPData memory elementValueProvider = createElementVPData();
         OracleData memory elementDataOracle = OracleData({
@@ -307,7 +307,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_NotionalFinanceValueProvider() public {
+    function test_deploy_notionalFinanceValueProvider() public {
         // Create the oracle data structure
         NotionalVPData memory notionalValueProvider = createNotionalVPData();
         OracleData memory notionalDataOracle = OracleData({
@@ -330,7 +330,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_NotionalFinanceValueProvider_onlyAuthorizedUsers()
+    function test_deploy_notionalFinanceValueProvider_onlyAuthorizedUsers()
         public
     {
         // Create the oracle data structure
@@ -359,7 +359,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_YieldValueProvider() public {
+    function test_deploy_yieldValueProvider() public {
         // Create the oracle data structure
         YieldVPData memory yieldValueProvider = createYieldVPData();
         OracleData memory yieldDataOracle = OracleData({
@@ -381,7 +381,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_YieldValueProvider_onlyAuthorizedUsers() public {
+    function test_deploy_yieldValueProvider_onlyAuthorizedUsers() public {
         // Create the oracle data structure
         YieldVPData memory yieldValueProvider = createYieldVPData();
         OracleData memory yieldDataOracle = OracleData({
@@ -408,7 +408,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_ChainlinkValueProvider() public {
+    function test_deploy_chainlinkValueProvider() public {
         // Create the oracle data structure
         ChainlinkVPData memory chainlinkValueProvider = createChainlinkVPData();
         OracleData memory chainlinkDataOracle = OracleData({
@@ -430,7 +430,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_ChainlinkValueProvider_onlyAuthorizedUsers() public {
+    function test_deploy_chainlinkValueProvider_onlyAuthorizedUsers() public {
         // Create the oracle data structure
         ChainlinkVPData memory chainlinkValueProvider = createChainlinkVPData();
         OracleData memory chainlinkDataOracle = OracleData({
@@ -457,7 +457,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_AggregatorOracle_forEveryValueProviderType() public {
+    function test_deploy_aggregatorOracle_forEveryValueProviderType() public {
         // Setup an array of oracle data structures for every oracle type
         OracleData[] memory oracleData = new OracleData[](
             uint256(Factory.ValueProviderType.COUNT)
@@ -502,7 +502,7 @@ contract FactoryTest is DSTest {
         }
     }
 
-    function test_deploy_AggregatorOracle_onlyAuthorizedUsers() public {
+    function test_deploy_aggregatorOracle_onlyAuthorizedUsers() public {
         OracleData memory oracleData = createElementOracleData();
 
         Caller user = new Caller();
@@ -528,7 +528,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_Aggregator_forEveryCompatibleValueProvider() public {
+    function test_deploy_aggregator_forEveryCompatibleValueProvider() public {
         // Deploy discount rate aggregators for every value provider type
         for (
             uint256 oracleType = 0;
@@ -560,7 +560,7 @@ contract FactoryTest is DSTest {
         }
     }
 
-    function test_deploy_Aggregator_CheckExistenceOfOracles() public {
+    function test_deploy_aggregator_checkExistenceOfOracles() public {
         // Create a mock discount rate relayer
         Relayer relayer = new Relayer(
             address(0xc011b005),
@@ -602,7 +602,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_Aggregator_CheckValidValues() public {
+    function test_deploy_aggregator_checkValidValues() public {
         Relayer relayer = new Relayer(
             address(0xc011b005),
             IRelayer.RelayerType.DiscountRate
@@ -635,7 +635,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_Aggregator_onlyAuthorizedUsers() public {
+    function test_deploy_aggregator_onlyAuthorizedUsers() public {
         Caller user = new Caller();
         Relayer relayer = new Relayer(
             address(0xc011b005),
@@ -670,7 +670,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_Relayer_DiscountRate_createsContract() public {
+    function test_deploy_relayer_discountRate_createsContract() public {
         address collybus = address(0xC0111b005);
         address relayer = factory.deployRelayer(
             collybus,
@@ -683,7 +683,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_Relayer_SpotPrice_createsContract() public {
+    function test_deploy_relayer_spotPrice_createsContract() public {
         address collybus = address(0xC01115107);
         address relayer = factory.deployRelayer(
             collybus,
@@ -697,7 +697,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_Relayer_onlyAuthorizedUsers() public {
+    function test_deploy_relayer_onlyAuthorizedUsers() public {
         Caller user = new Caller();
         address collybus = address(0xC0111b005);
 

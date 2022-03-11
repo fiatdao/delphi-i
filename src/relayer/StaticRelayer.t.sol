@@ -52,7 +52,7 @@ contract StaticRelayerTest is DSTest {
         );
     }
 
-    function test_execute_updates_DiscountRateInCollybus() public {
+    function test_execute_updates_discountRateInCollybus() public {
         // Create the static relayer with a tokenId and a value
         uint256 tokenId = 1;
         StaticRelayer staticRelayer = new StaticRelayer(
@@ -71,7 +71,7 @@ contract StaticRelayerTest is DSTest {
         );
     }
 
-    function test_execute_updates_SpotPriceInCollybus() public {
+    function test_execute_updates_spotPriceInCollybus() public {
         // Create the static relayer with a tokenId and a value
         address tokenAddress = address(0x1234);
         StaticRelayer staticRelayer = new StaticRelayer(
@@ -90,7 +90,7 @@ contract StaticRelayerTest is DSTest {
         );
     }
 
-    function test_execute_OnlyAuthorizedUsers() public {
+    function test_execute_onlyAuthorizedUsers() public {
         Caller user = new Caller();
 
         // Create the static relayer with a tokenId and a value

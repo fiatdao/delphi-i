@@ -564,7 +564,7 @@ contract AggregatorOracleTest is DSTest {
         assertTrue(updated, "Should return `true` no successful update");
     }
 
-    function test_update_retrurnsFalse_WhenOracleUpdateReturnsFalse() public {
+    function test_update_returnsFalse_WhenOracleUpdateReturnsFalse() public {
         // Make the oracle return false on update
         oracle.givenQueryReturnResponse(
             abi.encodePacked(Oracle.update.selector),
@@ -600,7 +600,7 @@ contract AggregatorOracleTest is DSTest {
     function test_update_AuthorizedUserCanCall_update() public {
         Caller user = new Caller();
 
-        // Give permission to the usre
+        // Give permission to the user
         aggregatorOracle.allowCaller(
             aggregatorOracle.update.selector,
             address(user)

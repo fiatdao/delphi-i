@@ -17,9 +17,9 @@ contract ChainLinkValueProviderTest is DSTest {
 
     ChainLinkValueProvider internal chainlinkVP;
 
-    uint256 internal _timeUpdateWindow = 100; // seconds
-    uint256 internal _maxValidTime = 300;
-    int256 internal _alpha = 2 * 10**17; // 0.2
+    uint256 private _timeUpdateWindow = 100; // seconds
+    uint256 private _maxValidTime = 300;
+    int256 private _alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
         mockChainlinkAggregator = new MockProvider();
@@ -79,7 +79,7 @@ contract ChainLinkValueProviderTest is DSTest {
         assertTrue(address(chainlinkVP) != address(0));
     }
 
-    function testFail_deploy_ShouldFailWithUnsupportedDecimals() public {
+    function testFail_deploy_shouldFailWithUnsupportedDecimals() public {
         MockProvider unsupportedDecimalsMP = new MockProvider();
         unsupportedDecimalsMP.givenQueryReturnResponse(
             abi.encodeWithSelector(

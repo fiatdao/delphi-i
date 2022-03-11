@@ -14,18 +14,18 @@ import {IOracle} from "../oracle/IOracle.sol";
 contract TestCollybus is ICollybus {
     mapping(bytes32 => uint256) public valueForToken;
 
-    function updateDiscountRate(uint256 tokenId, uint256 rate)
+    function updateDiscountRate(uint256 tokenId_, uint256 rate_)
         external
         override(ICollybus)
     {
-        valueForToken[bytes32(uint256(tokenId))] = rate;
+        valueForToken[bytes32(uint256(tokenId_))] = rate_;
     }
 
-    function updateSpot(address tokenAddress, uint256 spot)
+    function updateSpot(address tokenAddress_, uint256 spot_)
         external
         override(ICollybus)
     {
-        valueForToken[bytes32(uint256(uint160(tokenAddress)))] = spot;
+        valueForToken[bytes32(uint256(uint160(tokenAddress_)))] = spot_;
     }
 }
 
@@ -38,13 +38,9 @@ contract RelayerTest is DSTest {
 
     MockProvider internal oracle1;
 
-    uint256 internal oracleTimeUpdateWindow = 100; // seconds
-    uint256 internal oracleMaxValidTime = 300;
-    int256 internal oracleAlpha = 2 * 10**17; // 0.2
-
-    bytes32 internal mockTokenId1;
-    uint256 internal mockTokenId1MinThreshold = 1;
-    int256 internal oracle1InitialValue = 100 * 10**18;
+    bytes32 private _mockTokenId1;
+    uint256 private _mockTokenId1MinThreshold = 1;
+    int256 private _oracle1InitialValue = 100 * 10**18;
 
     function setUp() public {
         collybus = new TestCollybus();
@@ -52,14 +48,14 @@ contract RelayerTest is DSTest {
 
         oracle1 = new MockProvider();
 
-        mockTokenId1 = bytes32(uint256(1));
+        _mockTokenId1 = bytes32(uint256(1));
 
         // Set the value returned by the Oracle.
         oracle1.givenQueryReturnResponse(
             abi.encodePacked(IOracle.value.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(oracle1InitialValue, true)
+                data: abi.encode(_oracle1InitialValue, true)
             }),
             false
         );
@@ -86,8 +82,8 @@ contract RelayerTest is DSTest {
         // Add oracle with rate id
         relayer.oracleAdd(
             address(oracle1),
-            mockTokenId1,
-            mockTokenId1MinThreshold
+            _mockTokenId1,
+            _mockTokenId1MinThreshold
         );
     }
 
@@ -113,10 +109,10 @@ contract RelayerTest is DSTest {
 
         assertTrue(oracleData.exists);
         assertEq(oracleData.lastUpdateValue, 0);
-        assertEq(oracleData.tokenId, mockTokenId1);
+        assertEq(oracleData.tokenId, _mockTokenId1);
         assertEq(
             oracleData.minimumPercentageDeltaValue,
-            mockTokenId1MinThreshold
+            _mockTokenId1MinThreshold
         );
     }
 
@@ -145,13 +141,13 @@ contract RelayerTest is DSTest {
             MockProvider.ReturnData({success: true, data: abi.encode(true)}),
             false
         );
-        bytes32 mockTokenId2 = bytes32(uint256(mockTokenId1) + 1);
+        bytes32 mockTokenId2 = bytes32(uint256(_mockTokenId1) + 1);
 
         // Add the oracle for a new token ID.
         relayer.oracleAdd(
             address(newOracle),
             mockTokenId2,
-            mockTokenId1MinThreshold
+            _mockTokenId1MinThreshold
         );
 
         // Check that oracle was added
@@ -177,24 +173,24 @@ contract RelayerTest is DSTest {
             false
         );
 
-        bytes32 newMockTokenId = bytes32(uint256(mockTokenId1) + 1);
+        bytes32 newMockTokenId = bytes32(uint256(_mockTokenId1) + 1);
 
         // Should fail because the Relayer can not update the oracle
         relayer.oracleAdd(
             address(newOracle),
             newMockTokenId,
-            mockTokenId1MinThreshold
+            _mockTokenId1MinThreshold
         );
     }
 
     function testFail_addOracle_shouldNotAllowDuplicateOracles() public {
         // Attempt to add the same oracle again but use a different token id.
-        bytes32 mockTokenId2 = bytes32(uint256(mockTokenId1) + 1);
+        bytes32 mockTokenId2 = bytes32(uint256(_mockTokenId1) + 1);
 
         relayer.oracleAdd(
             address(oracle1),
             mockTokenId2,
-            mockTokenId1MinThreshold
+            _mockTokenId1MinThreshold
         );
     }
 
@@ -204,8 +200,8 @@ contract RelayerTest is DSTest {
         // Add a new oracle that has the same token id as the previously added oracle.
         relayer.oracleAdd(
             address(newOracle),
-            mockTokenId1,
-            mockTokenId1MinThreshold
+            _mockTokenId1,
+            _mockTokenId1MinThreshold
         );
     }
 
@@ -213,8 +209,8 @@ contract RelayerTest is DSTest {
         Caller user = new Caller();
 
         address newOracle = address(0x1);
-        bytes32 mockTokenId2 = bytes32(uint256(mockTokenId1) + 1);
-        uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
+        bytes32 mockTokenId2 = bytes32(uint256(_mockTokenId1) + 1);
+        uint256 mockTokenId2MinThreshold = _mockTokenId1MinThreshold;
         // Add the oracle
         (bool ok, ) = user.externalCall(
             address(relayer),
@@ -234,7 +230,7 @@ contract RelayerTest is DSTest {
     function test_addOracle_tokenIdMarkedAsUsed() public {
         // Check that the added oracle id is correctly marked as used
         assertTrue(
-            relayer.encodedTokenIds(mockTokenId1),
+            relayer.encodedTokenIds(_mockTokenId1),
             "Token Id not marked as used"
         );
     }
@@ -256,7 +252,7 @@ contract RelayerTest is DSTest {
 
         // Token id should be unused
         assertTrue(
-            relayer.encodedTokenIds(mockTokenId1) == false,
+            relayer.encodedTokenIds(_mockTokenId1) == false,
             "Relayer oracle should be deleted"
         );
     }
@@ -307,8 +303,8 @@ contract RelayerTest is DSTest {
             false
         );
 
-        bytes32 mockTokenId2 = bytes32(uint256(mockTokenId1) + 1);
-        uint256 mockTokenId2MinThreshold = mockTokenId1MinThreshold;
+        bytes32 mockTokenId2 = bytes32(uint256(_mockTokenId1) + 1);
+        uint256 mockTokenId2MinThreshold = _mockTokenId1MinThreshold;
         // Add oracle with rate id
         relayer.oracleAdd(
             address(oracle2),
@@ -331,8 +327,8 @@ contract RelayerTest is DSTest {
         relayer.execute();
 
         assertTrue(
-            collybus.valueForToken(mockTokenId1) ==
-                uint256(oracle1InitialValue),
+            collybus.valueForToken(_mockTokenId1) ==
+                uint256(_oracle1InitialValue),
             "Invalid discount rate relayer rate value"
         );
     }
@@ -498,7 +494,7 @@ contract RelayerTest is DSTest {
             false
         );
 
-        // Add oracle with a thresold percentage
+        // Add oracle with a threshold percentage
         localRelayer.oracleAdd(
             address(localOracle),
             localTokenId,
@@ -540,7 +536,7 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function test_execute_NonAuthorizedUserCanNotCall_executeWithRevert()
+    function test_execute_nonAuthorizedUserCanNotCall_executeWithRevert()
         public
     {
         Caller user = new Caller();
@@ -557,7 +553,7 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function test_execute_AuthorizedUserCanCall_executeWithRevert() public {
+    function test_execute_authorizedUserCanCall_executeWithRevert() public {
         Caller user = new Caller();
 
         // Give permission to the user
@@ -580,7 +576,7 @@ contract RelayerTest is DSTest {
         relayer.executeWithRevert();
     }
 
-    function test_execute_ReturnsTrue_WhenAtLeastOneOracleIsUpdated() public {
+    function test_execute_returnsTrue_whenAtLeastOneOracleIsUpdated() public {
         bool executed;
 
         executed = relayer.execute();
@@ -588,7 +584,7 @@ contract RelayerTest is DSTest {
         assertTrue(executed, "The relayer should return true");
     }
 
-    function test_execute_ReturnsFalse_WhenNoOracleIsUpdated() public {
+    function test_execute_returnsFalse_whenNoOracleIsUpdated() public {
         bool executed;
 
         oracle1.givenQueryReturnResponse(
@@ -602,14 +598,14 @@ contract RelayerTest is DSTest {
         assertTrue(executed == false, "The relayer should return false");
     }
 
-    function test_executeWithRevert_ShouldBeSuccessful_WhenAtLeastOneOracleIsUpdated()
+    function test_executeWithRevert_shouldBeSuccessful_whenAtLeastOneOracleIsUpdated()
         public
     {
         // Call should not revert
         relayer.executeWithRevert();
     }
 
-    function testFail_executeWithRevert_ShouldNotBeSuccessful_WhenNoOracleIsUpdated()
+    function testFail_executeWithRevert_shouldNotBeSuccessful_whenNoOracleIsUpdated()
         public
     {
         oracle1.givenQueryReturnResponse(

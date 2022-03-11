@@ -26,18 +26,18 @@ contract ElementFiValueProvider is Oracle, Convert {
     int256 public immutable timeScale;
     uint256 public immutable maturity;
 
-    /// @notice                      Constructs the Value provider contracts with the needed Element data in order to
-    ///                              calculate the annual rate.
-    /// @param timeUpdateWindow_     Minimum time between updates of the value
-    /// @param maxValidTime_         Maximum time for which the value is valid
-    /// @param alpha_                Alpha parameter for EMA
-    /// @param poolId_               poolID of the pool
+    /// @notice Constructs the Value provider contracts with the needed Element data in order to
+    /// calculate the annual rate.
+    /// @param timeUpdateWindow_ Minimum time between updates of the value
+    /// @param maxValidTime_ Maximum time for which the value is valid
+    /// @param alpha_ Alpha parameter for EMA
+    /// @param poolId_ poolID of the pool
     /// @param balancerVaultAddress_ Address of the balancer vault
-    /// @param poolToken_            Address of the pool (LP token) contract
-    /// @param underlier_            Address of the underlier IERC20 token
-    /// @param ePTokenBond_          Address of the bond IERC20 token
-    /// @param timeScale_            Time scale used on this pool (i.e. 1/(timeStretch*secondsPerYear)) in 59x18 fixed point
-    /// @param maturity_             The Maturity timestamp
+    /// @param poolToken_ Address of the pool (LP token) contract
+    /// @param underlier_ Address of the underlier IERC20 token
+    /// @param ePTokenBond_ Address of the bond IERC20 token
+    /// @param timeScale_ Time scale used on this pool (i.e. 1/(timeStretch*secondsPerYear)) in 59x18 fixed point
+    /// @param maturity_ The Maturity timestamp
     constructor(
         // Oracle parameters
         uint256 timeUpdateWindow_,

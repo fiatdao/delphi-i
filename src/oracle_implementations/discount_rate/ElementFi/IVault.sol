@@ -26,7 +26,7 @@ interface IVault {
      *
      * `assetManager` is the Pool's token Asset Manager.
      */
-    function getPoolTokenInfo(bytes32 poolId, IERC20 token)
+    function getPoolTokenInfo(bytes32 poolId_, IERC20 token_)
         external
         view
         returns (

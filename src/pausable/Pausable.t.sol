@@ -34,7 +34,7 @@ contract PausableTest is DSTest {
         pausable = new PausableInstance();
     }
 
-    function test_Pause_Unpause() public {
+    function test_pause_unpause() public {
         pausable.pause();
         assertTrue(pausable.paused() == true, "paused() should be true");
 
@@ -42,29 +42,29 @@ contract PausableTest is DSTest {
         assertTrue(pausable.paused() == false, "paused() should be false");
     }
 
-    function test_WhenPaused_Success_When_Paused() public {
+    function test_whenPaused_success_when_paused() public {
         pausable.pause();
         pausable.check_whenPaused();
         assertTrue(pausable.executedSuccessfully() == true);
     }
 
-    function testFail_WhenPaused_Fails_When_NotPaused() public {
+    function testFail_whenPaused_fails_when_notPaused() public {
         // Starts as unpaused
         pausable.check_whenPaused();
     }
 
-    function test_WhenNotPaused_Success_When_NotPaused() public {
+    function test_whenNotPaused_success_when_notPaused() public {
         // Starts as unpaused
         pausable.check_whenNotPaused();
         assertTrue(pausable.executedSuccessfully() == true);
     }
 
-    function testFail_WhenNotPaused_Fails_When_Paused() public {
+    function testFail_whenNotPaused_fails_when_paused() public {
         pausable.pause();
         pausable.check_whenNotPaused();
     }
 
-    function test_AuthorizedUser_CanPauseUnpause() public {
+    function test_authorizedUser_canPauseUnpause() public {
         // Create a user
         Caller user = new Caller();
 
