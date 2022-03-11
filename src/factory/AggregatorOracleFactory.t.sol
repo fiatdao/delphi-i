@@ -29,7 +29,7 @@ contract AggregatorOracleFactoryTest is DSTest {
         );
     }
 
-    function test_create_AddsPermission_OnSender() public {
+    function test_create_addsPermission_onSender() public {
         address oracle = _factory.create();
 
         assertTrue(
@@ -37,7 +37,7 @@ contract AggregatorOracleFactoryTest is DSTest {
                 AggregatorOracle(oracle).ANY_SIG(),
                 address(this)
             ),
-            "Creator shold have admin access"
+            "Creator should have admin access"
         );
     }
 }

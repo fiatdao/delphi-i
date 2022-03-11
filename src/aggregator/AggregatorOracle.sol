@@ -35,7 +35,7 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
     error AggregatorOracle__setParam_unrecognizedParam(bytes32 param);
 
     // @notice Emitted when trying to add a Oracle to the Aggregator but the Aggregator is not whitelisted in the Oracle
-    //         The Aggregator needs to be able to call Update on all Oracles
+    // The Aggregator needs to be able to call Update on all Oracles
     error AggregatorOracle__unauthorizedToCallUpdateOracle(address oracle);
     /// ======== Events ======== ///
 
@@ -75,18 +75,18 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
     }
 
     /// @notice Returns `true` if the oracle is registered
-    function oracleExists(address oracle)
+    function oracleExists(address oracle_)
         public
         view
         override(IAggregatorOracle)
         returns (bool)
     {
-        return _oracles.contains(oracle);
+        return _oracles.contains(oracle_);
     }
 
-    /// @notice         Returns the address of an oracle at index
-    /// @param index_   The internal index of the oracle
-    /// @return         Returns the address pf the oracle
+    /// @notice Returns the address of an oracle at index
+    /// @param index_ The internal index of the oracle
+    /// @return Returns the address pf the oracle
     function oracleAt(uint256 index_)
         external
         view
@@ -98,27 +98,27 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
 
     /// @notice Adds an oracle to the list of oracles
     /// @dev Reverts if the oracle is already registered
-    function oracleAdd(address oracle)
+    function oracleAdd(address oracle_)
         public
         override(IAggregatorOracle)
         checkCaller
     {
-        if (!Guarded(oracle).canCall(IOracle.update.selector, address(this))) {
-            revert AggregatorOracle__unauthorizedToCallUpdateOracle(oracle);
+        if (!Guarded(oracle_).canCall(IOracle.update.selector, address(this))) {
+            revert AggregatorOracle__unauthorizedToCallUpdateOracle(oracle_);
         }
 
-        bool added = _oracles.add(oracle);
+        bool added = _oracles.add(oracle_);
         if (added == false) {
-            revert AggregatorOracle__addOracle_oracleAlreadyRegistered(oracle);
+            revert AggregatorOracle__addOracle_oracleAlreadyRegistered(oracle_);
         }
 
-        emit OracleAdded(oracle);
+        emit OracleAdded(oracle_);
     }
 
     /// @notice Removes an oracle from the list of oracles
     /// @dev Reverts if removing the oracle would break the minimum required valid values
     /// @dev Reverts if removing the oracle is not registered
-    function oracleRemove(address oracle)
+    function oracleRemove(address oracle_)
         public
         override(IAggregatorOracle)
         checkCaller
@@ -134,12 +134,12 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
         }
 
         // Try to remove
-        bool removed = _oracles.remove(oracle);
+        bool removed = _oracles.remove(oracle_);
         if (removed == false) {
-            revert AggregatorOracle__removeOracle_oracleNotRegistered(oracle);
+            revert AggregatorOracle__removeOracle_oracleNotRegistered(oracle_);
         }
 
-        emit OracleRemoved(oracle);
+        emit OracleRemoved(oracle_);
     }
 
     /// @notice Update values from oracles and return aggregated value
@@ -246,21 +246,21 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
     }
 
     /// @notice Aggregates the values
-    function _aggregateValues(int256[] memory values, uint256 validValues)
+    function _aggregateValues(int256[] memory values_, uint256 validValues_)
         internal
         pure
         returns (int256)
     {
         // Avoid division by zero
-        if (validValues == 0) {
+        if (validValues_ == 0) {
             return 0;
         }
 
         int256 sum;
-        for (uint256 i = 0; i < validValues; i++) {
-            sum += values[i];
+        for (uint256 i = 0; i < validValues_; i++) {
+            sum += values_[i];
         }
 
-        return sum / int256(validValues);
+        return sum / int256(validValues_);
     }
 }

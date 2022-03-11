@@ -185,19 +185,19 @@ contract Factory is Guarded {
     /// @return Returns the address of the new value provider
     function deployYieldValueProvider(
         // Oracle params
-        OracleData memory oracleParams
+        OracleData memory oracleParams_
     ) public checkCaller returns (address) {
         YieldVPData memory yieldParams = abi.decode(
-            oracleParams.valueProviderData,
+            oracleParams_.valueProviderData,
             (YieldVPData)
         );
 
         address yieldValueProviderAddress = IYieldValueProviderFactory(
             yieldValueProviderFactory
         ).create(
-                oracleParams.timeWindow,
-                oracleParams.maxValidTime,
-                oracleParams.alpha,
+                oracleParams_.timeWindow,
+                oracleParams_.maxValidTime,
+                oracleParams_.alpha,
                 yieldParams.poolAddress,
                 yieldParams.maturity,
                 yieldParams.timeScale
