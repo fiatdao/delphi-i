@@ -38,25 +38,30 @@ abstract contract Oracle is Pausable, IOracle {
     int256 private _currentValue;
     bool private _validReturnedValue;
 
+    // reentrancy constants
+    uint256 private constant _NOT_ENTERED = 1;
+    uint256 private constant _ENTERED = 2;   
+
     // reentrancy guard flag
-    uint256 private _reentrantGuard = 1;
+    uint256 private _reentrantGuard = _NOT_ENTERED;
+
 
     /// ======== Modifiers ======== ///
 
     modifier nonReentrant() {
         // Check if the guard is set
-        if (_reentrantGuard != 1) {
+        if (_reentrantGuard != _NOT_ENTERED) {
             revert Oracle__nonReentrant();
         }
 
         // Set the guard
-        _reentrantGuard = 2;
+        _reentrantGuard = _ENTERED;
 
         // Allow execution
         _;
 
         // Reset the guard
-        _reentrantGuard = 1;
+        _reentrantGuard = _NOT_ENTERED;
     }
 
     constructor(
