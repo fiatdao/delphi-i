@@ -48,9 +48,7 @@ abstract contract Oracle is Pausable, IOracle {
         _reentrantGuard = 1;
     }
 
-    constructor(
-        uint256 timeUpdateWindow_
-    ) {
+    constructor(uint256 timeUpdateWindow_) {
         timeUpdateWindow = timeUpdateWindow_;
         _validReturnedValue = false;
     }

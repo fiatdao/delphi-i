@@ -7,9 +7,7 @@ import {Hevm} from "../test/utils/Hevm.sol";
 import {Oracle} from "./Oracle.sol";
 
 contract OracleImplementation is Oracle {
-    constructor(
-        uint256 timeUpdateWindow_
-    ) Oracle(timeUpdateWindow_) {
+    constructor(uint256 timeUpdateWindow_) Oracle(timeUpdateWindow_) {
         this;
     }
 
@@ -40,9 +38,7 @@ contract OracleImplementation is Oracle {
 }
 
 contract OracleReenter is Oracle {
-    constructor(
-        uint256 timeUpdateWindow_
-    ) Oracle(timeUpdateWindow_) {
+    constructor(uint256 timeUpdateWindow_) Oracle(timeUpdateWindow_) {
         this;
     }
 
@@ -67,9 +63,7 @@ contract OracleTest is DSTest {
     uint256 internal timeUpdateWindow = 100; // seconds
 
     function setUp() public {
-        oracle = new OracleImplementation(
-            timeUpdateWindow
-        );
+        oracle = new OracleImplementation(timeUpdateWindow);
 
         // Set the value returned to 100
         oracle.setValue(int256(100 * 10**18));
@@ -343,9 +337,7 @@ contract OracleTest is DSTest {
     }
 
     function testFail_update_cannotBeReentered() public {
-        OracleReenter oracleReenter = new OracleReenter(
-            timeUpdateWindow
-        );
+        OracleReenter oracleReenter = new OracleReenter(timeUpdateWindow);
 
         oracleReenter.update();
 

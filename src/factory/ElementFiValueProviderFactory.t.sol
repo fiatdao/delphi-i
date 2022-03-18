@@ -12,7 +12,7 @@ import {ElementFiValueProvider} from "../oracle_implementations/discount_rate/El
 
 contract ElementFiValueProviderFactoryTest is DSTest {
     uint256 private _oracleUpdateWindow;
-    
+
     bytes32 private _poolId =
         bytes32(
             0x6dd0f7c8f4793ed2531c0df4fea8633a21fdcff40002000000000000000000b7
