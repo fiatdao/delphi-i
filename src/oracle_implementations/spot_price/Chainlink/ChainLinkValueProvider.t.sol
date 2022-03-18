@@ -18,8 +18,6 @@ contract ChainLinkValueProviderTest is DSTest {
     ChainLinkValueProvider internal chainlinkVP;
 
     uint256 private _timeUpdateWindow = 100; // seconds
-    uint256 private _maxValidTime = 300;
-    int256 private _alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
         mockChainlinkAggregator = new MockProvider();
@@ -66,10 +64,6 @@ contract ChainLinkValueProviderTest is DSTest {
             // Oracle arguments
             // Time update window
             _timeUpdateWindow,
-            // Max valid time
-            _maxValidTime,
-            // Alpha
-            _alpha,
             // Chainlink arguments
             address(mockChainlinkAggregator)
         );
@@ -96,10 +90,6 @@ contract ChainLinkValueProviderTest is DSTest {
             // Oracle arguments
             // Time update window
             _timeUpdateWindow,
-            // Max valid time
-            _maxValidTime,
-            // Alpha
-            _alpha,
             // Chainlink arguments
             address(unsupportedDecimalsMP)
         );

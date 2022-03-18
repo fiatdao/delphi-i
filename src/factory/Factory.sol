@@ -52,8 +52,6 @@ struct OracleData {
     bytes valueProviderData;
     uint256 valueProviderType;
     uint256 timeWindow;
-    uint256 maxValidTime;
-    int256 alpha;
 }
 
 /// @notice Data structure that wraps needed data to deploy an Oracle Aggregator contract
@@ -136,8 +134,6 @@ contract Factory is Guarded {
             elementFiValueProviderFactory
         ).create(
                 oracleParams_.timeWindow,
-                oracleParams_.maxValidTime,
-                oracleParams_.alpha,
                 elementParams.poolId,
                 elementParams.balancerVault,
                 elementParams.poolToken,
@@ -167,8 +163,6 @@ contract Factory is Guarded {
                 notionalValueProviderFactory
             ).create(
                     oracleParams_.timeWindow,
-                    oracleParams_.maxValidTime,
-                    oracleParams_.alpha,
                     notionalParams.notionalViewAddress,
                     notionalParams.currencyId,
                     notionalParams.lastImpliedRateDecimals,
@@ -196,8 +190,6 @@ contract Factory is Guarded {
             yieldValueProviderFactory
         ).create(
                 oracleParams_.timeWindow,
-                oracleParams_.maxValidTime,
-                oracleParams_.alpha,
                 yieldParams.poolAddress,
                 yieldParams.maturity,
                 yieldParams.timeScale
@@ -223,8 +215,6 @@ contract Factory is Guarded {
             chainlinkValueProviderFactory
         ).create(
                 oracleParams_.timeWindow,
-                oracleParams_.maxValidTime,
-                oracleParams_.alpha,
                 chainlinkParams.chainlinkAggregatorAddress
             );
 

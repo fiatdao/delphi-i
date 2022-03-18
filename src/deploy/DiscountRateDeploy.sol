@@ -49,8 +49,6 @@ contract DiscountRateDeploy {
         OracleData memory elementOracleData = OracleData({
             valueProviderData: abi.encode(elementValueProvider),
             timeWindow: 60,
-            maxValidTime: 600,
-            alpha: 200000000000000000,
             valueProviderType: uint8(Factory.ValueProviderType.Element)
         });
 
@@ -67,8 +65,6 @@ contract DiscountRateDeploy {
         OracleData memory mockOracleData = OracleData({
             valueProviderData: abi.encode(mockedElementValueProvider),
             timeWindow: 60,
-            maxValidTime: 600,
-            alpha: 200000000000000000,
             valueProviderType: uint8(Factory.ValueProviderType.Element)
         });
 

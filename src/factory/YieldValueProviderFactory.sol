@@ -7,8 +7,6 @@ interface IYieldValueProviderFactory {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        uint256 maxValidTime_,
-        int256 alpha_,
         //
         address poolAddress_,
         uint256 maturity_,
@@ -20,8 +18,6 @@ contract YieldValueProviderFactory is IYieldValueProviderFactory {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        uint256 maxValidTime_,
-        int256 alpha_,
         //
         address poolAddress_,
         uint256 maturity_,
@@ -29,8 +25,6 @@ contract YieldValueProviderFactory is IYieldValueProviderFactory {
     ) public override(IYieldValueProviderFactory) returns (address) {
         YieldValueProvider yieldValueProvider = new YieldValueProvider(
             timeUpdateWindow_,
-            maxValidTime_,
-            alpha_,
             poolAddress_,
             maturity_,
             timeScale_

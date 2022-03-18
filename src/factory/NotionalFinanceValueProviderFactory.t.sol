@@ -33,8 +33,6 @@ contract NotionalFinanceValueProviderFactoryTest is DSTest {
         // Create Notional Value Provider
         address notionalValueProviderAddress = _factory.create(
             _oracleUpdateWindow,
-            _oracleMaxValidTime,
-            _oracleAlpha,
             _notionalView,
             _currencyId,
             _maturityDate,
@@ -52,8 +50,6 @@ contract NotionalFinanceValueProviderFactoryTest is DSTest {
         // Create Notional Value Provider
         address notionalValueProviderAddress = _factory.create(
             _oracleUpdateWindow,
-            _oracleMaxValidTime,
-            _oracleAlpha,
             _notionalView,
             _currencyId,
             _maturityDate,
@@ -67,19 +63,6 @@ contract NotionalFinanceValueProviderFactoryTest is DSTest {
                 .timeUpdateWindow(),
             _oracleUpdateWindow,
             "ElementFi Value Provider incorrect timeUpdateWindow"
-        );
-
-        assertEq(
-            NotionalFinanceValueProvider(notionalValueProviderAddress)
-                .maxValidTime(),
-            _oracleMaxValidTime,
-            "Notional Value Provider incorrect maxValidTime"
-        );
-
-        assertEq(
-            NotionalFinanceValueProvider(notionalValueProviderAddress).alpha(),
-            _oracleAlpha,
-            "Notional Value Provider incorrect alpha"
         );
 
         assertEq(

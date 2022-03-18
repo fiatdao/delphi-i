@@ -6,9 +6,6 @@ import {IOracle} from "./IOracle.sol";
 import {Pausable} from "../pausable/Pausable.sol";
 
 abstract contract Oracle is Pausable, IOracle {
-    /// @notice Emitted when alpha value is invalid
-    error Oracle__constructor_alphaInvalid(int256 alpha);
-
     /// @notice Emitted when a method is reentered
     error Oracle__nonReentrant();
 
@@ -22,15 +19,7 @@ abstract contract Oracle is Pausable, IOracle {
 
     uint256 public immutable timeUpdateWindow;
 
-    uint256 public immutable maxValidTime;
-
     uint256 public lastTimestamp;
-
-    // alpha determines how much influence
-    // the new value has on the computed moving average
-    // A commonly used value is 2 / (N + 1)
-    int256 public immutable alpha;
-
     // next EMA value
     int256 public nextValue;
 
@@ -60,18 +49,9 @@ abstract contract Oracle is Pausable, IOracle {
     }
 
     constructor(
-        uint256 timeUpdateWindow_,
-        uint256 maxValidTime_,
-        int256 alpha_
+        uint256 timeUpdateWindow_
     ) {
-        // Validate alpha
-        if (alpha_ <= 0 || alpha_ > 1 * 10**18) {
-            revert Oracle__constructor_alphaInvalid(alpha_);
-        }
-
         timeUpdateWindow = timeUpdateWindow_;
-        maxValidTime = maxValidTime_;
-        alpha = alpha_;
         _validReturnedValue = false;
     }
 
@@ -86,10 +66,7 @@ abstract contract Oracle is Pausable, IOracle {
         returns (int256, bool)
     {
         // Value is considered valid if the value provider successfully returned a value
-        // and it was updated before maxValidTime ago
-        bool valid = _validReturnedValue &&
-            (block.timestamp < lastTimestamp + maxValidTime);
-        return (_currentValue, valid);
+        return (_currentValue, _validReturnedValue);
     }
 
     function getValue() external virtual returns (int256);
@@ -117,15 +94,8 @@ abstract contract Oracle is Pausable, IOracle {
             } else {
                 // Update the current value with the next value
                 _currentValue = nextValue;
-
-                // Update the EMA and store it in the next value
-                int256 newValue = returnedValue;
-                // EMA = EMA(prev) + alpha * (Value - EMA(prev))
-                // Scales down because of fixed number of decimals
-                nextValue =
-                    _currentValue +
-                    (alpha * (newValue - _currentValue)) /
-                    10**18;
+                // Set the returnedValue as the next value
+                nextValue = returnedValue;
             }
 
             // Save when the value was last updated

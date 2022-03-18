@@ -20,8 +20,6 @@ contract SpotPriceDeploy {
         OracleData memory chainlinkOracleData = OracleData({
             valueProviderData: abi.encode(chainlinkValueProvider),
             timeWindow: 60,
-            maxValidTime: 600,
-            alpha: 200000000000000000,
             valueProviderType: uint8(Factory.ValueProviderType.Chainlink)
         });
 

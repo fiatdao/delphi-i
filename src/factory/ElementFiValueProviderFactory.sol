@@ -7,8 +7,6 @@ interface IElementFiValueProviderFactory {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        uint256 maxValidTime_,
-        int256 alpha_,
         //
         bytes32 poolId_,
         address balancerVaultAddress_,
@@ -24,8 +22,6 @@ contract ElementFiValueProviderFactory is IElementFiValueProviderFactory {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        uint256 maxValidTime_,
-        int256 alpha_,
         //
         bytes32 poolId_,
         address balancerVaultAddress_,
@@ -37,8 +33,6 @@ contract ElementFiValueProviderFactory is IElementFiValueProviderFactory {
     ) external override(IElementFiValueProviderFactory) returns (address) {
         ElementFiValueProvider elementFiValueProvider = new ElementFiValueProvider(
                 timeUpdateWindow_,
-                maxValidTime_,
-                alpha_,
                 poolId_,
                 balancerVaultAddress_,
                 poolToken_,

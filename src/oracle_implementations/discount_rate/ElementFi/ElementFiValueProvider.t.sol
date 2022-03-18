@@ -29,8 +29,6 @@ contract ElementFiValueProviderTest is DSTest {
     int256 internal _unitSeconds = 412133793;
     uint256 internal _maturity = 1651275535;
     uint256 internal _timeUpdateWindow = 100; // seconds
-    uint256 internal _maxValidTime = 300;
-    int256 internal _alpha = 2 * 10**17; // 0.2
     uint256 internal _decimals = 18;
 
     function setUp() public {
@@ -124,10 +122,6 @@ contract ElementFiValueProviderTest is DSTest {
             // Oracle arguments
             // Time update window
             _timeUpdateWindow,
-            // Max valid time
-            _maxValidTime,
-            // Alpha
-            _alpha,
             // Element Fi arguments
             // Pool ID
             _poolId,

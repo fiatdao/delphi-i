@@ -263,8 +263,6 @@ contract FactoryTest is DSTest {
         OracleData memory elementDataOracle = OracleData({
             valueProviderData: abi.encode(elementValueProvider),
             timeWindow: 100,
-            maxValidTime: 300,
-            alpha: 2 * 10**17,
             valueProviderType: uint8(Factory.ValueProviderType.Element)
         });
 
@@ -285,8 +283,6 @@ contract FactoryTest is DSTest {
         OracleData memory elementDataOracle = OracleData({
             valueProviderData: abi.encode(elementValueProvider),
             timeWindow: 100,
-            maxValidTime: 300,
-            alpha: 2 * 10**17,
             valueProviderType: uint8(Factory.ValueProviderType.Element)
         });
 
@@ -313,8 +309,6 @@ contract FactoryTest is DSTest {
         OracleData memory notionalDataOracle = OracleData({
             valueProviderData: abi.encode(notionalValueProvider),
             timeWindow: 100,
-            maxValidTime: 300,
-            alpha: 2 * 10**17,
             valueProviderType: uint8(Factory.ValueProviderType.Notional)
         });
 
@@ -338,8 +332,6 @@ contract FactoryTest is DSTest {
         OracleData memory notionalDataOracle = OracleData({
             valueProviderData: abi.encode(notionalValueProvider),
             timeWindow: 100,
-            maxValidTime: 300,
-            alpha: 2 * 10**17,
             valueProviderType: uint8(Factory.ValueProviderType.Notional)
         });
 
@@ -365,8 +357,6 @@ contract FactoryTest is DSTest {
         OracleData memory yieldDataOracle = OracleData({
             valueProviderData: abi.encode(yieldValueProvider),
             timeWindow: 100,
-            maxValidTime: 300,
-            alpha: 2 * 10**17,
             valueProviderType: uint8(Factory.ValueProviderType.Yield)
         });
 
@@ -387,8 +377,6 @@ contract FactoryTest is DSTest {
         OracleData memory yieldDataOracle = OracleData({
             valueProviderData: abi.encode(yieldValueProvider),
             timeWindow: 100,
-            maxValidTime: 300,
-            alpha: 2 * 10**17,
             valueProviderType: uint8(Factory.ValueProviderType.Yield)
         });
 
@@ -414,8 +402,6 @@ contract FactoryTest is DSTest {
         OracleData memory chainlinkDataOracle = OracleData({
             valueProviderData: abi.encode(chainlinkValueProvider),
             timeWindow: 100,
-            maxValidTime: 300,
-            alpha: 2 * 10**17,
             valueProviderType: uint8(Factory.ValueProviderType.Chainlink)
         });
 
@@ -436,8 +422,6 @@ contract FactoryTest is DSTest {
         OracleData memory chainlinkDataOracle = OracleData({
             valueProviderData: abi.encode(chainlinkValueProvider),
             timeWindow: 100,
-            maxValidTime: 300,
-            alpha: 2 * 10**17,
             valueProviderType: uint8(Factory.ValueProviderType.Chainlink)
         });
 
@@ -987,8 +971,6 @@ contract FactoryTest is DSTest {
             OracleData({
                 valueProviderData: abi.encode(createElementVPData()),
                 timeWindow: 0,
-                maxValidTime: 0,
-                alpha: 1,
                 valueProviderType: uint8(Factory.ValueProviderType.Element)
             });
     }
@@ -1002,8 +984,6 @@ contract FactoryTest is DSTest {
             OracleData({
                 valueProviderData: abi.encode(createNotionalVPData()),
                 timeWindow: 0,
-                maxValidTime: 0,
-                alpha: 1,
                 valueProviderType: uint8(Factory.ValueProviderType.Notional)
             });
     }
@@ -1013,8 +993,6 @@ contract FactoryTest is DSTest {
             OracleData({
                 valueProviderData: abi.encode(createYieldVPData()),
                 timeWindow: 0,
-                maxValidTime: 0,
-                alpha: 1,
                 valueProviderType: uint8(Factory.ValueProviderType.Yield)
             });
     }
@@ -1024,8 +1002,6 @@ contract FactoryTest is DSTest {
             OracleData({
                 valueProviderData: abi.encode(createChainlinkVPData()),
                 timeWindow: 0,
-                maxValidTime: 0,
-                alpha: 1,
                 valueProviderType: uint8(Factory.ValueProviderType.Chainlink)
             });
     }

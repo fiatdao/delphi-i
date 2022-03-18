@@ -21,8 +21,6 @@ contract NotionalFinanceValueProviderTest is DSTest {
     uint256 internal _maturityDate = 1671840000;
     uint256 internal _settlementDate = 1648512000;
     uint256 internal _timeUpdateWindow = 100; // seconds
-    uint256 internal _maxValidTime = 300;
-    int256 internal _alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
         // Values taken from interrogating the active markets via the Notional View Contract deployed at
@@ -61,10 +59,6 @@ contract NotionalFinanceValueProviderTest is DSTest {
             // Oracle arguments
             // Time update window
             _timeUpdateWindow,
-            // Max valid time
-            _maxValidTime,
-            // Alpha
-            _alpha,
             // Notional Finance arguments
             address(mockNotionalView),
             _currencyId,
