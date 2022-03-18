@@ -16,18 +16,22 @@ abstract contract Oracle is Pausable, IOracle {
     event OracleReset();
 
     /// ======== Storage ======== ///
-
+    // Time interval between the value updates
     uint256 public immutable timeUpdateWindow;
 
+    // Timestamp of the current value
     uint256 public lastTimestamp;
-    // next EMA value
+
+    // The next value that will replace the current value once the timeUpdateWindow has passed
     int256 public nextValue;
 
-    // current EMA value and its validity
+    // Current value that will be returned by the Oracle
     int256 private _currentValue;
+
+    // Flag that tells if the value provider returned successfully
     bool private _validReturnedValue;
 
-    // reentrancy guard flag
+    // Reentrancy guard flag
     uint256 private _reentrantGuard = 1;
 
     /// ======== Modifiers ======== ///
