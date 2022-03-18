@@ -40,11 +40,10 @@ abstract contract Oracle is Pausable, IOracle {
 
     // reentrancy constants
     uint256 private constant _NOT_ENTERED = 1;
-    uint256 private constant _ENTERED = 2;   
+    uint256 private constant _ENTERED = 2;
 
     // reentrancy guard flag
     uint256 private _reentrantGuard = _NOT_ENTERED;
-
 
     /// ======== Modifiers ======== ///
 
