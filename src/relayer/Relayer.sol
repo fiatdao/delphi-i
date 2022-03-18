@@ -209,7 +209,11 @@ contract Relayer is Guarded, IRelayer {
             }
             (int256 oracleValue, bool isValid) = IOracle(localOracle).value();
 
+            // If the value is invalid we don't need to update Collybus
             if (!isValid) continue;
+
+            // If the oracle was not updated we don't need to update Collybus
+            if (!oracleUpdated) continue;
 
             OracleData storage oracleData = _oraclesData[localOracle];
 
