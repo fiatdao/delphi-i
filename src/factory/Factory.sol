@@ -2,13 +2,11 @@
 pragma solidity ^0.8.0;
 
 import {IOracle} from "../oracle/IOracle.sol";
-import {IAggregatorOracle} from "../aggregator/IAggregatorOracle.sol";
 // Contract Deployers
 import {IElementFiValueProviderFactory} from "./ElementFiValueProviderFactory.sol";
 import {INotionalFinanceValueProviderFactory} from "./NotionalFinanceValueProviderFactory.sol";
 import {IYieldValueProviderFactory} from "./YieldValueProviderFactory.sol";
 import {IChainlinkValueProviderFactory} from "./ChainlinkValueProviderFactory.sol";
-import {IAggregatorOracleFactory} from "./AggregatorOracleFactory.sol";
 import {IRelayerFactory} from "./RelayerFactory.sol";
 import {IRelayer} from "../relayer/IRelayer.sol";
 import {Guarded} from "../guarded/Guarded.sol";

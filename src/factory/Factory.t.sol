@@ -11,13 +11,11 @@ import "./Factory.sol";
 import {Guarded} from "../guarded/Guarded.sol";
 import {Oracle} from "../oracle/Oracle.sol";
 
-import {AggregatorOracle} from "../aggregator/AggregatorOracle.sol";
 // Contract Deployers and dependencies
 import {ElementFiValueProviderFactory} from "./ElementFiValueProviderFactory.sol";
 import {NotionalFinanceValueProviderFactory} from "./NotionalFinanceValueProviderFactory.sol";
 import {YieldValueProviderFactory} from "./YieldValueProviderFactory.sol";
 import {ChainlinkValueProviderFactory} from "./ChainlinkValueProviderFactory.sol";
-import {AggregatorOracleFactory} from "./AggregatorOracleFactory.sol";
 import {RelayerFactory} from "./RelayerFactory.sol";
 import {ChainlinkMockProvider} from "../deploy/ChainlinkMockProvider.sol";
 import {IYieldPool} from "../oracle_implementations/discount_rate/Yield/IYieldPool.sol";
