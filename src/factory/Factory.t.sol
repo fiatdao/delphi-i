@@ -27,6 +27,7 @@ import {IChainlinkAggregatorV3Interface} from "../oracle_implementations/spot_pr
 import {IRelayer} from "../relayer/IRelayer.sol";
 import {Relayer} from "../relayer/Relayer.sol";
 
+/*
 contract FactoryTest is DSTest {
     error FactoryTest__invalidDiscountRateAggregatorType(uint256 valueType);
     error FactoryTest__invalidSpotPriceAggregatorType(uint256 valueType);
@@ -1169,3 +1170,4 @@ contract FactoryTest is DSTest {
         return deployData;
     }
 }
+*/

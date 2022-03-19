@@ -3,8 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IVault} from "../oracle_implementations/discount_rate/ElementFi/IVault.sol";
-import {RelayerDeployData, AggregatorData, OracleData, ChainlinkVPData, Factory} from "../factory/Factory.sol";
-
+//import {RelayerData, OracleData, ChainlinkVPData, Factory} from "../factory/Factory.sol";
 import "prb-math/contracts/PRBMathSD59x18.sol";
 
 contract SpotPriceDeploy {
@@ -13,7 +12,7 @@ contract SpotPriceDeploy {
         pure
         returns (bytes memory)
     {
-        ChainlinkVPData memory chainlinkValueProvider = ChainlinkVPData({
+        /*ChainlinkVPData memory chainlinkValueProvider = ChainlinkVPData({
             chainlinkAggregatorAddress: chainlinkDataFeedAddress_
         });
 
@@ -41,5 +40,6 @@ contract SpotPriceDeploy {
         deployData.aggregatorData[0] = abi.encode(chainlinkAggregator);
 
         return abi.encode(deployData);
+        */
     }
 }

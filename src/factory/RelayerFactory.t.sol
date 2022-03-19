@@ -31,8 +31,8 @@ contract RelayerFactoryTest is DSTest {
         // Create Relayer
         address relayerAddress = _factory.create(
             _collybusAddress,
-            _oracleAddress,
             _relayerType,
+            _oracleAddress,
             _encodedTokenId,
             _minimumPercentageDeltaValue
         );
@@ -63,8 +63,8 @@ contract RelayerFactoryTest is DSTest {
         Relayer relayer = Relayer(
             _factory.create(
                 _collybusAddress,
-                _oracleAddress,
                 _relayerType,
+                _oracleAddress,
                 _encodedTokenId,
                 _minimumPercentageDeltaValue
             )
@@ -76,9 +76,8 @@ contract RelayerFactoryTest is DSTest {
             "Relayer incorrect collybus"
         );
 
-        assertEq(
-            relayer.relayerType(),
-            _relayerType,
+        assertTrue(
+            relayer.relayerType() == _relayerType,
             "Relayer incorrect relayerType"
         );
 
@@ -118,9 +117,8 @@ contract RelayerFactoryTest is DSTest {
             "StaticRelayer incorrect collybus"
         );
 
-        assertEq(
-            staticRelayer.relayerType(),
-            _relayerType,
+        assertTrue(
+            staticRelayer.relayerType() == _relayerType,
             "StaticRelayer incorrect relayerType"
         );
 

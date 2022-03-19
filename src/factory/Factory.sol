@@ -12,6 +12,7 @@ import {IAggregatorOracleFactory} from "./AggregatorOracleFactory.sol";
 import {IRelayerFactory} from "./RelayerFactory.sol";
 import {IRelayer} from "../relayer/IRelayer.sol";
 import {Guarded} from "../guarded/Guarded.sol";
+/*
 
 /// @notice Data structure that wraps data needed to deploy an Element Value Provider contract
 struct ElementVPData {
@@ -52,35 +53,18 @@ struct OracleData {
     bytes valueProviderData;
     uint256 valueProviderType;
     uint256 timeWindow;
-    uint256 maxValidTime;
-    int256 alpha;
-}
-
-/// @notice Data structure that wraps needed data to deploy an Oracle Aggregator contract
-/// @dev The oracleData array field contains abi.encoded OracleData structures
-/// @dev Factory will revert if the requiredValidValues is bigger than the oracleData item count
-struct AggregatorData {
-    bytes32 encodedTokenId;
-    bytes[] oracleData;
-    uint256 requiredValidValues;
-    uint256 minimumPercentageDeltaValue;
 }
 
 /// @notice Data structure that wraps needed data to deploy a full Relayer architecture
 /// @dev The aggregatorData field contains abi.encoded AggregatorData structure
 /// @dev Factory will revert if the aggregators do not contain unique tokenId's
-struct RelayerDeployData {
-    bytes[] aggregatorData;
+struct RelayerData {
+    bytes oracleData;
+    bytes32 encodedTokenId;
+    uint256 minimumPercentageDeltaValue;
 }
 
 contract Factory is Guarded {
-    event RelayerDeployed(
-        address relayerAddress,
-        IRelayer.RelayerType relayerType
-    );
-    event AggregatorDeployed(address aggregatorAddress);
-    event OracleDeployed(address oracleAddress);
-
     // @notice Emitted when the collybus address is address(0)
     error Factory__deployRelayer_invalidCollybusAddress();
 
@@ -231,14 +215,12 @@ contract Factory is Guarded {
         return chainlinkValueProviderAddress;
     }
 
-    /// @notice Deploys a new Oracle and adds it to an Aggregator
+    /// @notice Deploys a new Oracle
     /// @param oracleDataEncoded_ ABI encoded Oracle data structure
-    /// @param aggregatorAddress_ The aggregator address that will contain the created Oracle
     /// @dev Reverts if the encoded struct can not be decoded
     /// @return Returns the address of the new Oracle
-    function deployAggregatorOracle(
-        bytes memory oracleDataEncoded_,
-        address aggregatorAddress_
+    function deployOracle(
+        bytes memory oracleDataEncoded_
     ) public checkCaller returns (address) {
         // Decode oracle data
         OracleData memory oracleData = abi.decode(
@@ -277,88 +259,26 @@ contract Factory is Guarded {
             );
         }
 
-        // Whitelist the aggregator so it can Update the oracle
-        Guarded(oracleAddress).allowCaller(
-            Guarded(oracleAddress).ANY_SIG(),
-            aggregatorAddress_
-        );
-        // Add the oracle to the Aggregator Oracle
-        IAggregatorOracle(aggregatorAddress_).oracleAdd(oracleAddress);
-        emit OracleDeployed(oracleAddress);
-
         return oracleAddress;
-    }
-
-    /// @notice Deploys a new Aggregator and adds it to a Relayer
-    /// @param aggregatorDataEncoded_ ABI encoded Aggregator data structure
-    /// @param relayerAddress_ The address of the discount rate relayer where we will add the aggregator
-    /// @dev Reverts if the encoded struct can not be decoded
-    /// @return Returns the address of the new Aggregator
-    function deployAggregator(
-        bytes memory aggregatorDataEncoded_,
-        address relayerAddress_
-    ) public checkCaller returns (address) {
-        // Create aggregator contract
-        address aggregatorOracleAddress = IAggregatorOracleFactory(
-            aggregatorOracleFactory
-        ).create();
-
-        // Decode aggregator structure
-        AggregatorData memory aggData = abi.decode(
-            aggregatorDataEncoded_,
-            (AggregatorData)
-        );
-
-        // Iterate and deploy each oracle
-        uint256 oracleCount = aggData.oracleData.length;
-        for (
-            uint256 oracleIndex = 0;
-            oracleIndex < oracleCount;
-            oracleIndex++
-        ) {
-            // TODO: We can use the oracles returned address to emit events
-            // Each oracle is also added to the aggregator
-            deployAggregatorOracle(
-                aggData.oracleData[oracleIndex],
-                aggregatorOracleAddress
-            );
-        }
-
-        // Set the minimum required valid values for the aggregator
-        // Reverts if the requiredValidValues is greater than the oracleCount
-        IAggregatorOracle(aggregatorOracleAddress).setParam(
-            "requiredValidValues",
-            aggData.requiredValidValues
-        );
-
-        // Whitelist the relayer so it can Update the aggregator
-        Guarded(aggregatorOracleAddress).allowCaller(
-            Guarded(aggregatorOracleAddress).ANY_SIG(),
-            relayerAddress_
-        );
-
-        // Add the aggregator to the relayer
-        // Reverts if the tokenId is not unique
-        // Reverts if the Aggregator is already used
-        IRelayer(relayerAddress_).oracleAdd(
-            aggregatorOracleAddress,
-            aggData.encodedTokenId,
-            aggData.minimumPercentageDeltaValue
-        );
-
-        emit AggregatorDeployed(aggregatorOracleAddress);
-        return aggregatorOracleAddress;
     }
 
     /// @notice Deploys a new Discount Rate Relayer
     /// @param collybus_ Address of Collybus
     /// @dev Reverts if Collybus is not set
     /// @return Returns the address of the Relayer
-    function deployRelayer(address collybus_, IRelayer.RelayerType type_)
+    function deployRelayer(address collybus_, IRelayer.RelayerType type_, bytes memory relayerData_)
         public
         checkCaller
         returns (address)
     {
+        // Decode relayer data
+        RelayerData memory relayerData = abi.decode(
+            relayerData_,
+            (RelayerData)
+        );
+
+        address oracleAddress = deployOracle(relayerData.oracleData);
+
         // Collybus address is needed in order to deploy the Discount Rate Relayer
         if (collybus_ == address(0)) {
             revert Factory__deployRelayer_invalidCollybusAddress();
@@ -366,74 +286,13 @@ contract Factory is Guarded {
 
         address relayerAddress = IRelayerFactory(relayerFactory).create(
             collybus_,
-            type_
+            type_,
+            oracleAddress,
+            relayerData.encodedTokeId,
+            relayerData.minimumPercentageDeltaValue
         );
 
-        emit RelayerDeployed(relayerAddress, type_);
         return relayerAddress;
-    }
-
-    /// @notice Deploys a full Discount Rate Relayer architecture, can contain Aggregator Oracles and Oracles
-    /// @param discountRateRelayerDataEncoded_ ABI encoded RelayerDeployData struct
-    /// @param collybus_ Collybus address
-    /// @dev Reverts on dependencies checks and conditions
-    /// @return Returns the Discount Rate Relayer
-    function deployDiscountRateArchitecture(
-        bytes memory discountRateRelayerDataEncoded_,
-        address collybus_
-    ) public checkCaller returns (address) {
-        RelayerDeployData memory discountRateRelayerData = abi.decode(
-            discountRateRelayerDataEncoded_,
-            (RelayerDeployData)
-        );
-        // Create the relayer and cache the address
-        address discountRateRelayerAddress = deployRelayer(
-            collybus_,
-            IRelayer.RelayerType.DiscountRate
-        );
-
-        // Iterate and deploy each aggregator
-        uint256 aggCount = discountRateRelayerData.aggregatorData.length;
-        for (uint256 aggIndex = 0; aggIndex < aggCount; aggIndex++) {
-            deployAggregator(
-                discountRateRelayerData.aggregatorData[aggIndex],
-                discountRateRelayerAddress
-            );
-        }
-
-        return discountRateRelayerAddress;
-    }
-
-    /// @notice Deploys a full Spot Price Relayer architecture, can contain Aggregator Oracles and Oracles
-    /// @param spotPriceRelayerDataEncoded_ ABI encoded RelayerDeployData struct
-    /// @param collybusAddress_ Collybus address
-    /// @dev Reverts on dependency checks and conditions
-    /// @return Returns the Spot Price Relayer
-    function deploySpotPriceArchitecture(
-        bytes memory spotPriceRelayerDataEncoded_,
-        address collybusAddress_
-    ) public checkCaller returns (address) {
-        RelayerDeployData memory spotPriceRelayerData = abi.decode(
-            spotPriceRelayerDataEncoded_,
-            (RelayerDeployData)
-        );
-
-        // Create the relayer and cache the address
-        address spotPriceRelayerAddress = deployRelayer(
-            collybusAddress_,
-            IRelayer.RelayerType.SpotPrice
-        );
-
-        // Iterate and deploy each aggregator
-        uint256 aggCount = spotPriceRelayerData.aggregatorData.length;
-        for (uint256 aggIndex = 0; aggIndex < aggCount; aggIndex++) {
-            deployAggregator(
-                spotPriceRelayerData.aggregatorData[aggIndex],
-                spotPriceRelayerAddress
-            );
-        }
-
-        return spotPriceRelayerAddress;
     }
 
     /// @notice Sets permission on the destination contract
@@ -462,3 +321,4 @@ contract Factory is Guarded {
         Guarded(where_).blockCaller(sig_, who_);
     }
 }
+*/
