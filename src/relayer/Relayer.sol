@@ -11,10 +11,10 @@ contract Relayer is Guarded, IRelayer {
     // @notice Emitter when execute() does not update any oracle
     error Relayer__executeWithRevert_noUpdates(RelayerType relayerType);
 
-    // @notice Emitted when trying to add a Oracle to the Relayer but the Relayer is not whitelisted in the Oracle
-    //         The Relayer needs to be able to call Update on all Oracles
-    error Relayer__unauthorizedToCallUpdateOracle(address oracleAddress);
+    // @notice Emitted when trying to set a parameter that does not exist
+    error Relayer__setParam_unrecognizedParam(bytes32 param);
 
+    event SetParam(bytes32 param, uint256 value);
     event UpdateOracle(address oracle, int256 value, bool valid);
     event UpdatedCollybus(bytes32 tokenId, uint256 rate, RelayerType);
 
@@ -24,17 +24,37 @@ contract Relayer is Guarded, IRelayer {
     RelayerType public immutable relayerType;
     address public immutable oracle;
     bytes32 public immutable encodedTokenId;
-    uint256 public minimumPercentageDeltaValue;
 
-    uint256 private _lastUpdateValue;
-    
-    constructor(address collybusAddress_, RelayerType type_, address oracleAddress_, bytes32 encodedTokenId_, uint256 minimumPercentageDeltaValue_) {
+    uint256 public minimumPercentageDeltaValue;
+    int256 private _lastUpdateValue;
+
+    constructor(
+        address collybusAddress_,
+        RelayerType type_,
+        address oracleAddress_,
+        bytes32 encodedTokenId_,
+        uint256 minimumPercentageDeltaValue_
+    ) {
         collybus = collybusAddress_;
         relayerType = type_;
         oracle = oracleAddress_;
         encodedTokenId = encodedTokenId_;
         minimumPercentageDeltaValue = minimumPercentageDeltaValue_;
         _lastUpdateValue = 0;
+    }
+
+    /// @notice Sets a Relayer parameter
+    /// Supported parameters are:
+    /// - minimumPercentageDeltaValue
+    /// @param param_ The identifier of the parameter that should be updated
+    /// @param value_ The new value
+    /// @dev Returns if parameter is not found
+    function setParam(bytes32 param_, uint256 value_) public checkCaller {
+        if (param_ == "minimumPercentageDeltaValue") {
+            minimumPercentageDeltaValue = value_;
+        } else revert Relayer__setParam_unrecognizedParam(param_);
+
+        emit SetParam(param_, value_);
     }
 
     /// @notice Iterates and updates all the oracles and pushes the updated data to Collybus for the
@@ -45,7 +65,7 @@ contract Relayer is Guarded, IRelayer {
         bool oracleUpdated = IOracle(oracle).update();
         (int256 oracleValue, bool isValid) = IOracle(oracle).value();
 
-        if(oracleUpdated && isValid){
+        if (oracleUpdated && isValid) {
             // If the change in delta rate from the last update is bigger than the threshold value push
             // the rates to Collybus
             if (
@@ -75,7 +95,6 @@ contract Relayer is Guarded, IRelayer {
                     relayerType
                 );
             }
-
         }
 
         return oracleUpdated;
@@ -83,7 +102,7 @@ contract Relayer is Guarded, IRelayer {
 
     /// @notice The function will call `execute()` and will revert if no oracle was updated
     /// @dev This method is needed for services that try to updates the oracles on each block and only call the method if it doesn't fail
-    function executeWithRevert() public override(IRelayer) checkCaller {
+    function executeWithRevert() public override(IRelayer) {
         if (!execute()) {
             revert Relayer__executeWithRevert_noUpdates(relayerType);
         }
