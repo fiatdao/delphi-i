@@ -95,15 +95,24 @@ contract RelayerTest is DSTest {
     }
 
     function test_check_oracle() public {
-        assertTrue(relayer.oracle() == address(oracle), "Invalid oracle address");
+        assertTrue(
+            relayer.oracle() == address(oracle),
+            "Invalid oracle address"
+        );
     }
 
     function test_check_encodedTokenId() public {
-        assertTrue(relayer.encodedTokenId() == _mockTokenId, "Invalid encoded token id");
+        assertTrue(
+            relayer.encodedTokenId() == _mockTokenId,
+            "Invalid encoded token id"
+        );
     }
 
     function test_check_minimumPercentageDeltaValue() public {
-        assertTrue(relayer.minimumPercentageDeltaValue() == _mockMinThreshold, "Invalid minimumPercentageDeltaValue");
+        assertTrue(
+            relayer.minimumPercentageDeltaValue() == _mockMinThreshold,
+            "Invalid minimumPercentageDeltaValue"
+        );
     }
 
     function test_canSetParam_minimumPercentageDeltaValue() public {

@@ -6,9 +6,13 @@ import {StaticRelayer} from "../relayer/StaticRelayer.sol";
 import {IRelayer} from "../relayer/IRelayer.sol";
 
 interface IRelayerFactory {
-    function create(address collybus_, IRelayer.RelayerType relayerType_)
-        external
-        returns (address);
+    function create(
+        address collybus_,
+        IRelayer.RelayerType relayerType_,
+        address oracleAddress,
+        bytes32 encodedTokenId,
+        uint256 minimumPercentageDeltaValue
+    ) external returns (address);
 
     function createStatic(
         address collybus_,
@@ -22,23 +26,43 @@ contract RelayerFactory is IRelayerFactory {
     // Emitted when a Relayer is created
     event RelayerDeployed(
         address relayerAddress,
-        IRelayer.RelayerType relayerType
+        IRelayer.RelayerType relayerType,
+        address oracleAddress,
+        bytes32 encodedTokenId,
+        uint256 minimumPercentageDeltaValue
     );
     // Emitted when a Static Relayer is created
     event StaticRelayerDeployed(
         address relayerAddress,
-        IRelayer.RelayerType relayerType
+        IRelayer.RelayerType relayerType,
+        bytes32 encodedTokenId,
+        uint256 value
     );
 
-    function create(address collybus_, Relayer.RelayerType relayerType_)
-        public
-        override(IRelayerFactory)
-        returns (address)
-    {
-        Relayer relayer = new Relayer(collybus_, relayerType_);
+    function create(
+        address collybus_,
+        Relayer.RelayerType relayerType_,
+        address oracleAddress_,
+        bytes32 encodedTokenId_,
+        uint256 minimumPercentageDeltaValue_
+    ) public override(IRelayerFactory) returns (address) {
+        Relayer relayer = new Relayer(
+            collybus_,
+            relayerType_,
+            oracleAddress_,
+            encodedTokenId_,
+            minimumPercentageDeltaValue_
+        );
         relayer.allowCaller(relayer.ANY_SIG(), msg.sender);
+        relayer.blockCaller(relayer.ANY_SIG(), address(this));
 
-        emit RelayerDeployed(address(relayer), relayerType_);
+        emit RelayerDeployed(
+            address(relayer),
+            relayerType_,
+            oracleAddress_,
+            encodedTokenId_,
+            minimumPercentageDeltaValue_
+        );
         return address(relayer);
     }
 
@@ -60,7 +84,12 @@ contract RelayerFactory is IRelayerFactory {
         staticRelayer.allowCaller(staticRelayer.ANY_SIG(), msg.sender);
         staticRelayer.blockCaller(staticRelayer.ANY_SIG(), address(this));
 
-        emit StaticRelayerDeployed(address(staticRelayer), relayerType_);
+        emit StaticRelayerDeployed(
+            address(staticRelayer),
+            relayerType_,
+            encodedTokenId_,
+            value_
+        );
         return address(staticRelayer);
     }
 }
