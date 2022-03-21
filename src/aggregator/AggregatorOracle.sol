@@ -159,10 +159,9 @@ contract AggregatorOracle is Guarded, Pausable, IAggregatorOracle, IOracle {
             IOracle oracle = IOracle(_oracles.at(i));
 
             try oracle.update() returns (bool localUpdated) {
-                emit OracleUpdated(address(oracle));
-
                 // If at least one oracle updated successfully, set the flag
                 if (localUpdated) {
+                    emit OracleUpdated(address(oracle));
                     updated = true;
                 }
 
