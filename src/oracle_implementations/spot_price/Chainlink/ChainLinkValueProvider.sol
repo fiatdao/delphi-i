@@ -11,17 +11,13 @@ contract ChainLinkValueProvider is Oracle, Convert {
 
     /// @notice Constructs the Value provider contracts with the needed Chainlink.
     /// @param timeUpdateWindow_ Minimum time between updates of the value
-    /// @param maxValidTime_ Maximum time for which the value is valid
-    /// @param alpha_ Alpha parameter for EMA
     /// @param chainlinkAggregatorAddress_ Address of the deployed chainlink aggregator contract.
     constructor(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        uint256 maxValidTime_,
-        int256 alpha_,
         //
         address chainlinkAggregatorAddress_
-    ) Oracle(timeUpdateWindow_, maxValidTime_, alpha_) {
+    ) Oracle(timeUpdateWindow_) {
         chainlinkAggregatorAddress = chainlinkAggregatorAddress_;
         underlierDecimals = IChainlinkAggregatorV3Interface(
             chainlinkAggregatorAddress_

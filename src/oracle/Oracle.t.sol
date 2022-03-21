@@ -7,11 +7,7 @@ import {Hevm} from "../test/utils/Hevm.sol";
 import {Oracle} from "./Oracle.sol";
 
 contract OracleImplementation is Oracle {
-    constructor(
-        uint256 timeUpdateWindow_,
-        uint256 maxValidTime_,
-        int256 alpha_
-    ) Oracle(timeUpdateWindow_, maxValidTime_, alpha_) {
+    constructor(uint256 timeUpdateWindow_) Oracle(timeUpdateWindow_) {
         this;
     }
 
@@ -42,11 +38,7 @@ contract OracleImplementation is Oracle {
 }
 
 contract OracleReenter is Oracle {
-    constructor(
-        uint256 timeUpdateWindow_,
-        uint256 maxValidTime_,
-        int256 alpha_
-    ) Oracle(timeUpdateWindow_, maxValidTime_, alpha_) {
+    constructor(uint256 timeUpdateWindow_) Oracle(timeUpdateWindow_) {
         this;
     }
 
@@ -69,15 +61,9 @@ contract OracleTest is DSTest {
 
     OracleImplementation internal oracle;
     uint256 internal timeUpdateWindow = 100; // seconds
-    uint256 internal maxValidTime = 300;
-    int256 internal alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
-        oracle = new OracleImplementation(
-            timeUpdateWindow,
-            maxValidTime,
-            alpha
-        );
+        oracle = new OracleImplementation(timeUpdateWindow);
 
         // Set the value returned to 100
         oracle.setValue(int256(100 * 10**18));
@@ -95,19 +81,6 @@ contract OracleTest is DSTest {
             oracle.timeUpdateWindow() == timeUpdateWindow,
             "Invalid oracle timeUpdateWindow"
         );
-    }
-
-    function test_check_maxValidTime() public {
-        // Check that the property was properly set
-        assertTrue(
-            oracle.maxValidTime() == maxValidTime,
-            "Invalid oracle maxValidTime"
-        );
-    }
-
-    function test_check_alpha() public {
-        // Check that the property was properly set
-        assertTrue(oracle.alpha() == alpha, "Invalid oracle alpha");
     }
 
     function test_update_updates_timestamp() public {
@@ -231,92 +204,10 @@ contract OracleTest is DSTest {
         assertTrue(isValid2 == true);
     }
 
-    function test_update_recalculates_movingAverage() public {
-        // Set the value to 100
-        oracle.setValue(100 * 10**18);
-        // Update the oracle
-        oracle.update();
-
-        // Check accumulated value
-        (int256 value1, ) = oracle.value();
-        // First update returns initial value
-        assertEq(value1, 100 * 10**18);
-
-        // Check next value
-        int256 nextValue1 = oracle.nextValue();
-        // Next value is set as the initial value
-        assertEq(nextValue1, 100 * 10**18);
-
-        // Set reported value to 150
-        oracle.setValue(150 * 10**18);
-
-        // Advance time
-        hevm.warp(block.timestamp + timeUpdateWindow);
-
-        // Update the oracle
-        oracle.update();
-
-        // Check value after the second update
-        (int256 value2, ) = oracle.value();
-        assertEq(value2, 100 * 10**18);
-
-        // Check the next value after the second update
-        int256 nextValue2 = oracle.nextValue();
-        assertEq(nextValue2, 110 * 10**18);
-
-        // Set reported value to 100
-        oracle.setValue(100 * 10**18);
-
-        // Advance time
-        hevm.warp(block.timestamp + timeUpdateWindow);
-
-        // Update the oracle
-        oracle.update();
-
-        (int256 value3, ) = oracle.value();
-        assertEq(value3, 110 * 10**18);
-
-        int256 nextValue3 = oracle.nextValue();
-        assertEq(nextValue3, 108 * 10**18);
-    }
-
     function test_valueReturned_shouldNotBeValid_ifNeverUpdated() public {
         // Initially the value should be considered stale
         (, bool valid) = oracle.value();
         assertTrue(valid == false);
-    }
-
-    function test_valueReturned_shouldNotBeValid_ifNotUpdatedForTooLong()
-        public
-    {
-        // Set the value to 100
-        oracle.setValue(100 * 10**18);
-        // Update the oracle
-        oracle.update();
-
-        // Cache start time
-        uint256 startTime = block.timestamp;
-
-        // Advance time at the maximum valid time
-        hevm.warp(startTime + maxValidTime - 1);
-        // Check value , should be fresh
-        (, bool valid1) = oracle.value();
-        assertTrue(valid1 == true);
-
-        // Advance time exactly when it should become invalid(or stale)
-        hevm.warp(startTime + maxValidTime);
-        // Check value, should be stale
-        (, bool valid2) = oracle.value();
-        assertTrue(valid2 == false);
-    }
-
-    function test_valueReturned_shouldBeValid_ifJustUpdated() public {
-        // Update the oracle
-        oracle.update();
-
-        // Check stale value
-        (, bool valid) = oracle.value();
-        assertTrue(valid);
     }
 
     function test_paused_stops_returnValue() public {
@@ -451,24 +342,8 @@ contract OracleTest is DSTest {
         );
     }
 
-    function testFail_alphaHasToBe_greaterThanZero() public {
-        new OracleImplementation(timeUpdateWindow, maxValidTime, 0);
-    }
-
-    function testFail_alphaHasToBe_lowerOrEqualToOne() public {
-        new OracleImplementation(
-            timeUpdateWindow,
-            maxValidTime,
-            1 * 10**18 + 1
-        );
-    }
-
     function testFail_update_cannotBeReentered() public {
-        OracleReenter oracleReenter = new OracleReenter(
-            timeUpdateWindow,
-            maxValidTime,
-            alpha
-        );
+        OracleReenter oracleReenter = new OracleReenter(timeUpdateWindow);
 
         oracleReenter.update();
 

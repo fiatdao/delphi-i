@@ -27,8 +27,6 @@ contract YieldValueProviderTest is DSTest, Convert {
 
     // Default oracle parameters
     uint256 private _timeUpdateWindow = 100; // seconds
-    uint256 private _maxValidTime = 300;
-    int256 private _alpha = 2 * 10**17; // 0.2
 
     function setUp() public {
         mockValueProvider = new MockProvider();
@@ -39,10 +37,6 @@ contract YieldValueProviderTest is DSTest, Convert {
             // Oracle arguments
             // Time update window
             _timeUpdateWindow,
-            // Max valid time
-            _maxValidTime,
-            // Alpha
-            _alpha,
             // Yield arguments
             address(mockValueProvider),
             uint256(_maturity),

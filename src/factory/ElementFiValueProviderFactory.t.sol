@@ -12,8 +12,6 @@ import {ElementFiValueProvider} from "../oracle_implementations/discount_rate/El
 
 contract ElementFiValueProviderFactoryTest is DSTest {
     uint256 private _oracleUpdateWindow;
-    uint256 private _oracleMaxValidTime;
-    int256 private _oracleAlpha = 1;
 
     bytes32 private _poolId =
         bytes32(
@@ -59,8 +57,6 @@ contract ElementFiValueProviderFactoryTest is DSTest {
         // Create ElementFi Value Provider
         address elementValueProviderAddress = _factory.create(
             _oracleUpdateWindow,
-            _oracleMaxValidTime,
-            _oracleAlpha,
             _poolId,
             _balancerVaultAddress,
             address(poolToken),
@@ -102,8 +98,6 @@ contract ElementFiValueProviderFactoryTest is DSTest {
         // Create the ElementFi Value Provider
         address elementValueProviderAddress = _factory.create(
             _oracleUpdateWindow,
-            _oracleMaxValidTime,
-            _oracleAlpha,
             _poolId,
             _balancerVaultAddress,
             address(poolTokenMock),
@@ -119,18 +113,6 @@ contract ElementFiValueProviderFactoryTest is DSTest {
                 .timeUpdateWindow(),
             _oracleUpdateWindow,
             "ElementFi Value Provider incorrect timeUpdateWindow"
-        );
-
-        assertEq(
-            ElementFiValueProvider(elementValueProviderAddress).maxValidTime(),
-            _oracleMaxValidTime,
-            "ElementFi Value Provider incorrect maxValidTime"
-        );
-
-        assertEq(
-            ElementFiValueProvider(elementValueProviderAddress).alpha(),
-            _oracleAlpha,
-            "ElementFi Value Provider incorrect alpha"
         );
 
         assertEq(

@@ -29,8 +29,6 @@ contract ElementFiValueProvider is Oracle, Convert {
     /// @notice Constructs the Value provider contracts with the needed Element data in order to
     /// calculate the annual rate.
     /// @param timeUpdateWindow_ Minimum time between updates of the value
-    /// @param maxValidTime_ Maximum time for which the value is valid
-    /// @param alpha_ Alpha parameter for EMA
     /// @param poolId_ poolID of the pool
     /// @param balancerVaultAddress_ Address of the balancer vault
     /// @param poolToken_ Address of the pool (LP token) contract
@@ -41,8 +39,6 @@ contract ElementFiValueProvider is Oracle, Convert {
     constructor(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        uint256 maxValidTime_,
-        int256 alpha_,
         //
         bytes32 poolId_,
         address balancerVaultAddress_,
@@ -51,7 +47,7 @@ contract ElementFiValueProvider is Oracle, Convert {
         address ePTokenBond_,
         int256 timeScale_,
         uint256 maturity_
-    ) Oracle(timeUpdateWindow_, maxValidTime_, alpha_) {
+    ) Oracle(timeUpdateWindow_) {
         poolId = poolId_;
         balancerVaultAddress = balancerVaultAddress_;
         poolToken = poolToken_;
