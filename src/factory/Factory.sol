@@ -10,7 +10,6 @@ import {IChainlinkValueProviderFactory} from "./ChainlinkValueProviderFactory.so
 import {IRelayerFactory} from "./RelayerFactory.sol";
 import {IRelayer} from "../relayer/IRelayer.sol";
 import {Guarded} from "../guarded/Guarded.sol";
-/*
 
 /// @notice Data structure that wraps data needed to deploy an Element Value Provider contract
 struct ElementVPData {
@@ -57,7 +56,7 @@ struct OracleData {
 /// @dev The aggregatorData field contains abi.encoded AggregatorData structure
 /// @dev Factory will revert if the aggregators do not contain unique tokenId's
 struct RelayerData {
-    bytes oracleData;
+    OracleData oracleData;
     bytes32 encodedTokenId;
     uint256 minimumPercentageDeltaValue;
 }
@@ -82,7 +81,6 @@ contract Factory is Guarded {
     address public immutable notionalValueProviderFactory;
     address public immutable yieldValueProviderFactory;
     address public immutable chainlinkValueProviderFactory;
-    address public immutable aggregatorOracleFactory;
     address public immutable relayerFactory;
 
     constructor(
@@ -90,14 +88,12 @@ contract Factory is Guarded {
         address notionalValueProviderFactory_,
         address yieldValueProviderFactory_,
         address chainlinkValueProviderFactory_,
-        address aggregatorOracleFactory_,
         address relayerFactory_
     ) {
         elementFiValueProviderFactory = elementFiValueProviderFactory_;
         notionalValueProviderFactory = notionalValueProviderFactory_;
         yieldValueProviderFactory = yieldValueProviderFactory_;
         chainlinkValueProviderFactory = chainlinkValueProviderFactory_;
-        aggregatorOracleFactory = aggregatorOracleFactory_;
         relayerFactory = relayerFactory_;
     }
 
@@ -206,46 +202,45 @@ contract Factory is Guarded {
     }
 
     /// @notice Deploys a new Oracle
-    /// @param oracleDataEncoded_ ABI encoded Oracle data structure
-    /// @dev Reverts if the encoded struct can not be decoded
+    /// @param oracleData_ Oracle data structure
+    /// @dev Reverts if the encoded oracle struct can not be decoded
     /// @return Returns the address of the new Oracle
-    function deployOracle(
-        bytes memory oracleDataEncoded_
-    ) public checkCaller returns (address) {
+    function deployOracle(OracleData memory oracleData_)
+        public
+        checkCaller
+        returns (address)
+    {
         // Decode oracle data
-        OracleData memory oracleData = abi.decode(
-            oracleDataEncoded_,
-            (OracleData)
-        );
 
         address oracleAddress;
 
         // Create the value provider based on valueProviderType
         // Revert if no match match is found
         if (
-            oracleData.valueProviderType == uint256(ValueProviderType.Element)
+            oracleData_.valueProviderType == uint256(ValueProviderType.Element)
         ) {
             // Create the value provider
-            oracleAddress = deployElementFiValueProvider(oracleData);
+            oracleAddress = deployElementFiValueProvider(oracleData_);
         } else if (
-            oracleData.valueProviderType == uint256(ValueProviderType.Notional)
+            oracleData_.valueProviderType == uint256(ValueProviderType.Notional)
         ) {
             // Create the value provider
-            oracleAddress = deployNotionalFinanceValueProvider(oracleData);
+            oracleAddress = deployNotionalFinanceValueProvider(oracleData_);
         } else if (
-            oracleData.valueProviderType == uint256(ValueProviderType.Chainlink)
+            oracleData_.valueProviderType ==
+            uint256(ValueProviderType.Chainlink)
         ) {
             // Create the value provider
-            oracleAddress = deployChainlinkValueProvider(oracleData);
+            oracleAddress = deployChainlinkValueProvider(oracleData_);
         } else if (
-            oracleData.valueProviderType == uint256(ValueProviderType.Yield)
+            oracleData_.valueProviderType == uint256(ValueProviderType.Yield)
         ) {
             // Create the value provider
-            oracleAddress = deployYieldValueProvider(oracleData);
+            oracleAddress = deployYieldValueProvider(oracleData_);
         } else {
             // Revert if the value provider type is not supported
             revert Factory__deployOracle_invalidValueProviderType(
-                oracleData.valueProviderType
+                oracleData_.valueProviderType
             );
         }
 
@@ -254,20 +249,16 @@ contract Factory is Guarded {
 
     /// @notice Deploys a new Discount Rate Relayer
     /// @param collybus_ Address of Collybus
+    /// @param type_ Relayer Type, can be DiscountRate or SpotPrice
+    /// @param relayerData_ Data needed to create the relayer
     /// @dev Reverts if Collybus is not set
     /// @return Returns the address of the Relayer
-    function deployRelayer(address collybus_, IRelayer.RelayerType type_, bytes memory relayerData_)
-        public
-        checkCaller
-        returns (address)
-    {
-        // Decode relayer data
-        RelayerData memory relayerData = abi.decode(
-            relayerData_,
-            (RelayerData)
-        );
-
-        address oracleAddress = deployOracle(relayerData.oracleData);
+    function deployRelayer(
+        address collybus_,
+        IRelayer.RelayerType type_,
+        RelayerData memory relayerData_
+    ) public checkCaller returns (address) {
+        address oracleAddress = deployOracle(relayerData_.oracleData);
 
         // Collybus address is needed in order to deploy the Discount Rate Relayer
         if (collybus_ == address(0)) {
@@ -278,8 +269,8 @@ contract Factory is Guarded {
             collybus_,
             type_,
             oracleAddress,
-            relayerData.encodedTokeId,
-            relayerData.minimumPercentageDeltaValue
+            relayerData_.encodedTokenId,
+            relayerData_.minimumPercentageDeltaValue
         );
 
         return relayerAddress;
@@ -311,4 +302,3 @@ contract Factory is Guarded {
         Guarded(where_).blockCaller(sig_, who_);
     }
 }
-*/

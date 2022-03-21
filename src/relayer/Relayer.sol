@@ -28,6 +28,12 @@ contract Relayer is Guarded, IRelayer {
     uint256 public minimumPercentageDeltaValue;
     int256 private _lastUpdateValue;
 
+    /// @param collybusAddress_ Address of the collybus
+    /// @param type_ Relayer type, DiscountRate or SpotPrice
+    /// @param encodedTokenId_ Encoded token Id that will be used to push values to Collybus
+    /// uint256 for discount rate, address for spot price
+    /// @param minimumPercentageDeltaValue_ Minimum delta value used to determine when to
+    /// push data to Collybus
     constructor(
         address collybusAddress_,
         RelayerType type_,
