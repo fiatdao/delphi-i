@@ -53,8 +53,6 @@ struct OracleData {
 }
 
 /// @notice Data structure that wraps needed data to deploy a full Relayer architecture
-/// @dev The aggregatorData field contains abi.encoded AggregatorData structure
-/// @dev Factory will revert if the aggregators do not contain unique tokenId's
 struct RelayerData {
     OracleData oracleData;
     bytes32 encodedTokenId;
