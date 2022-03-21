@@ -10,8 +10,6 @@ import {YieldValueProvider} from "../oracle_implementations/discount_rate/Yield/
 
 contract YieldValueProviderFactoryTest is DSTest {
     uint256 private _oracleUpdateWindow;
-    uint256 private _oracleMaxValidTime;
-    int256 private _oracleAlpha = 1;
 
     uint256 private _maturity;
     int256 private _timeScale;
@@ -44,8 +42,6 @@ contract YieldValueProviderFactoryTest is DSTest {
         // Create Yield Value Provider
         address yieldValueProviderAddress = _factory.create(
             _oracleUpdateWindow,
-            _oracleMaxValidTime,
-            _oracleAlpha,
             address(yieldPool),
             _maturity,
             _timeScale
@@ -75,8 +71,6 @@ contract YieldValueProviderFactoryTest is DSTest {
         // Create Yield Value Provider
         address yieldValueProviderAddress = _factory.create(
             _oracleUpdateWindow,
-            _oracleMaxValidTime,
-            _oracleAlpha,
             address(yieldPool),
             _maturity,
             _timeScale
@@ -87,18 +81,6 @@ contract YieldValueProviderFactoryTest is DSTest {
             YieldValueProvider(yieldValueProviderAddress).timeUpdateWindow(),
             _oracleUpdateWindow,
             "ElementFi Value Provider incorrect timeUpdateWindow"
-        );
-
-        assertEq(
-            YieldValueProvider(yieldValueProviderAddress).maxValidTime(),
-            _oracleMaxValidTime,
-            "Yield Value Provider incorrect maxValidTime"
-        );
-
-        assertEq(
-            YieldValueProvider(yieldValueProviderAddress).alpha(),
-            _oracleAlpha,
-            "Yield Value Provider incorrect alpha"
         );
 
         assertEq(

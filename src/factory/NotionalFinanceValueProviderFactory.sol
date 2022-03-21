@@ -7,8 +7,6 @@ interface INotionalFinanceValueProviderFactory {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        uint256 maxValidTime_,
-        int256 alpha_,
         //
         address notionalViewContract_,
         uint16 currencyId_,
@@ -24,8 +22,6 @@ contract NotionalFinanceValueProviderFactory is
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        uint256 maxValidTime_,
-        int256 alpha_,
         //
         address notionalViewContract_,
         uint16 currencyId_,
@@ -39,8 +35,6 @@ contract NotionalFinanceValueProviderFactory is
     {
         NotionalFinanceValueProvider notionalFinanceValueProvider = new NotionalFinanceValueProvider(
                 timeUpdateWindow_,
-                maxValidTime_,
-                alpha_,
                 notionalViewContract_,
                 currencyId_,
                 lastImpliedRateDecimals_,

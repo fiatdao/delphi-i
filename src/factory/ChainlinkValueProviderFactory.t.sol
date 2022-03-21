@@ -13,8 +13,6 @@ import {IChainlinkAggregatorV3Interface} from "../oracle_implementations/spot_pr
 
 contract ChainlinkValueProviderFactoryTest is DSTest {
     uint256 private _oracleUpdateWindow;
-    uint256 private _oracleMaxValidTime;
-    int256 private _oracleAlpha = 1;
 
     ChainlinkValueProviderFactory private _factory;
 
@@ -40,8 +38,6 @@ contract ChainlinkValueProviderFactoryTest is DSTest {
         // Create chainlink Value Provider
         address chainlinkValueProviderAddress = _factory.create(
             _oracleUpdateWindow,
-            _oracleMaxValidTime,
-            _oracleAlpha,
             address(chainlinkMock)
         );
 
@@ -65,8 +61,6 @@ contract ChainlinkValueProviderFactoryTest is DSTest {
         // Create chainlink Value Provider
         address chainlinkValueProviderAddress = _factory.create(
             _oracleUpdateWindow,
-            _oracleMaxValidTime,
-            _oracleAlpha,
             address(chainlinkMock)
         );
 
