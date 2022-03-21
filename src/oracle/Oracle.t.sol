@@ -204,6 +204,12 @@ contract OracleTest is DSTest {
         assertTrue(isValid2 == true);
     }
 
+    function test_valueReturned_shouldNotBeValid_ifNeverUpdated() public {
+        // Initially the value should be considered stale
+        (, bool valid) = oracle.value();
+        assertTrue(valid == false);
+    }
+
     function test_paused_stops_returnValue() public {
         // Pause oracle
         oracle.pause();
