@@ -46,6 +46,12 @@ contract NotionalFinanceValueProviderFactory is
             notionalFinanceValueProvider.ANY_SIG(),
             msg.sender
         );
+
+        notionalFinanceValueProvider.blockCaller(
+            notionalFinanceValueProvider.ANY_SIG(),
+            address(this)
+        );
+
         return address(notionalFinanceValueProvider);
     }
 }

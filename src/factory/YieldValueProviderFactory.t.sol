@@ -101,4 +101,49 @@ contract YieldValueProviderFactoryTest is DSTest {
             "Yield Value Provider incorrect timeScale"
         );
     }
+
+    function test_create_factoryPassesPermissions() public {
+        // Mock the yield pool that is needed when the value provider contract is created
+        MockProvider yieldPool = new MockProvider();
+        yieldPool.givenQueryReturnResponse(
+            abi.encodeWithSelector(IYieldPool.getCache.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(0, 0, 0)}),
+            false
+        );
+
+        yieldPool.givenQueryReturnResponse(
+            abi.encodeWithSelector(IYieldPool.cumulativeBalancesRatio.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(0)}),
+            false
+        );
+
+        // Create Yield Value Provider
+        address yieldValueProviderAddress = _factory.create(
+            _oracleUpdateWindow,
+            address(yieldPool),
+            _maturity,
+            _timeScale
+        );
+
+        YieldValueProvider yieldValueProvider = YieldValueProvider(
+            yieldValueProviderAddress
+        );
+        bool factoryIsAuthorized = yieldValueProvider.canCall(
+            yieldValueProvider.ANY_SIG(),
+            address(_factory)
+        );
+        assertTrue(
+            factoryIsAuthorized == false,
+            "The Factory should not have rights over the created contract"
+        );
+
+        bool callerIsAuthorized = yieldValueProvider.canCall(
+            yieldValueProvider.ANY_SIG(),
+            address(this)
+        );
+        assertTrue(
+            callerIsAuthorized,
+            "Caller should have rights over the created contract"
+        );
+    }
 }

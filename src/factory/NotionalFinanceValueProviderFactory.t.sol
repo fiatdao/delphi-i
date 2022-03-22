@@ -93,4 +93,37 @@ contract NotionalFinanceValueProviderFactoryTest is DSTest {
             "Notional Value Provider incorrect settlementDate"
         );
     }
+
+    function test_create_factoryPassesPermissions() public {
+        // Create Notional Value Provider
+        address notionalValueProviderAddress = _factory.create(
+            _oracleUpdateWindow,
+            _notionalView,
+            _currencyId,
+            _maturityDate,
+            _settlementDate,
+            _oracleRateDecimals
+        );
+
+        NotionalFinanceValueProvider notionalValueProvider = NotionalFinanceValueProvider(
+                notionalValueProviderAddress
+            );
+        bool factoryIsAuthorized = notionalValueProvider.canCall(
+            notionalValueProvider.ANY_SIG(),
+            address(_factory)
+        );
+        assertTrue(
+            factoryIsAuthorized == false,
+            "The Factory should not have rights over the created contract"
+        );
+
+        bool callerIsAuthorized = notionalValueProvider.canCall(
+            notionalValueProvider.ANY_SIG(),
+            address(this)
+        );
+        assertTrue(
+            callerIsAuthorized,
+            "Caller should have rights over the created contract"
+        );
+    }
 }

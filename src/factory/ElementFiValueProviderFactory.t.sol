@@ -158,4 +158,61 @@ contract ElementFiValueProviderFactoryTest is DSTest {
             "ElementFi Value Provider incorrect maturity"
         );
     }
+
+    function test_create_factoryPassesPermissions() public {
+        // Create mock ERC20 tokens needed to create the value provider
+        MockProvider underlierMock = new MockProvider();
+        underlierMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ERC20.decimals.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
+            false
+        );
+
+        MockProvider ePTokenBondMock = new MockProvider();
+        ePTokenBondMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ERC20.decimals.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
+            false
+        );
+
+        MockProvider poolTokenMock = new MockProvider();
+        poolTokenMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ERC20.decimals.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
+            false
+        );
+
+        // Create the ElementFi Value Provider
+        address elementValueProviderAddress = _factory.create(
+            _oracleUpdateWindow,
+            _poolId,
+            _balancerVaultAddress,
+            address(poolTokenMock),
+            address(underlierMock),
+            address(ePTokenBondMock),
+            _timeScale,
+            _maturity
+        );
+
+        ElementFiValueProvider elementValueProvider = ElementFiValueProvider(
+            elementValueProviderAddress
+        );
+        bool factoryIsAuthorized = elementValueProvider.canCall(
+            elementValueProvider.ANY_SIG(),
+            address(_factory)
+        );
+        assertTrue(
+            factoryIsAuthorized == false,
+            "The Factory should not have rights over the created contract"
+        );
+
+        bool callerIsAuthorized = elementValueProvider.canCall(
+            elementValueProvider.ANY_SIG(),
+            address(this)
+        );
+        assertTrue(
+            callerIsAuthorized,
+            "Caller should have rights over the created contract"
+        );
+    }
 }

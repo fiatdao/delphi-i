@@ -2,6 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "ds-test/test.sol";
+import {Caller} from "../test/utils/Caller.sol";
+import {Guarded} from "../guarded/Guarded.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {RelayerFactory} from "./RelayerFactory.sol";
@@ -129,5 +131,64 @@ contract RelayerFactoryTest is DSTest {
         );
 
         assertEq(staticRelayer.value(), value, "StaticRelayer incorrect value");
+    }
+
+    function test_create_factoryPassesPermissions() public {
+        Relayer relayer = Relayer(
+            _factory.create(
+                _collybusAddress,
+                _relayerType,
+                _oracleAddress,
+                _encodedTokenId,
+                _minimumPercentageDeltaValue
+            )
+        );
+
+        bool factoryIsAuthorized = relayer.canCall(
+            relayer.ANY_SIG(),
+            address(_factory)
+        );
+        assertTrue(
+            factoryIsAuthorized == false,
+            "The Factory should not have rights over the created contract"
+        );
+
+        bool callerIsAuthorized = relayer.canCall(
+            relayer.ANY_SIG(),
+            address(this)
+        );
+        assertTrue(
+            callerIsAuthorized,
+            "Caller should have rights over the created contract"
+        );
+    }
+
+    function test_createStatic_factoryPassesPermissions() public {
+        StaticRelayer staticRelayer = StaticRelayer(
+            _factory.createStatic(
+                _collybusAddress,
+                _relayerType,
+                _encodedTokenId,
+                1
+            )
+        );
+
+        bool factoryIsAuthorized = staticRelayer.canCall(
+            staticRelayer.ANY_SIG(),
+            address(_factory)
+        );
+        assertTrue(
+            factoryIsAuthorized == false,
+            "The Factory should not have rights over the created contract"
+        );
+
+        bool callerIsAuthorized = staticRelayer.canCall(
+            staticRelayer.ANY_SIG(),
+            address(this)
+        );
+        assertTrue(
+            callerIsAuthorized,
+            "Caller should have rights over the created contract"
+        );
     }
 }

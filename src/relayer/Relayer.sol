@@ -70,7 +70,6 @@ contract Relayer is Guarded, IRelayer {
         // We always update the oracles before retrieving the rates
         bool oracleUpdated = IOracle(oracle).update();
         (int256 oracleValue, bool isValid) = IOracle(oracle).value();
-
         if (oracleUpdated && isValid) {
             // If the change in delta rate from the last update is bigger than the threshold value push
             // the rates to Collybus
