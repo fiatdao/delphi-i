@@ -4,7 +4,8 @@ pragma solidity ^0.8.0;
 interface IRelayer {
     enum RelayerType {
         DiscountRate,
-        SpotPrice
+        SpotPrice,
+        COUNT
     }
 
     function execute() external returns (bool);

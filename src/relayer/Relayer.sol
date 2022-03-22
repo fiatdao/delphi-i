@@ -70,40 +70,34 @@ contract Relayer is Guarded, IRelayer {
         bool oracleUpdated = IOracle(oracle).update();
         (int256 oracleValue, bool isValid) = IOracle(oracle).value();
 
-        // If the oracle was not updated or the value was invalid then we can exit early as we will not push data to Collybus
-        if (!oracleUpdated || !isValid) {
-            return oracleUpdated;
-        }
-
-        // If the change in delta rate from the last update is bigger than the threshold value push
-        // the rates to Collybus
+        // If the oracle was not updated, the value is invalid or the delta condition is not met, we can exit early
         if (
-            checkDeviation(
+            !oracleUpdated ||
+            !isValid ||
+            !checkDeviation(
                 _lastUpdateValue,
                 oracleValue,
                 minimumPercentageDeltaValue
             )
         ) {
-            _lastUpdateValue = oracleValue;
+            return oracleUpdated;
+        }
 
-            if (relayerType == RelayerType.DiscountRate) {
-                ICollybus(collybus).updateDiscountRate(
-                    uint256(encodedTokenId),
-                    uint256(oracleValue)
-                );
-            } else if (relayerType == RelayerType.SpotPrice) {
-                ICollybus(collybus).updateSpot(
-                    address(uint160(uint256(encodedTokenId))),
-                    uint256(oracleValue)
-                );
-            }
+        _lastUpdateValue = oracleValue;
 
-            emit UpdatedCollybus(
-                encodedTokenId,
-                uint256(oracleValue),
-                relayerType
+        if (relayerType == RelayerType.DiscountRate) {
+            ICollybus(collybus).updateDiscountRate(
+                uint256(encodedTokenId),
+                uint256(oracleValue)
+            );
+        } else if (relayerType == RelayerType.SpotPrice) {
+            ICollybus(collybus).updateSpot(
+                address(uint160(uint256(encodedTokenId))),
+                uint256(oracleValue)
             );
         }
+
+        emit UpdatedCollybus(encodedTokenId, uint256(oracleValue), relayerType);
 
         return oracleUpdated;
     }
