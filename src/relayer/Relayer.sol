@@ -71,10 +71,10 @@ contract Relayer is Guarded, IRelayer {
         (int256 oracleValue, bool isValid) = IOracle(oracle).value();
 
         // If the oracle was not updated or the value was invalid then we can exit early as we will not push data to Collybus
-        if(!oracleUpdated || !isValid){
+        if (!oracleUpdated || !isValid) {
             return oracleUpdated;
         }
-        
+
         // If the change in delta rate from the last update is bigger than the threshold value push
         // the rates to Collybus
         if (
