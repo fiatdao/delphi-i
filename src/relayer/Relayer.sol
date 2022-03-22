@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IRelayer} from "./IRelayer.sol";
 import {IOracle} from "../oracle/IOracle.sol";
 import {ICollybus} from "./ICollybus.sol";
@@ -70,36 +69,40 @@ contract Relayer is Guarded, IRelayer {
         // We always update the oracles before retrieving the rates
         bool oracleUpdated = IOracle(oracle).update();
         (int256 oracleValue, bool isValid) = IOracle(oracle).value();
-        if (oracleUpdated && isValid) {
-            // If the change in delta rate from the last update is bigger than the threshold value push
-            // the rates to Collybus
-            if (
-                checkDeviation(
-                    _lastUpdateValue,
-                    oracleValue,
-                    minimumPercentageDeltaValue
-                )
-            ) {
-                _lastUpdateValue = oracleValue;
 
-                if (relayerType == RelayerType.DiscountRate) {
-                    ICollybus(collybus).updateDiscountRate(
-                        uint256(encodedTokenId),
-                        uint256(oracleValue)
-                    );
-                } else if (relayerType == RelayerType.SpotPrice) {
-                    ICollybus(collybus).updateSpot(
-                        address(uint160(uint256(encodedTokenId))),
-                        uint256(oracleValue)
-                    );
-                }
+        // If the oracle was not updated or the value was invalid then we can exit early as we will not push data to Collybus
+        if(!oracleUpdated || !isValid){
+            return oracleUpdated;
+        }
+        
+        // If the change in delta rate from the last update is bigger than the threshold value push
+        // the rates to Collybus
+        if (
+            checkDeviation(
+                _lastUpdateValue,
+                oracleValue,
+                minimumPercentageDeltaValue
+            )
+        ) {
+            _lastUpdateValue = oracleValue;
 
-                emit UpdatedCollybus(
-                    encodedTokenId,
-                    uint256(oracleValue),
-                    relayerType
+            if (relayerType == RelayerType.DiscountRate) {
+                ICollybus(collybus).updateDiscountRate(
+                    uint256(encodedTokenId),
+                    uint256(oracleValue)
+                );
+            } else if (relayerType == RelayerType.SpotPrice) {
+                ICollybus(collybus).updateSpot(
+                    address(uint160(uint256(encodedTokenId))),
+                    uint256(oracleValue)
                 );
             }
+
+            emit UpdatedCollybus(
+                encodedTokenId,
+                uint256(oracleValue),
+                relayerType
+            );
         }
 
         return oracleUpdated;
