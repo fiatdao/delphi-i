@@ -54,7 +54,7 @@ contract Relayer is Guarded, IRelayer {
     /// - minimumPercentageDeltaValue
     /// @param param_ The identifier of the parameter that should be updated
     /// @param value_ The new value
-    /// @dev Returns if parameter is not found
+    /// @dev Reverts if parameter is not found
     function setParam(bytes32 param_, uint256 value_) public checkCaller {
         if (param_ == "minimumPercentageDeltaValue") {
             minimumPercentageDeltaValue = value_;
