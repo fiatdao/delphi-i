@@ -34,6 +34,10 @@ contract YieldValueProviderFactory is IYieldValueProviderFactory {
             yieldValueProvider.ANY_SIG(),
             msg.sender
         );
+        yieldValueProvider.blockCaller(
+            yieldValueProvider.ANY_SIG(),
+            address(this)
+        );
         return address(yieldValueProvider);
     }
 }

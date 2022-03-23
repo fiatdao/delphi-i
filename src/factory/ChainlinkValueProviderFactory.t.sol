@@ -72,4 +72,43 @@ contract ChainlinkValueProviderFactoryTest is DSTest {
             "Chainlink Value Provider incorrect chainlinkAggregatorAddress"
         );
     }
+
+    function test_create_factoryPassesPermissions() public {
+        // Create a chainlink mock aggregator
+        MockProvider chainlinkMock = new MockProvider();
+        chainlinkMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(
+                IChainlinkAggregatorV3Interface.decimals.selector
+            ),
+            MockProvider.ReturnData({success: true, data: abi.encode(8)}),
+            false
+        );
+
+        // Create chainlink Value Provider
+        address chainlinkValueProviderAddress = _factory.create(
+            _oracleUpdateWindow,
+            address(chainlinkMock)
+        );
+
+        ChainLinkValueProvider chainLinkValueProvider = ChainLinkValueProvider(
+            chainlinkValueProviderAddress
+        );
+        bool factoryIsAuthorized = chainLinkValueProvider.canCall(
+            chainLinkValueProvider.ANY_SIG(),
+            address(_factory)
+        );
+        assertTrue(
+            factoryIsAuthorized == false,
+            "The Factory should not have rights over the created contract"
+        );
+
+        bool callerIsAuthorized = chainLinkValueProvider.canCall(
+            chainLinkValueProvider.ANY_SIG(),
+            address(this)
+        );
+        assertTrue(
+            callerIsAuthorized,
+            "Caller should have rights over the created contract"
+        );
+    }
 }

@@ -46,6 +46,11 @@ contract ElementFiValueProviderFactory is IElementFiValueProviderFactory {
             elementFiValueProvider.ANY_SIG(),
             msg.sender
         );
+        elementFiValueProvider.blockCaller(
+            elementFiValueProvider.ANY_SIG(),
+            address(this)
+        );
+
         return address(elementFiValueProvider);
     }
 }

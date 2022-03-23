@@ -11,13 +11,11 @@ import "./Factory.sol";
 import {Guarded} from "../guarded/Guarded.sol";
 import {Oracle} from "../oracle/Oracle.sol";
 
-import {AggregatorOracle} from "../aggregator/AggregatorOracle.sol";
 // Contract Deployers and dependencies
 import {ElementFiValueProviderFactory} from "./ElementFiValueProviderFactory.sol";
 import {NotionalFinanceValueProviderFactory} from "./NotionalFinanceValueProviderFactory.sol";
 import {YieldValueProviderFactory} from "./YieldValueProviderFactory.sol";
 import {ChainlinkValueProviderFactory} from "./ChainlinkValueProviderFactory.sol";
-import {AggregatorOracleFactory} from "./AggregatorOracleFactory.sol";
 import {RelayerFactory} from "./RelayerFactory.sol";
 import {ChainlinkMockProvider} from "../deploy/ChainlinkMockProvider.sol";
 import {IYieldPool} from "../oracle_implementations/discount_rate/Yield/IYieldPool.sol";
@@ -38,7 +36,6 @@ contract FactoryTest is DSTest {
         internal notionalValueProviderFactoryMock;
     YieldValueProviderFactory internal yieldValueProviderFactoryMock;
     ChainlinkValueProviderFactory internal chainlinkValueProviderFactoryMock;
-    AggregatorOracleFactory internal aggregatorOracleFactoryMock;
     RelayerFactory internal relayerFactoryMock;
 
     function setUp() public {
@@ -47,7 +44,6 @@ contract FactoryTest is DSTest {
         notionalValueProviderFactoryMock = new NotionalFinanceValueProviderFactory();
         yieldValueProviderFactoryMock = new YieldValueProviderFactory();
         chainlinkValueProviderFactoryMock = new ChainlinkValueProviderFactory();
-        aggregatorOracleFactoryMock = new AggregatorOracleFactory();
         relayerFactoryMock = new RelayerFactory();
 
         factory = new Factory(
@@ -55,7 +51,6 @@ contract FactoryTest is DSTest {
             address(notionalValueProviderFactoryMock),
             address(yieldValueProviderFactoryMock),
             address(chainlinkValueProviderFactoryMock),
-            address(aggregatorOracleFactoryMock),
             address(relayerFactoryMock)
         );
     }
@@ -84,12 +79,6 @@ contract FactoryTest is DSTest {
             factory.chainlinkValueProviderFactory(),
             address(chainlinkValueProviderFactoryMock),
             "Invalid chainLinkValueProviderFactory"
-        );
-
-        assertEq(
-            factory.aggregatorOracleFactory(),
-            address(aggregatorOracleFactoryMock),
-            "Invalid aggregatorOracleFactory"
         );
 
         assertEq(
@@ -441,7 +430,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_aggregatorOracle_forEveryValueProviderType() public {
+    function test_deploy_deployOracle_forEveryValueProviderType() public {
         // Setup an array of oracle data structures for every oracle type
         OracleData[] memory oracleData = new OracleData[](
             uint256(Factory.ValueProviderType.COUNT)
@@ -465,200 +454,45 @@ contract FactoryTest is DSTest {
             oracleType < uint256(Factory.ValueProviderType.COUNT);
             oracleType++
         ) {
-            // Create a new mock aggregator and allow the factory to add oracles
-            AggregatorOracle aggregatorOracle = new AggregatorOracle();
-            aggregatorOracle.allowCaller(
-                aggregatorOracle.ANY_SIG(),
-                address(factory)
-            );
-
             // Deploy and add the oracle to the aggregator oracle
-            address oracleAddress = factory.deployAggregatorOracle(
-                abi.encode(oracleData[oracleType]),
-                address(aggregatorOracle)
+            address oracleAddress = factory.deployOracle(
+                oracleData[oracleType]
             );
 
-            // Check that oracleAdd was called on the aggregator
-            assertTrue(
-                aggregatorOracle.oracleExists(oracleAddress),
-                "Deployed oracle should be contained by the aggregator oracle"
-            );
+            // Check that the oracle was created
+            assertTrue(oracleAddress != address(0));
         }
     }
 
-    function test_deploy_aggregatorOracle_onlyAuthorizedUsers() public {
+    function test_deploy_deployOracle_onlyAuthorizedUsers() public {
         OracleData memory oracleData = createElementOracleData();
-
         Caller user = new Caller();
-        AggregatorOracle aggregatorOracle = new AggregatorOracle();
-        aggregatorOracle.allowCaller(
-            aggregatorOracle.ANY_SIG(),
-            address(factory)
-        );
-
-        // Call deployAggregatorOracle
+        // Call deployOracle
         (bool ok, ) = user.externalCall(
             address(factory),
             abi.encodeWithSelector(
-                factory.deployAggregatorOracle.selector,
-                abi.encode(oracleData),
-                address(aggregatorOracle)
+                factory.deployOracle.selector,
+                abi.encode(oracleData)
             )
         );
 
         assertTrue(
             ok == false,
-            "Only authorized users should be able to call deployAggregatorOracle"
-        );
-    }
-
-    function test_deploy_aggregator_forEveryCompatibleValueProvider() public {
-        // Deploy discount rate aggregators for every value provider type
-        for (
-            uint256 oracleType = 0;
-            oracleType < uint256(Factory.ValueProviderType.COUNT);
-            oracleType++
-        ) {
-            Relayer relayer = new Relayer(
-                address(0xc011b005),
-                IRelayer.RelayerType.DiscountRate
-            );
-
-            relayer.allowCaller(relayer.ANY_SIG(), address(factory));
-
-            // Create mock data and deploy the aggregator
-            address aggregatorAddress = factory.deployAggregator(
-                abi.encode(
-                    createDiscountRateAggregatorData(
-                        Factory.ValueProviderType(oracleType),
-                        oracleType
-                    )
-                ),
-                address(relayer)
-            );
-
-            assertTrue(
-                aggregatorAddress != address(0),
-                "Aggregator not deployed"
-            );
-        }
-    }
-
-    function test_deploy_aggregator_checkExistenceOfOracles() public {
-        // Create a mock discount rate relayer
-        Relayer relayer = new Relayer(
-            address(0xc011b005),
-            IRelayer.RelayerType.DiscountRate
-        );
-
-        relayer.allowCaller(relayer.ANY_SIG(), address(factory));
-
-        // Create an aggregator with multiple oracles
-        uint256 oracleCount = 3;
-        AggregatorData memory aggregator = AggregatorData({
-            encodedTokenId: bytes32(uint256(1)),
-            oracleData: new bytes[](oracleCount),
-            requiredValidValues: 1,
-            minimumPercentageDeltaValue: 1
-        });
-
-        for (
-            uint256 oracleIndex = 0;
-            oracleIndex < oracleCount;
-            oracleIndex++
-        ) {
-            aggregator.oracleData[oracleIndex] = abi.encode(
-                createElementOracleData()
-            );
-        }
-
-        // Deploy the aggregator
-        address aggregatorAddress = factory.deployAggregator(
-            abi.encode(aggregator),
-            address(relayer)
-        );
-
-        // Check that all the oracles where added
-        assertEq(
-            IAggregatorOracle(aggregatorAddress).oracleCount(),
-            oracleCount,
-            "Invalid Aggregator oracle count"
-        );
-    }
-
-    function test_deploy_aggregator_checkValidValues() public {
-        Relayer relayer = new Relayer(
-            address(0xc011b005),
-            IRelayer.RelayerType.DiscountRate
-        );
-
-        relayer.allowCaller(relayer.ANY_SIG(), address(factory));
-
-        // Create the mock Discount rate aggregator data
-        uint256 validValues = 1;
-        AggregatorData memory aggregator = AggregatorData({
-            encodedTokenId: bytes32(uint256(1)),
-            oracleData: new bytes[](1),
-            requiredValidValues: validValues,
-            minimumPercentageDeltaValue: 1
-        });
-
-        aggregator.oracleData[0] = abi.encode(createElementOracleData());
-
-        // Deploy the aggregator
-        address aggregatorAddress = factory.deployAggregator(
-            abi.encode(aggregator),
-            address(relayer)
-        );
-
-        // Check that the required valid values is correct
-        assertEq(
-            AggregatorOracle(aggregatorAddress).requiredValidValues(),
-            validValues,
-            "Invalid required valid values"
-        );
-    }
-
-    function test_deploy_aggregator_onlyAuthorizedUsers() public {
-        Caller user = new Caller();
-        Relayer relayer = new Relayer(
-            address(0xc011b005),
-            IRelayer.RelayerType.DiscountRate
-        );
-
-        relayer.allowCaller(relayer.ANY_SIG(), address(factory));
-
-        // Create the discount rate aggregator data
-        AggregatorData memory aggregator = AggregatorData({
-            encodedTokenId: bytes32(uint256(1)),
-            oracleData: new bytes[](1),
-            requiredValidValues: 1,
-            minimumPercentageDeltaValue: 1
-        });
-
-        aggregator.oracleData[0] = abi.encode(createElementOracleData());
-
-        // Call deployDiscountRateAggregator
-        (bool ok, ) = user.externalCall(
-            address(factory),
-            abi.encodeWithSelector(
-                factory.deployAggregator.selector,
-                abi.encode(aggregator),
-                address(relayer)
-            )
-        );
-
-        assertTrue(
-            ok == false,
-            "Only authorized users should be able to call deployAggregator"
+            "Only authorized users should be able to call deployOracle"
         );
     }
 
     function test_deploy_relayer_discountRate_createsContract() public {
         address collybus = address(0xC0111b005);
+        RelayerData memory relayerData;
+        relayerData.encodedTokenId = bytes32(uint256(1));
+        relayerData.minimumPercentageDeltaValue = 1;
+        relayerData.oracleData = createElementOracleData();
+
         address relayer = factory.deployRelayer(
             collybus,
-            IRelayer.RelayerType.DiscountRate
+            IRelayer.RelayerType.DiscountRate,
+            relayerData
         );
         // Make sure the Relayer was deployed
         assertTrue(
@@ -669,9 +503,17 @@ contract FactoryTest is DSTest {
 
     function test_deploy_relayer_spotPrice_createsContract() public {
         address collybus = address(0xC01115107);
+        RelayerData memory relayerData;
+        relayerData.encodedTokenId = bytes32(
+            uint256(uint160(address(0x1E1a135)))
+        );
+        relayerData.minimumPercentageDeltaValue = 1;
+        relayerData.oracleData = createChainlinkOracleData();
+
         address relayer = factory.deployRelayer(
             collybus,
-            IRelayer.RelayerType.SpotPrice
+            IRelayer.RelayerType.SpotPrice,
+            relayerData
         );
 
         // Make sure the Relayer_ was deployed
@@ -698,177 +540,6 @@ contract FactoryTest is DSTest {
         assertTrue(
             ok == false,
             "Only authorized users should be able to deploy Relayers"
-        );
-    }
-
-    function test_deploy_collybusDiscountRateArchitecture() public {
-        RelayerDeployData memory deployData = createDiscountRateDeployData();
-
-        // Deploy the oracle architecture
-        address relayer = factory.deployDiscountRateArchitecture(
-            abi.encode(deployData),
-            address(0x1234)
-        );
-
-        // Check the creation of the discount rate relayer
-        assertTrue(
-            relayer != address(0),
-            "CollybusDiscountPriceRelayer should be deployed"
-        );
-
-        // Check that all aggregators were added to the relayer
-        assertEq(
-            IRelayer(relayer).oracleCount(),
-            deployData.aggregatorData.length,
-            "Discount rate relayer invalid aggregator count"
-        );
-    }
-
-    function test_deploy_collybusDiscountRateArchitecture_onlyAuthorizedUsers()
-        public
-    {
-        Caller user = new Caller();
-        RelayerDeployData memory deployData = createDiscountRateDeployData();
-
-        // Call deployDiscountRateArchitecture
-        (bool ok, ) = user.externalCall(
-            address(factory),
-            abi.encodeWithSelector(
-                factory.deployDiscountRateArchitecture.selector,
-                abi.encode(deployData),
-                address(0x1234)
-            )
-        );
-
-        assertTrue(
-            ok == false,
-            "Only authorized users should be able to call deployDiscountRateArchitecture"
-        );
-    }
-
-    function test_addAggregator() public {
-        RelayerDeployData memory deployData = createDiscountRateDeployData();
-
-        // Deploy the oracle architecture
-        address relayer = factory.deployDiscountRateArchitecture(
-            abi.encode(deployData),
-            address(0x1234)
-        );
-
-        // Save the current aggregator count in the Relayer
-        uint256 aggregatorCount = IRelayer(relayer).oracleCount();
-
-        // Create the Aggregator data structure that will contain a Notional Oracle
-        // Use the aggregator count as token id to make sure it is unused
-        AggregatorData memory notionalAggregator = AggregatorData({
-            encodedTokenId: bytes32(uint256(aggregatorCount)),
-            oracleData: new bytes[](1),
-            requiredValidValues: 1,
-            minimumPercentageDeltaValue: 1
-        });
-
-        notionalAggregator.oracleData[0] = abi.encode(
-            createNotionalOracleData()
-        );
-
-        // Deploy the new aggregator
-        address aggregatorAddress = factory.deployAggregator(
-            abi.encode(notionalAggregator),
-            relayer
-        );
-
-        // The Relayer should contain an extra Aggregator/Oracle
-        assertEq(
-            aggregatorCount + 1,
-            IRelayer(relayer).oracleCount(),
-            "Relayer should contain the new aggregator"
-        );
-
-        // The Relayer should contain the new aggregator
-        assertTrue(
-            IRelayer(relayer).oracleExists(aggregatorAddress),
-            "Aggregator should exist"
-        );
-    }
-
-    function test_addOracle() public {
-        RelayerDeployData memory deployData = createDiscountRateDeployData();
-
-        // Deploy the oracle architecture
-        address relayer = factory.deployDiscountRateArchitecture(
-            abi.encode(deployData),
-            address(0x1234)
-        );
-
-        // Get the address of the first aggregator
-        address firstAggregatorAddress = IRelayer(relayer).oracleAt(0);
-
-        // Cache the number of oracles in the aggregator
-        uint256 oracleCount = IAggregatorOracle(firstAggregatorAddress)
-            .oracleCount();
-
-        // Create and add the oracle to the aggregator
-        address oracleAddress = factory.deployAggregatorOracle(
-            abi.encode(createNotionalOracleData()),
-            firstAggregatorAddress
-        );
-
-        // The aggregator should contain an extra Oracle
-        assertEq(
-            oracleCount + 1,
-            IAggregatorOracle(firstAggregatorAddress).oracleCount(),
-            "Aggregator should contain an extra Oracle"
-        );
-
-        assertTrue(
-            IAggregatorOracle(firstAggregatorAddress).oracleExists(
-                oracleAddress
-            ),
-            "Aggregator should contain the added Oracle"
-        );
-    }
-
-    function test_deploy_collybusSpotPriceArchitecture() public {
-        RelayerDeployData memory deployData = createSpotPriceDeployData();
-
-        // Deploy the oracle architecture
-        address relayer = factory.deploySpotPriceArchitecture(
-            abi.encode(deployData),
-            address(0x1234)
-        );
-
-        // Check the creation of the discount rate relayer
-        assertTrue(
-            relayer != address(0),
-            "CollybusSpotPriceRelayer should be deployed"
-        );
-
-        assertEq(
-            IRelayer(relayer).oracleCount(),
-            deployData.aggregatorData.length,
-            "CollybusSpotPriceRelayer invalid aggregator count"
-        );
-    }
-
-    function test_deploy_collybusSpotPriceArchitecture_onlyAuthorizedUsers()
-        public
-    {
-        Caller user = new Caller();
-        RelayerDeployData memory deployData = createSpotPriceDeployData();
-
-        // Call deploySpotPriceArchitecture
-        (bool ok, ) = user.externalCall(
-            address(factory),
-            abi.encodeWithSelector(
-                factory.deploySpotPriceArchitecture.selector,
-                abi.encode(deployData),
-                address(0x1234)
-            )
-        );
-
-        assertTrue(
-            ok == false,
-            "Only authorized users should be able to call deploySpotPriceArchitecture"
         );
     }
 
@@ -1026,122 +697,5 @@ contract FactoryTest is DSTest {
         });
 
         return chainlinkValueProvider;
-    }
-
-    function createDiscountRateAggregatorData(
-        Factory.ValueProviderType valueType_,
-        uint256 tokenId_
-    ) internal returns (AggregatorData memory) {
-        // Create a discount rate aggregator for a certain given value provider
-        AggregatorData memory aggregator = AggregatorData({
-            encodedTokenId: bytes32(tokenId_),
-            oracleData: new bytes[](1),
-            requiredValidValues: 1,
-            minimumPercentageDeltaValue: 1
-        });
-
-        // Create the oracle data structure based on the provided value provider type
-        if (valueType_ == Factory.ValueProviderType.Element) {
-            aggregator.oracleData[0] = abi.encode(createElementOracleData());
-        } else if (valueType_ == Factory.ValueProviderType.Notional) {
-            aggregator.oracleData[0] = abi.encode(createNotionalOracleData());
-        } else if (valueType_ == Factory.ValueProviderType.Yield) {
-            aggregator.oracleData[0] = abi.encode(createYieldOracleData());
-        } else if (valueType_ == Factory.ValueProviderType.Chainlink) {
-            aggregator.oracleData[0] = abi.encode(createChainlinkOracleData());
-        } else {
-            revert FactoryTest__invalidDiscountRateAggregatorType(
-                uint256(valueType_)
-            );
-        }
-
-        return aggregator;
-    }
-
-    function createSpotPriceAggregatorData(
-        Factory.ValueProviderType valueType_,
-        address tokenAddress_
-    ) internal returns (AggregatorData memory) {
-        // Create a spot price aggregator for a certain given value provider
-        AggregatorData memory aggregator = AggregatorData({
-            encodedTokenId: bytes32(uint256(uint160(tokenAddress_))),
-            oracleData: new bytes[](1),
-            requiredValidValues: 1,
-            minimumPercentageDeltaValue: 1
-        });
-
-        // Create the oracle data structure based on the provided value provider type
-        if (valueType_ == Factory.ValueProviderType.Element) {
-            aggregator.oracleData[0] = abi.encode(createElementOracleData());
-        } else if (valueType_ == Factory.ValueProviderType.Notional) {
-            aggregator.oracleData[0] = abi.encode(createNotionalOracleData());
-        } else if (valueType_ == Factory.ValueProviderType.Yield) {
-            aggregator.oracleData[0] = abi.encode(createYieldOracleData());
-        } else if (valueType_ == Factory.ValueProviderType.Chainlink) {
-            aggregator.oracleData[0] = abi.encode(createChainlinkOracleData());
-        } else {
-            revert FactoryTest__invalidDiscountRateAggregatorType(
-                uint256(valueType_)
-            );
-        }
-
-        return aggregator;
-    }
-
-    function createDiscountRateDeployData()
-        internal
-        returns (RelayerDeployData memory)
-    {
-        // Create the data structure for a full discount rate relayer architecture with multiple oracles and aggregators
-        RelayerDeployData memory deployData;
-        deployData.aggregatorData = new bytes[](
-            uint256(Factory.ValueProviderType.COUNT)
-        );
-        for (
-            uint256 oracleType = 0;
-            oracleType < uint256(Factory.ValueProviderType.COUNT);
-            oracleType++
-        ) {
-            // use the oracle type as index for the aggregator data structure
-            // use the oracle type as a unique token Id for each aggregator
-            deployData.aggregatorData[oracleType] = abi.encode(
-                createDiscountRateAggregatorData(
-                    Factory.ValueProviderType(oracleType),
-                    oracleType
-                )
-            );
-        }
-
-        return deployData;
-    }
-
-    function createSpotPriceDeployData()
-        internal
-        returns (RelayerDeployData memory)
-    {
-        // Create the data structure for a full spot price relayer architecture with multiple oracles and aggregators
-        RelayerDeployData memory deployData;
-        deployData.aggregatorData = new bytes[](
-            uint256(Factory.ValueProviderType.COUNT)
-        );
-
-        // Compute the token address as a uint160 which will be inc after every add
-        address tokenAddress = address(uint160(1));
-        for (
-            uint256 oracleType = 0;
-            oracleType < uint256(Factory.ValueProviderType.COUNT);
-            oracleType++
-        ) {
-            // use the oracle type as index for the aggregator data structure
-            deployData.aggregatorData[oracleType] = abi.encode(
-                createSpotPriceAggregatorData(
-                    Factory.ValueProviderType(oracleType),
-                    tokenAddress
-                )
-            );
-            tokenAddress = address(uint160(tokenAddress) + 1);
-        }
-
-        return deployData;
     }
 }
