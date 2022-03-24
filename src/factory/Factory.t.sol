@@ -88,7 +88,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_setPermission_CallsAllowCaller_WithCorrectArguments(
+    function test_setPermission_callsAllowCaller_withCorrectArguments(
         bytes32 sig_,
         address who_
     ) public {
@@ -136,7 +136,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_AuthorizedUser_CanSetPermission(bytes32 sig_, address who_)
+    function test_authorizedUser_canSetPermission(bytes32 sig_, address who_)
         public
     {
         // Create mock
@@ -166,7 +166,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_removePermission_CallsBlockCaller_WithCorrectArguments(
+    function test_removePermission_callsBlockCaller_withCorrectArguments(
         bytes32 sig_,
         address who_
     ) public {
@@ -188,7 +188,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_UnauthorizedUser_CannotRemovePermission(
+    function test_unauthorizedUser_cannotRemovePermission(
         bytes32 sig_,
         address who_
     ) public {
@@ -216,7 +216,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_AuthorizedUser_CanRemovePermission(bytes32 sig_, address who_)
+    function test_authorizedUser_canRemovePermission(bytes32 sig_, address who_)
         public
     {
         // Create mock
@@ -246,7 +246,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_elementFiValueProvider() public {
+    function test_deployElementFiValueProvider() public {
         // Create the oracle data structure
         ElementVPData memory elementValueProvider = createElementVPData();
         OracleData memory elementDataOracle = OracleData({
@@ -266,7 +266,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_elementFiValueProvider_onlyAuthorizedUsers() public {
+    function test_deployElementFiValueProvider_onlyAuthorizedUsers() public {
         // Create the oracle data structure
         ElementVPData memory elementValueProvider = createElementVPData();
         OracleData memory elementDataOracle = OracleData({
@@ -292,7 +292,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_notionalFinanceValueProvider() public {
+    function test_deployNotionalFinanceValueProvider() public {
         // Create the oracle data structure
         NotionalVPData memory notionalValueProvider = createNotionalVPData();
         OracleData memory notionalDataOracle = OracleData({
@@ -313,7 +313,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_notionalFinanceValueProvider_onlyAuthorizedUsers()
+    function test_deployNotionalFinanceValueProvider_onlyAuthorizedUsers()
         public
     {
         // Create the oracle data structure
@@ -340,7 +340,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_yieldValueProvider() public {
+    function test_deployYieldValueProvider() public {
         // Create the oracle data structure
         YieldVPData memory yieldValueProvider = createYieldVPData();
         OracleData memory yieldDataOracle = OracleData({
@@ -360,7 +360,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_yieldValueProvider_onlyAuthorizedUsers() public {
+    function test_deployYieldValueProvider_onlyAuthorizedUsers() public {
         // Create the oracle data structure
         YieldVPData memory yieldValueProvider = createYieldVPData();
         OracleData memory yieldDataOracle = OracleData({
@@ -385,7 +385,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_chainlinkValueProvider() public {
+    function test_deployChainlinkValueProvider() public {
         // Create the oracle data structure
         ChainlinkVPData memory chainlinkValueProvider = createChainlinkVPData();
         OracleData memory chainlinkDataOracle = OracleData({
@@ -405,7 +405,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_chainlinkValueProvider_onlyAuthorizedUsers() public {
+    function test_deployChainlinkValueProvider_onlyAuthorizedUsers() public {
         // Create the oracle data structure
         ChainlinkVPData memory chainlinkValueProvider = createChainlinkVPData();
         OracleData memory chainlinkDataOracle = OracleData({
@@ -430,7 +430,7 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_deployOracle_forEveryValueProviderType() public {
+    function test_deployOracle_forEveryValueProviderType() public {
         // Setup an array of oracle data structures for every oracle type
         OracleData[] memory oracleData = new OracleData[](
             uint256(Factory.ValueProviderType.COUNT)
@@ -464,7 +464,7 @@ contract FactoryTest is DSTest {
         }
     }
 
-    function test_deploy_deployOracle_onlyAuthorizedUsers() public {
+    function test_deployOracle_onlyAuthorizedUsers() public {
         OracleData memory oracleData = createElementOracleData();
         Caller user = new Caller();
         // Call deployOracle
@@ -482,52 +482,34 @@ contract FactoryTest is DSTest {
         );
     }
 
-    function test_deploy_relayer_discountRate_createsContract() public {
+    function test_deployRelayer_createsContract() public {
         address collybus = address(0xC0111b005);
         RelayerData memory relayerData;
         relayerData.encodedTokenId = bytes32(uint256(1));
         relayerData.minimumPercentageDeltaValue = 1;
         relayerData.oracleData = createElementOracleData();
 
-        address relayer = factory.deployRelayer(
-            collybus,
-            IRelayer.RelayerType.DiscountRate,
-            relayerData
-        );
-        // Make sure the Relayer was deployed
-        assertTrue(
-            relayer != address(0),
-            "Discount Rate Relayer should be deployed"
-        );
+        for (
+            uint256 relayerType = 0;
+            relayerType < uint256(IRelayer.RelayerType.COUNT);
+            relayerType++
+        ) {
+            address relayer = factory.deployRelayer(
+                collybus,
+                IRelayer.RelayerType(relayerType),
+                relayerData
+            );
+
+            // Make sure the Relayer was deployed
+            assertTrue(relayer != address(0), "Relayer should be deployed");
+        }
     }
 
-    function test_deploy_relayer_spotPrice_createsContract() public {
-        address collybus = address(0xC01115107);
-        RelayerData memory relayerData;
-        relayerData.encodedTokenId = bytes32(
-            uint256(uint160(address(0x1E1a135)))
-        );
-        relayerData.minimumPercentageDeltaValue = 1;
-        relayerData.oracleData = createChainlinkOracleData();
-
-        address relayer = factory.deployRelayer(
-            collybus,
-            IRelayer.RelayerType.SpotPrice,
-            relayerData
-        );
-
-        // Make sure the Relayer_ was deployed
-        assertTrue(
-            relayer != address(0),
-            "Spot Price Relayer should be deployed"
-        );
-    }
-
-    function test_deploy_relayer_onlyAuthorizedUsers() public {
+    function test_deployRelayer_onlyAuthorizedUsers() public {
         Caller user = new Caller();
         address collybus = address(0xC0111b005);
 
-        // Call deployCollybusDiscountRateRelayer
+        // Call deployRelayer
         (bool ok, ) = user.externalCall(
             address(factory),
             abi.encodeWithSelector(
@@ -540,6 +522,80 @@ contract FactoryTest is DSTest {
         assertTrue(
             ok == false,
             "Only authorized users should be able to deploy Relayers"
+        );
+    }
+
+    function testFail_deployRelayer_failsWithInvalidCollybus() public {
+        address collybus = address(0);
+        RelayerData memory relayerData;
+        relayerData.encodedTokenId = bytes32(uint256(1));
+        relayerData.minimumPercentageDeltaValue = 1;
+        relayerData.oracleData = createElementOracleData();
+
+        factory.deployRelayer(
+            collybus,
+            IRelayer.RelayerType.DiscountRate,
+            relayerData
+        );
+    }
+
+    function test_deployStaticRelayer_createsContract() public {
+        address collybus = address(0xC0111b005);
+        bytes32 encodedTokenId = bytes32(uint256(1));
+        uint256 value = 1;
+
+        for (
+            uint256 relayerType = 0;
+            relayerType < uint256(IRelayer.RelayerType.COUNT);
+            relayerType++
+        ) {
+            address staticRelayer = factory.deployStaticRelayer(
+                collybus,
+                IRelayer.RelayerType(relayerType),
+                encodedTokenId,
+                value
+            );
+
+            // Make sure the StaticRelayer was deployed
+            assertTrue(
+                staticRelayer != address(0),
+                "StaticRelayer should be deployed"
+            );
+        }
+    }
+
+    function test_deployStaticRelayer_onlyAuthorizedUsers() public {
+        Caller user = new Caller();
+        address collybus = address(0xC0111b005);
+
+        // Call deployStaticRelayer
+        (bool ok, ) = user.externalCall(
+            address(factory),
+            abi.encodeWithSelector(
+                factory.deployStaticRelayer.selector,
+                collybus,
+                IRelayer.RelayerType.DiscountRate,
+                bytes32(uint256(1)),
+                1
+            )
+        );
+
+        assertTrue(
+            ok == false,
+            "Only authorized users should be able to deploy StaticRelayers"
+        );
+    }
+
+    function testFail_deployStaticRelayer_failsWithInvalidCollybus() public {
+        address collybus = address(0);
+        bytes32 encodedTokenId = bytes32(uint256(1));
+        uint256 value = 1;
+
+        factory.deployStaticRelayer(
+            collybus,
+            IRelayer.RelayerType.DiscountRate,
+            encodedTokenId,
+            value
         );
     }
 

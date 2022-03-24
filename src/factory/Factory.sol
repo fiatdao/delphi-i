@@ -60,11 +60,14 @@ struct RelayerData {
 }
 
 contract Factory is Guarded {
-    // @notice Emitted when the collybus address is address(0)
+    /// @notice Emitted when the collybus address is address(0) when deploying a Relayer
     error Factory__deployRelayer_invalidCollybusAddress();
 
-    // @notice Emitted if no value provider is found for given providerType
+    /// @notice Emitted if no value provider is found for given providerType
     error Factory__deployOracle_invalidValueProviderType(uint256);
+
+    /// @notice Emitted when the collybus address is address(0) when deploying a StaticRelayer
+    error Factory__deployStaticRelayer_invalidCollybusAddress();
 
     // Supported value provider oracle types
     enum ValueProviderType {
@@ -245,7 +248,7 @@ contract Factory is Guarded {
         return oracleAddress;
     }
 
-    /// @notice Deploys a new Discount Rate Relayer
+    /// @notice Deploys a new Relayer
     /// @param collybus_ Address of Collybus
     /// @param type_ Relayer Type, can be DiscountRate or SpotPrice
     /// @param relayerData_ Data needed to create the relayer
@@ -256,19 +259,52 @@ contract Factory is Guarded {
         IRelayer.RelayerType type_,
         RelayerData memory relayerData_
     ) public checkCaller returns (address) {
-        address oracleAddress = deployOracle(relayerData_.oracleData);
-
-        // Collybus address is needed in order to deploy the Discount Rate Relayer
+        // Collybus address is needed in order to deploy the Relayer
         if (collybus_ == address(0)) {
             revert Factory__deployRelayer_invalidCollybusAddress();
         }
 
+        address oracleAddress = deployOracle(relayerData_.oracleData);
         address relayerAddress = IRelayerFactory(relayerFactory).create(
             collybus_,
             type_,
             oracleAddress,
             relayerData_.encodedTokenId,
             relayerData_.minimumPercentageDeltaValue
+        );
+
+        // Whitelist the Relayer so it can update the Oracle
+        Guarded(oracleAddress).allowCaller(
+            Guarded(oracleAddress).ANY_SIG(),
+            relayerAddress
+        );
+
+        return relayerAddress;
+    }
+
+    /// @notice Deploys a new StaticRelayer
+    /// @param collybus_ The address of the Collybus where the StaticRelayer will push data
+    /// @param type_ Relayer type, can be DiscountRate or SpotPrice
+    /// @param encodedTokenId_ Encoded tokenId that will be used to push data to Collybus
+    /// @param value_ The value that will be pushed.
+    /// @dev Reverts if Collybus is not set
+    /// @return Returns the address of the Relayer
+    function deployStaticRelayer(
+        address collybus_,
+        IRelayer.RelayerType type_,
+        bytes32 encodedTokenId_,
+        uint256 value_
+    ) public checkCaller returns (address) {
+        // Collybus address is needed in order to deploy the StaticRelayer
+        if (collybus_ == address(0)) {
+            revert Factory__deployStaticRelayer_invalidCollybusAddress();
+        }
+
+        address relayerAddress = IRelayerFactory(relayerFactory).createStatic(
+            collybus_,
+            type_,
+            encodedTokenId_,
+            value_
         );
 
         return relayerAddress;
