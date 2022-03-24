@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {ElementFiValueProvider} from "src/oracle_implementations/discount_rate/ElementFi/ElementFiValueProvider.sol";
+import {ElementFiValueProvider} from "../oracle_implementations/discount_rate/ElementFi/ElementFiValueProvider.sol";
 
 interface IElementFiValueProviderFactory {
     function create(
