@@ -276,47 +276,12 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function test_execute_nonAuthorizedUserCanNotCall_executeWithRevert()
-        public
-    {
-        Caller user = new Caller();
-
-        // A non permissioned user should not be able to call this
-        bool ok;
-        (ok, ) = user.externalCall(
-            address(relayer),
-            abi.encodeWithSelector(relayer.executeWithRevert.selector)
-        );
-        assertTrue(
-            ok == false,
-            "Non permissioned user should not be able to call executeWithRevert"
-        );
-    }
-
-    function test_execute_authorizedUserCanCall_executeWithRevert() public {
-        Caller user = new Caller();
-
-        // Give permission to the user
-        relayer.allowCaller(relayer.executeWithRevert.selector, address(user));
-
-        // A permissioned user should be able to call this
-        bool ok;
-        (ok, ) = user.externalCall(
-            address(relayer),
-            abi.encodeWithSelector(relayer.executeWithRevert.selector)
-        );
-        assertTrue(
-            ok,
-            "Permissioned user should be able to call executeWithRevert"
-        );
-    }
-
     function test_executeWithRevert() public {
         // Call should not revert
         relayer.executeWithRevert();
     }
 
-    function test_execute_returnsTrue_whenAtLeastOneOracleIsUpdated() public {
+    function test_execute_returnsTrue_whenTheOracleIsUpdated() public {
         bool executed;
 
         executed = relayer.execute();
@@ -324,7 +289,7 @@ contract RelayerTest is DSTest {
         assertTrue(executed, "The relayer should return true");
     }
 
-    function test_execute_returnsFalse_whenNoOracleIsUpdated() public {
+    function test_execute_returnsFalse_whenTheOracleIsNotUpdated() public {
         bool executed;
 
         oracle.givenQueryReturnResponse(
@@ -338,14 +303,14 @@ contract RelayerTest is DSTest {
         assertTrue(executed == false, "The relayer should return false");
     }
 
-    function test_executeWithRevert_shouldBeSuccessful_whenAtLeastOneOracleIsUpdated()
+    function test_executeWithRevert_shouldBeSuccessful_whenTheOracleIsUpdated()
         public
     {
         // Call should not revert
         relayer.executeWithRevert();
     }
 
-    function testFail_executeWithRevert_shouldNotBeSuccessful_whenNoOracleIsUpdated()
+    function testFail_executeWithRevert_shouldNotBeSuccessful_whenTheOracleIsNotUpdated()
         public
     {
         oracle.givenQueryReturnResponse(

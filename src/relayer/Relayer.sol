@@ -6,11 +6,17 @@ import {IOracle} from "../oracle/IOracle.sol";
 import {ICollybus} from "./ICollybus.sol";
 import {Guarded} from "../guarded/Guarded.sol";
 
+/// @notice The Relayer contract manages the relationship between an oracle and Collybus.
+/// The Relayer manages an Oracle for which it controls the update flow and via execute() calls
+/// pushes data to Collybus when it's needed
+/// @dev The Relayer should be the single entity that updates the oracle so that the Relayer and the Oracle
+/// are value synched. The same is true for the Relayer-Collybus relationship as we do not interrogate the Collybus
+/// for the current value and use a storage cached last updated value.
 contract Relayer is Guarded, IRelayer {
-    // @notice Emitter when execute() does not update any oracle
-    error Relayer__executeWithRevert_noUpdates(RelayerType relayerType);
+    /// @notice Emitter when execute() does not update the oracle
+    error Relayer__executeWithRevert_noUpdate(RelayerType relayerType);
 
-    // @notice Emitted when trying to set a parameter that does not exist
+    /// @notice Emitted when trying to set a parameter that does not exist
     error Relayer__setParam_unrecognizedParam(bytes32 param);
 
     event SetParam(bytes32 param, uint256 value);
@@ -62,10 +68,9 @@ contract Relayer is Guarded, IRelayer {
         emit SetParam(param_, value_);
     }
 
-    /// @notice Iterates and updates all the oracles and pushes the updated data to Collybus for the
-    /// oracles that have delta changes in value bigger than the minimum threshold values.
-    /// @dev Oracles that return invalid values are skipped.
-    function execute() public override(IRelayer) checkCaller returns (bool) {
+    /// @notice Updates the oracle and pushes the updated data to Collybus if the
+    /// delta change in value is bigger than the minimum threshold value.
+    function execute() public override(IRelayer) returns (bool) {
         // We always update the oracles before retrieving the rates
         bool oracleUpdated = IOracle(oracle).update();
         (int256 oracleValue, bool isValid) = IOracle(oracle).value();
@@ -83,6 +88,7 @@ contract Relayer is Guarded, IRelayer {
             return oracleUpdated;
         }
 
+        //
         _lastUpdateValue = oracleValue;
 
         if (relayerType == RelayerType.DiscountRate) {
@@ -102,11 +108,11 @@ contract Relayer is Guarded, IRelayer {
         return oracleUpdated;
     }
 
-    /// @notice The function will call `execute()` and will revert if no oracle was updated
-    /// @dev This method is needed for services that try to updates the oracles on each block and only call the method if it doesn't fail
+    /// @notice The function will call `execute()` and will revert if the oracle was not updated
+    /// @dev This method is needed for services that run on each block and only call the method if it doesn't fail
     function executeWithRevert() public override(IRelayer) {
         if (!execute()) {
-            revert Relayer__executeWithRevert_noUpdates(relayerType);
+            revert Relayer__executeWithRevert_noUpdate(relayerType);
         }
     }
 
