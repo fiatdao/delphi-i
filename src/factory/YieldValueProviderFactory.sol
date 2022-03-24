@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {YieldValueProvider} from "src/oracle_implementations/discount_rate/Yield/YieldValueProvider.sol";
+import {YieldValueProvider} from "../oracle_implementations/discount_rate/Yield/YieldValueProvider.sol";
 
 interface IYieldValueProviderFactory {
     function create(
