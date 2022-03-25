@@ -89,28 +89,4 @@ contract StaticRelayerTest is DSTest {
             "Invalid spot price in Collybus"
         );
     }
-
-    function test_execute_onlyAuthorizedUsers() public {
-        Caller user = new Caller();
-
-        // Create the static relayer with a tokenId and a value
-        bytes32 encodedTokenId = bytes32(uint256(1));
-        StaticRelayer staticRelayer = new StaticRelayer(
-            address(collybus),
-            IRelayer.RelayerType.DiscountRate,
-            encodedTokenId,
-            1e18
-        );
-
-        // Call execute from an unauthorized address
-        (bool ok, ) = user.externalCall(
-            address(staticRelayer),
-            abi.encodeWithSelector(StaticRelayer.execute.selector)
-        );
-
-        assertTrue(
-            ok == false,
-            "Only authorized users should be able to call execute()"
-        );
-    }
 }

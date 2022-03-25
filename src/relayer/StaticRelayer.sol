@@ -35,7 +35,7 @@ contract StaticRelayer is Guarded {
 
     /// @notice Pushes the hardcoded value to Collybus for the hardcoded token id
     /// After the rate is pushed the contract self-destructs
-    function execute() public checkCaller {
+    function execute() public {
         if (relayerType == IRelayer.RelayerType.DiscountRate) {
             ICollybus(collybus).updateDiscountRate(
                 uint256(encodedTokenId),
