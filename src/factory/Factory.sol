@@ -60,6 +60,15 @@ struct RelayerData {
 }
 
 contract Factory is Guarded {
+    /// @notice Emitter when a relayer is deployed by the factory
+    event RelayerDeployed(address relayerAddress);
+
+    /// @notice Emitter when a static relayer is deployed by the factory
+    event StaticRelayerDeployed(address relayerAddress);
+
+    /// @notice Emitter when an oracle is deployed by the factory
+    event OracleDeployed(address oracleAddress);
+
     /// @notice Emitted when the collybus address is address(0) when deploying a Relayer
     error Factory__deployRelayer_invalidCollybusAddress();
 
@@ -245,6 +254,7 @@ contract Factory is Guarded {
             );
         }
 
+        emit OracleDeployed(oracleAddress);
         return oracleAddress;
     }
 
@@ -279,6 +289,7 @@ contract Factory is Guarded {
             relayerAddress
         );
 
+        emit RelayerDeployed(relayerAddress);
         return relayerAddress;
     }
 
@@ -307,6 +318,7 @@ contract Factory is Guarded {
             value_
         );
 
+        emit StaticRelayerDeployed(relayerAddress);
         return relayerAddress;
     }
 
