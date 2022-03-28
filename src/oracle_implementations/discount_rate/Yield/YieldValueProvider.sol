@@ -29,7 +29,7 @@ contract YieldValueProvider is Oracle, Convert {
     constructor(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        //
+        // Yield specific parameters
         address poolAddress_,
         uint256 maturity_,
         int256 timeScale_

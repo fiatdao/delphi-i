@@ -15,7 +15,7 @@ contract ChainLinkValueProvider is Oracle, Convert {
     constructor(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        //
+        // Chainlink specific parameter
         address chainlinkAggregatorAddress_
     ) Oracle(timeUpdateWindow_) {
         chainlinkAggregatorAddress = chainlinkAggregatorAddress_;

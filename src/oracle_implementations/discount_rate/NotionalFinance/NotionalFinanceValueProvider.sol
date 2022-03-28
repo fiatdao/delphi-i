@@ -33,7 +33,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     constructor(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        //
+        // Notional specific parameters
         address notionalViewContract_,
         uint16 currencyId_,
         uint256 oracleRateDecimals_,

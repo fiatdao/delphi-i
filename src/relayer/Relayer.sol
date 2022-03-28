@@ -13,7 +13,7 @@ import {Guarded} from "../guarded/Guarded.sol";
 /// are value synched. The same is true for the Relayer-Collybus relationship as we do not interrogate the Collybus
 /// for the current value and use a storage cached last updated value.
 contract Relayer is Guarded, IRelayer {
-    /// @notice Emitter during executeWithRevert() if the oracle is not updates successfully
+    /// @notice Emitter during executeWithRevert() if the oracle is not updated successfully
     error Relayer__executeWithRevert_noUpdate(RelayerType relayerType);
 
     /// @notice Emitted when trying to set a parameter that does not exist

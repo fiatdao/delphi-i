@@ -39,7 +39,7 @@ contract ElementFiValueProvider is Oracle, Convert {
     constructor(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        //
+        // Element specific parameters
         bytes32 poolId_,
         address balancerVaultAddress_,
         address poolToken_,
