@@ -116,10 +116,10 @@ contract StaticRelayerTest is DSTest {
             1e18
         );
 
-        // Call execute so the StaticRelayer will update the Collybus
+        // Call execute() so the StaticRelayer will update the Collybus
         staticRelayer.execute();
 
-        // Attempt cu call it again, call should revert
+        // Call to executeWithRevert() should revert because we already updated the Collybus
         staticRelayer.executeWithRevert();
     }
 }
