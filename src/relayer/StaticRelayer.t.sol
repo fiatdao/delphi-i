@@ -104,7 +104,9 @@ contract StaticRelayerTest is DSTest {
         staticRelayer.executeWithRevert();
     }
 
-    function testFail_executeWithRevert_shouldRevertAfterCollybusIsUpdated() public {
+    function testFail_executeWithRevert_shouldRevertAfterCollybusIsUpdated()
+        public
+    {
         address tokenAddress = address(0x1234);
         // The Collybus type does not change the behavior so we can use either of them
         StaticRelayer staticRelayer = new StaticRelayer(

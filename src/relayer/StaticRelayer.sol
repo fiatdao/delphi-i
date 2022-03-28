@@ -6,7 +6,9 @@ import {IRelayer} from "./IRelayer.sol";
 
 contract StaticRelayer is IRelayer {
     /// @notice Emitted during executeWithRevert() if the Collybus was already updated
-    error StaticRelayer__executeWithRevert_collybusAlreadyUpdated(IRelayer.RelayerType relayerType);
+    error StaticRelayer__executeWithRevert_collybusAlreadyUpdated(
+        IRelayer.RelayerType relayerType
+    );
 
     /// ======== Events ======== ///
 
@@ -42,8 +44,7 @@ contract StaticRelayer is IRelayer {
     /// @notice Pushes the hardcoded value to Collybus for the hardcoded token id
     /// After the rate is pushed the contract self-destructs
     function execute() public override(IRelayer) returns (bool) {
-        if(_updatedCollybus)
-            return false;
+        if (_updatedCollybus) return false;
 
         _updatedCollybus = true;
         if (relayerType == IRelayer.RelayerType.DiscountRate) {
@@ -65,7 +66,9 @@ contract StaticRelayer is IRelayer {
     /// @notice The function will call `execute()` and will revert if _updatedCollybus is true
     function executeWithRevert() public override(IRelayer) {
         if (!execute()) {
-            revert StaticRelayer__executeWithRevert_collybusAlreadyUpdated(relayerType);
+            revert StaticRelayer__executeWithRevert_collybusAlreadyUpdated(
+                relayerType
+            );
         }
     }
 }
