@@ -89,4 +89,35 @@ contract StaticRelayerTest is DSTest {
             "Invalid spot price in Collybus"
         );
     }
+
+    function test_executeWithRevert() public {
+        address tokenAddress = address(0x1234);
+        // The Collybus type does not change the behavior so we can use either of them
+        StaticRelayer staticRelayer = new StaticRelayer(
+            address(collybus),
+            IRelayer.RelayerType.SpotPrice,
+            bytes32(uint256(uint160(tokenAddress))),
+            1e18
+        );
+
+        // Call should not revert
+        staticRelayer.executeWithRevert();
+    }
+
+    function testFail_executeWithRevert_shouldRevertAfterCollybusIsUpdated() public {
+        address tokenAddress = address(0x1234);
+        // The Collybus type does not change the behavior so we can use either of them
+        StaticRelayer staticRelayer = new StaticRelayer(
+            address(collybus),
+            IRelayer.RelayerType.SpotPrice,
+            bytes32(uint256(uint160(tokenAddress))),
+            1e18
+        );
+
+        // Call execute so the StaticRelayer will update the Collybus
+        staticRelayer.execute();
+
+        // Attempt cu call it again, call should revert
+        staticRelayer.executeWithRevert();
+    }
 }
