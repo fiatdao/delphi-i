@@ -7,7 +7,7 @@ interface IElementFiValueProviderFactory {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        //
+        // ElementFi specific parameters, see ElementFiValueProvider for more info
         bytes32 poolId_,
         address balancerVaultAddress_,
         address poolToken_,
@@ -22,7 +22,7 @@ contract ElementFiValueProviderFactory is IElementFiValueProviderFactory {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        //
+        // ElementFi specific parameters, see ElementFiValueProvider for more info
         bytes32 poolId_,
         address balancerVaultAddress_,
         address poolToken_,
@@ -42,6 +42,7 @@ contract ElementFiValueProviderFactory is IElementFiValueProviderFactory {
                 maturity_
             );
 
+        // Transfer permissions to the intended owner
         elementFiValueProvider.allowCaller(
             elementFiValueProvider.ANY_SIG(),
             msg.sender

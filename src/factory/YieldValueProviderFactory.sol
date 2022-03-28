@@ -7,7 +7,7 @@ interface IYieldValueProviderFactory {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        //
+        // Yield specific parameters, see YieldValueProvider for more info
         address poolAddress_,
         uint256 maturity_,
         int256 timeScale_
@@ -18,7 +18,7 @@ contract YieldValueProviderFactory is IYieldValueProviderFactory {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        //
+        // Yield specific parameters, see YieldValueProvider for more info
         address poolAddress_,
         uint256 maturity_,
         int256 timeScale_
@@ -30,6 +30,7 @@ contract YieldValueProviderFactory is IYieldValueProviderFactory {
             timeScale_
         );
 
+        // Transfer permissions to the intended owner
         yieldValueProvider.allowCaller(
             yieldValueProvider.ANY_SIG(),
             msg.sender

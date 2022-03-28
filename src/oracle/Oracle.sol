@@ -31,11 +31,11 @@ abstract contract Oracle is Pausable, IOracle {
     // Flag that tells if the value provider returned successfully
     bool private _validReturnedValue;
 
-    // reentrancy constants
+    // Reentrancy constants
     uint256 private constant _NOT_ENTERED = 1;
     uint256 private constant _ENTERED = 2;
 
-    // reentrancy guard flag
+    // Reentrancy guard flag
     uint256 private _reentrantGuard = _NOT_ENTERED;
 
     /// ======== Modifiers ======== ///
@@ -62,8 +62,8 @@ abstract contract Oracle is Pausable, IOracle {
     }
 
     /// @notice Get the current value of the oracle
-    /// @return the current value of the oracle
-    /// @return whether the value is valid
+    /// @return The current value of the oracle
+    /// @return Whether the value is valid
     function value()
         public
         view
