@@ -162,33 +162,4 @@ contract RelayerFactoryTest is DSTest {
             "Caller should have rights over the created contract"
         );
     }
-
-    function test_createStatic_factoryPassesPermissions() public {
-        StaticRelayer staticRelayer = StaticRelayer(
-            _factory.createStatic(
-                _collybusAddress,
-                _relayerType,
-                _encodedTokenId,
-                1
-            )
-        );
-
-        bool factoryIsAuthorized = staticRelayer.canCall(
-            staticRelayer.ANY_SIG(),
-            address(_factory)
-        );
-        assertTrue(
-            factoryIsAuthorized == false,
-            "The Factory should not have rights over the created contract"
-        );
-
-        bool callerIsAuthorized = staticRelayer.canCall(
-            staticRelayer.ANY_SIG(),
-            address(this)
-        );
-        assertTrue(
-            callerIsAuthorized,
-            "Caller should have rights over the created contract"
-        );
-    }
 }

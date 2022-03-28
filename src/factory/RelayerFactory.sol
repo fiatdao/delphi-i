@@ -77,10 +77,6 @@ contract RelayerFactory is IRelayerFactory {
             value_
         );
 
-        // Pass permissions to the intended contract owner
-        staticRelayer.allowCaller(staticRelayer.ANY_SIG(), msg.sender);
-        staticRelayer.blockCaller(staticRelayer.ANY_SIG(), address(this));
-
         emit StaticRelayerDeployed(
             address(staticRelayer),
             relayerType_,

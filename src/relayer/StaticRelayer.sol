@@ -3,9 +3,13 @@ pragma solidity ^0.8.0;
 
 import {ICollybus} from "./ICollybus.sol";
 import {IRelayer} from "./IRelayer.sol";
-import {Guarded} from "../guarded/Guarded.sol";
 
-contract StaticRelayer is Guarded {
+contract StaticRelayer is IRelayer {
+    /// @notice Emitted during executeWithRevert() if the Collybus was already updated
+    error StaticRelayer__executeWithRevert_collybusAlreadyUpdated(
+        IRelayer.RelayerType relayerType
+    );
+
     /// ======== Events ======== ///
 
     event UpdatedCollybus(
@@ -21,6 +25,9 @@ contract StaticRelayer is Guarded {
     bytes32 public immutable encodedTokenId;
     uint256 public immutable value;
 
+    // Flag used to ensure that the value is pushed to Collybus only once
+    bool private _updatedCollybus;
+
     constructor(
         address collybusAddress_,
         IRelayer.RelayerType type_,
@@ -31,11 +38,15 @@ contract StaticRelayer is Guarded {
         relayerType = type_;
         encodedTokenId = encodedTokenId_;
         value = value_;
+        _updatedCollybus = false;
     }
 
     /// @notice Pushes the hardcoded value to Collybus for the hardcoded token id
     /// After the rate is pushed the contract self-destructs
-    function execute() public {
+    function execute() public override(IRelayer) returns (bool) {
+        if (_updatedCollybus) return false;
+
+        _updatedCollybus = true;
         if (relayerType == IRelayer.RelayerType.DiscountRate) {
             ICollybus(collybus).updateDiscountRate(
                 uint256(encodedTokenId),
@@ -49,7 +60,15 @@ contract StaticRelayer is Guarded {
         }
 
         emit UpdatedCollybus(encodedTokenId, value, relayerType);
+        return true;
+    }
 
-        selfdestruct(payable(address(0)));
+    /// @notice The function will call `execute()` and will revert if _updatedCollybus is true
+    function executeWithRevert() public override(IRelayer) {
+        if (!execute()) {
+            revert StaticRelayer__executeWithRevert_collybusAlreadyUpdated(
+                relayerType
+            );
+        }
     }
 }
