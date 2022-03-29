@@ -88,7 +88,6 @@ contract Relayer is Guarded, IRelayer {
             return oracleUpdated;
         }
 
-        //
         _lastUpdateValue = oracleValue;
 
         if (relayerType == RelayerType.DiscountRate) {

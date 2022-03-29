@@ -7,7 +7,7 @@ interface INotionalFinanceValueProviderFactory {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        //
+        // Notional specific parameters, see NotionalFinanceValueProvider for more info
         address notionalViewContract_,
         uint16 currencyId_,
         uint256 lastImpliedRateDecimals_,
@@ -22,7 +22,7 @@ contract NotionalFinanceValueProviderFactory is
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        //
+        // Notional specific parameters, see NotionalFinanceValueProvider for more info
         address notionalViewContract_,
         uint16 currencyId_,
         uint256 lastImpliedRateDecimals_,
@@ -42,6 +42,7 @@ contract NotionalFinanceValueProviderFactory is
                 settlementDate_
             );
 
+        // Transfer permissions to the intended owner
         notionalFinanceValueProvider.allowCaller(
             notionalFinanceValueProvider.ANY_SIG(),
             msg.sender

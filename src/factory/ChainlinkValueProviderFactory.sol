@@ -7,7 +7,7 @@ interface IChainlinkValueProviderFactory {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        //
+        // Chainlink specific parameters, see ChainLinkValueProvider for more info
         address chainlinkAggregatorAddress_
     ) external returns (address);
 }
@@ -18,7 +18,7 @@ contract ChainlinkValueProviderFactory is IChainlinkValueProviderFactory {
     function create(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        //
+        // Chainlink specific parameters, see ChainLinkValueProvider for more info
         address chainlinkAggregatorAddress_
     ) public override(IChainlinkValueProviderFactory) returns (address) {
         ChainLinkValueProvider chainlinkValueProvider = new ChainLinkValueProvider(
