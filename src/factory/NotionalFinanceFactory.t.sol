@@ -32,7 +32,7 @@ contract NotionalFinanceFactoryTest is DSTest {
         assertTrue(address(_factory) != address(0));
     }
 
-    function test_create() public {
+    function test_create_relayerIsDeployed() public {
         // Create Notional Relayer
         address notionalRelayerAddress = _factory.create(
             _collybusAddress,
@@ -209,7 +209,9 @@ contract NotionalFinanceFactoryTest is DSTest {
             _settlementDate
         );
 
-        NotionalFinanceValueProvider oracle = NotionalFinanceValueProvider(Relayer(notionalRelayerAddress).oracle());
+        NotionalFinanceValueProvider oracle = NotionalFinanceValueProvider(
+            Relayer(notionalRelayerAddress).oracle()
+        );
         bool factoryIsAuthorized = oracle.canCall(
             oracle.ANY_SIG(),
             address(_factory)
