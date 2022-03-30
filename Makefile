@@ -8,7 +8,7 @@ update-libs		:; git submodule update --init --recursive
 install-deps	:; yarn install
 
 # Build & test & deploy
-build         :; forge build
+build         :; forge clean; forge build
 xclean        :; forge clean
 lint          :; yarn run lint
 test          :; forge test
