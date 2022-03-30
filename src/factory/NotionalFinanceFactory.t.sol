@@ -17,10 +17,10 @@ contract NotionalFinanceFactoryTest is DSTest {
     uint256 private _minimumPercentageDeltaValue = 25;
 
     address private _notionalView;
-    uint256 private _currencyId;
-    uint256 private _lastImpliedRateDecimals;
-    uint256 private _maturityDate;
-    uint256 private _settlementDate;
+    uint256 private _currencyId = 2;
+    uint256 private _lastImpliedRateDecimals = 9;
+    uint256 private _maturityDate = 1671840000;
+    uint256 private _settlementDate = 1648512000;
 
     NotionalFinanceFactory private _factory;
 
@@ -160,7 +160,7 @@ contract NotionalFinanceFactoryTest is DSTest {
         );
     }
 
-    function test_create_factoryPassesPermissions() public {
+    function test_create_factoryPassesRelayerPermissions() public {
         // Create Notional Value Provider
         address notionalRelayerAddress = _factory.create(
             _collybusAddress,
@@ -187,6 +187,40 @@ contract NotionalFinanceFactoryTest is DSTest {
 
         bool callerIsAuthorized = notionalRelayer.canCall(
             notionalRelayer.ANY_SIG(),
+            address(this)
+        );
+        assertTrue(
+            callerIsAuthorized,
+            "Caller should have rights over the created contract"
+        );
+    }
+
+    function test_create_factoryPassesOraclePermissions() public {
+        // Create Notional Value Provider
+        address notionalRelayerAddress = _factory.create(
+            _collybusAddress,
+            _tokenId,
+            _minimumPercentageDeltaValue,
+            _oracleUpdateWindow,
+            _notionalView,
+            _currencyId,
+            _lastImpliedRateDecimals,
+            _maturityDate,
+            _settlementDate
+        );
+
+        NotionalFinanceValueProvider oracle = NotionalFinanceValueProvider(Relayer(notionalRelayerAddress).oracle());
+        bool factoryIsAuthorized = oracle.canCall(
+            oracle.ANY_SIG(),
+            address(_factory)
+        );
+        assertTrue(
+            factoryIsAuthorized == false,
+            "The Factory should not have rights over the created contract"
+        );
+
+        bool callerIsAuthorized = oracle.canCall(
+            oracle.ANY_SIG(),
             address(this)
         );
         assertTrue(

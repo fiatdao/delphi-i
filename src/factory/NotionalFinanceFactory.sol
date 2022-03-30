@@ -55,23 +55,21 @@ contract NotionalFinanceFactory {
             minimumPercentageDeltaValue_
         );
 
-        // Transfer the Oracle permissions from the Factory to the deployer
-        notionalFinanceValueProvider.allowCaller(
-            notionalFinanceValueProvider.ANY_SIG(),
-            msg.sender
-        );
-
         // Whitelist the Relayer in the Oracle so it can trigger updates
         notionalFinanceValueProvider.allowCaller(
             notionalFinanceValueProvider.ANY_SIG(),
             address(relayer)
         );
-
-        // Transfer the Relayer permissions from the Factory to the deployer
+        // Whitelist the deployer
+        notionalFinanceValueProvider.allowCaller(
+            notionalFinanceValueProvider.ANY_SIG(),
+            msg.sender
+        );
+        // Whitelist the deployer
         relayer.allowCaller(relayer.ANY_SIG(), msg.sender);
 
+        // Renounce permissions
         relayer.blockCaller(relayer.ANY_SIG(), address(this));
-
         notionalFinanceValueProvider.blockCaller(
             notionalFinanceValueProvider.ANY_SIG(),
             address(this)
