@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import {ChainLinkValueProvider} from "../oracle_implementations/spot_price/Chainlink/ChainLinkValueProvider.sol";
+import {ChainlinkValueProvider} from "../oracle_implementations/spot_price/Chainlink/ChainlinkValueProvider.sol";
 import {Relayer} from "../relayer/Relayer.sol";
 import {IRelayer} from "../relayer/IRelayer.sol";
 
@@ -12,6 +12,7 @@ contract ChainlinkFactory {
     /// @param tokenAddress_ Token address that will be used to push values to Collybus
     /// @param minimumPercentageDeltaValue_ Minimum delta value used to determine when to
     /// push data to Collybus
+    /// @param timeUpdateWindow_ Minimum time between updates of the value
     /// @param chainlinkAggregatorAddress_ Address of the deployed chainlink aggregator contract.
     /// @return The address of the Relayer
     function create(
@@ -21,10 +22,10 @@ contract ChainlinkFactory {
         uint256 minimumPercentageDeltaValue_,
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        // Chainlink specific parameters, see ChainLinkValueProvider for more info
+        // Chainlink specific parameters, see ChainlinkValueProvider for more info
         address chainlinkAggregatorAddress_
     ) public returns (address) {
-        ChainLinkValueProvider chainlinkValueProvider = new ChainLinkValueProvider(
+        ChainlinkValueProvider chainlinkValueProvider = new ChainlinkValueProvider(
                 timeUpdateWindow_,
                 chainlinkAggregatorAddress_
             );

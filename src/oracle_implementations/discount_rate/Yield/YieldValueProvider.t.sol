@@ -20,7 +20,7 @@ contract YieldValueProviderTest is DSTest, Convert {
     // https://etherscan.io/token/0x3771c99c087a81df4633b50d8b149afaa83e3c9e
     // at block 13911954
     uint256 private _maturity = 1648177200;
-    int256 private _timeScale = 3168808781; // 58454204609 in 64.64 format
+    int256 private _timeScale = 3168808781; // computed from 58454204609 which is in 64.64 format
     uint112 private _cumulativeBalancesRatio =
         5141501570599198210548627855691773;
     uint32 private _blockTime = 1639432842;

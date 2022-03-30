@@ -10,7 +10,7 @@ import {ChainlinkFactory} from "./ChainlinkFactory.sol";
 import {Relayer} from "../relayer/Relayer.sol";
 import {IRelayer} from "../relayer/IRelayer.sol";
 
-import {ChainLinkValueProvider} from "../oracle_implementations/spot_price/Chainlink/ChainLinkValueProvider.sol";
+import {ChainlinkValueProvider} from "../oracle_implementations/spot_price/Chainlink/ChainlinkValueProvider.sol";
 import {IChainlinkAggregatorV3Interface} from "../oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
 
 contract ChainlinkFactoryTest is DSTest {
@@ -148,19 +148,18 @@ contract ChainlinkFactoryTest is DSTest {
             address(chainlinkMock)
         );
 
-        address chainlinkValueProviderAddress = Relayer(chainlinkRelayerAddress)
+        address chainlinkOracleAddress = Relayer(chainlinkRelayerAddress)
             .oracle();
 
         // Test that properties are correctly set
         assertEq(
-            ChainLinkValueProvider(chainlinkValueProviderAddress)
-                .timeUpdateWindow(),
+            ChainlinkValueProvider(chainlinkOracleAddress).timeUpdateWindow(),
             _oracleUpdateWindow,
             "Chainlink Value Provider incorrect oracleUpdateWindow"
         );
 
         assertEq(
-            ChainLinkValueProvider(chainlinkValueProviderAddress)
+            ChainlinkValueProvider(chainlinkOracleAddress)
                 .chainlinkAggregatorAddress(),
             address(chainlinkMock),
             "Chainlink Value Provider incorrect chainlinkAggregatorAddress"
@@ -187,12 +186,12 @@ contract ChainlinkFactoryTest is DSTest {
             address(chainlinkMock)
         );
 
-        ChainLinkValueProvider chainLinkValueProvider = ChainLinkValueProvider(
+        ChainlinkValueProvider chainlinkValueProvider = ChainlinkValueProvider(
             Relayer(chainlinkRelayerAddress).oracle()
         );
 
-        bool factoryIsAuthorized = chainLinkValueProvider.canCall(
-            chainLinkValueProvider.ANY_SIG(),
+        bool factoryIsAuthorized = chainlinkValueProvider.canCall(
+            chainlinkValueProvider.ANY_SIG(),
             address(_factory)
         );
         assertTrue(
@@ -200,8 +199,8 @@ contract ChainlinkFactoryTest is DSTest {
             "The Factory should not have rights over the created contract"
         );
 
-        bool callerIsAuthorized = chainLinkValueProvider.canCall(
-            chainLinkValueProvider.ANY_SIG(),
+        bool callerIsAuthorized = chainlinkValueProvider.canCall(
+            chainlinkValueProvider.ANY_SIG(),
             address(this)
         );
         assertTrue(

@@ -8,9 +8,9 @@ import {Hevm} from "../../../test/utils/Hevm.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 
 import {IChainlinkAggregatorV3Interface} from "./ChainlinkAggregatorV3Interface.sol";
-import {ChainLinkValueProvider} from "./ChainLinkValueProvider.sol";
+import {ChainlinkValueProvider} from "./ChainLinkValueProvider.sol";
 
-contract ChainLinkValueProviderTest is DSTest {
+contract ChainlinkValueProviderTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
 
     MockProvider internal mockChainlinkAggregator;
