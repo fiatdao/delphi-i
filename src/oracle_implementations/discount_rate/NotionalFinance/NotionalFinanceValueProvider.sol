@@ -13,7 +13,9 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     );
 
     // @notice Emitted when an invalid currencyId is used to deploy the contract
-    error NotionalFinanceValueProvider__constructor_invalidCurrencyId(uint256 currencyId);
+    error NotionalFinanceValueProvider__constructor_invalidCurrencyId(
+        uint256 currencyId
+    );
 
     // Seconds in a 360 days year as used by Notional in 18 digits precision
     int256 internal constant SECONDS_PER_YEAR = 31104000 * 1e18;
@@ -45,7 +47,9 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
         uint256 settlementDate_
     ) Oracle(timeUpdateWindow_) {
         if (currencyId_ > type(uint16).max) {
-            revert NotionalFinanceValueProvider__constructor_invalidCurrencyId(currencyId_);
+            revert NotionalFinanceValueProvider__constructor_invalidCurrencyId(
+                currencyId_
+            );
         }
 
         lastImpliedRateDecimals = lastImpliedRateDecimals_;
