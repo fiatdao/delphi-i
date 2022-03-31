@@ -8,8 +8,13 @@ import "prb-math/contracts/PRBMathSD59x18.sol";
 
 contract NotionalFinanceValueProvider is Oracle, Convert {
     // @notice Emitted when trying to add pull a value for an expired pool
-    error NotionalFinanceValueProvider__value_maturityLessThanBlocktime(
+    error NotionalFinanceValueProvider__getValue_maturityLessThanBlocktime(
         uint256 maturity
+    );
+
+    // @notice Emitted when an invalid currencyId is used to deploy the contract
+    error NotionalFinanceValueProvider__constructor_invalidCurrencyId(
+        uint256 currencyId
     );
 
     // Seconds in a 360 days year as used by Notional in 18 digits precision
@@ -30,6 +35,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     /// @param lastImpliedRateDecimals_ Precision of the Notional Market rate.
     /// @param maturity_ Maturity date.
     /// @param settlementDate_ Settlement date.
+    /// @dev reverts if the CurrencyId is bigger than uint16 max value
     constructor(
         // Oracle parameters
         uint256 timeUpdateWindow_,
@@ -40,6 +46,12 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
         uint256 maturity_,
         uint256 settlementDate_
     ) Oracle(timeUpdateWindow_) {
+        if (currencyId_ > type(uint16).max) {
+            revert NotionalFinanceValueProvider__constructor_invalidCurrencyId(
+                currencyId_
+            );
+        }
+
         lastImpliedRateDecimals = lastImpliedRateDecimals_;
         notionalView = notionalViewContract_;
         currencyId = currencyId_;
@@ -55,7 +67,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     function getValue() external view override(Oracle) returns (int256) {
         // No values for matured pools
         if (block.timestamp >= maturityDate) {
-            revert NotionalFinanceValueProvider__value_maturityLessThanBlocktime(
+            revert NotionalFinanceValueProvider__getValue_maturityLessThanBlocktime(
                 maturityDate
             );
         }
