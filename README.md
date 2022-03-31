@@ -1,33 +1,26 @@
-# Dapptools template
+# <h1 align="center"> Delphi 🏛️ </h1>
 
-Heavily inspired by [Georgios's template](https://github.com/gakonst/dapptools-template).
+**Repository containing the core smart contracts of Delphi**
 
-## Installation
+## Requirements
 
-Create a folder for your project and `cd` into it. Using the commands below you will set up your template.
+Having installed [Foundry](https://github.com/gakonst/foundry) and [Node.js](https://nodejs.org/) is the minimum requirement to get started.
+
+Run `make` to install dependencies.
+
+## Tests
+
+After installing dependencies with `make`, run `make test` to run the tests.
+
+## Building and testing
 
 ```sh
-git clone https://github.com/cleanunicorn/dapptools-template ./
+git clone https://github.com/fiatdao/delphi
+cd delphi
 make # This installs the project's dependencies.
 make test
 ```
 
-## Features
+## Deploying contracts
 
-### Generic caller
-
-Most of the time you'll need to test your application for unauthorized access. In that case, you need a contract that is NOT allowed to call some methods. To do this, you can use the `User` contract and make it call whatever you need.
-
-The user contract is able to call any method of the contract it is given. Check the test [OnlyAuthrorized.t.sol](./src/OnlyAuthrorized.t.sol) to find out how to use the generic caller.
-
-## Testing
-
-```sh
-make test
-```
-
-### Fuzz testing
-
-```sh
-make test-fuzz
-```
+This is done typically in a different repo that imports this repo.
