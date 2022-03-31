@@ -42,7 +42,7 @@ contract StaticRelayer is IRelayer {
     }
 
     /// @notice Pushes the hardcoded value to Collybus for the hardcoded token id
-    /// After the rate is pushed the contract self-destructs
+    /// @dev The execute will exit early after the first update
     function execute() public override(IRelayer) returns (bool) {
         if (_updatedCollybus) return false;
 
