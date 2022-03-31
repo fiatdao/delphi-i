@@ -230,4 +230,20 @@ contract NotionalFinanceFactoryTest is DSTest {
             "Caller should have rights over the created contract"
         );
     }
+
+    function testFail_create_failsWithInvalidCurrencyId() public {
+        uint256 invalidCurrencyId = type(uint16).max + 1;
+        // Create Notional Value Provider
+        _factory.create(
+            _collybusAddress,
+            _tokenId,
+            _minimumPercentageDeltaValue,
+            _oracleUpdateWindow,
+            _notionalView,
+            invalidCurrencyId,
+            _lastImpliedRateDecimals,
+            _maturityDate,
+            _settlementDate
+        );
+    }
 }
