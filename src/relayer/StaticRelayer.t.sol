@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {Hevm} from "../test/utils/Hevm.sol";
-import {DSTest} from "lib/ds-test/src/test.sol";
+import {DSTest} from "ds-test/test.sol";
 import {Caller} from "../test/utils/Caller.sol";
 
 import {ICollybus} from "./ICollybus.sol";
