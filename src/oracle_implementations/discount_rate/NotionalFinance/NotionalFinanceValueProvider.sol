@@ -8,39 +8,51 @@ import "prb-math/contracts/PRBMathSD59x18.sol";
 
 contract NotionalFinanceValueProvider is Oracle, Convert {
     // @notice Emitted when trying to add pull a value for an expired pool
-    error NotionalFinanceValueProvider__value_maturityLessThanBlocktime(
+    error NotionalFinanceValueProvider__getValue_maturityLessThanBlocktime(
         uint256 maturity
+    );
+
+    // @notice Emitted when an invalid currencyId is used to deploy the contract
+    error NotionalFinanceValueProvider__constructor_invalidCurrencyId(
+        uint256 currencyId
     );
 
     // Seconds in a 360 days year as used by Notional in 18 digits precision
     int256 internal constant SECONDS_PER_YEAR = 31104000 * 1e18;
 
     address public immutable notionalView;
-    uint16 public immutable currencyId;
+    uint256 public immutable currencyId;
     uint256 public immutable maturityDate;
     uint256 public immutable settlementDate;
 
-    uint256 private immutable oracleRateDecimals;
+    uint256 private immutable lastImpliedRateDecimals;
 
     /// @notice Constructs the Value provider contracts with the needed Notional contract data in order to
     /// calculate the annual rate.
     /// @param timeUpdateWindow_ Minimum time between updates of the value
     /// @param notionalViewContract_ The address of the deployed notional view contract.
     /// @param currencyId_ Currency ID(eth = 1, dai = 2, usdc = 3, wbtc = 4)
-    /// @param oracleRateDecimals_ Precision of the Notional Market rate.
+    /// @param lastImpliedRateDecimals_ Precision of the Notional Market rate.
     /// @param maturity_ Maturity date.
     /// @param settlementDate_ Settlement date.
+    /// @dev reverts if the CurrencyId is bigger than uint16 max value
     constructor(
         // Oracle parameters
         uint256 timeUpdateWindow_,
         // Notional specific parameters
         address notionalViewContract_,
-        uint16 currencyId_,
-        uint256 oracleRateDecimals_,
+        uint256 currencyId_,
+        uint256 lastImpliedRateDecimals_,
         uint256 maturity_,
         uint256 settlementDate_
     ) Oracle(timeUpdateWindow_) {
-        oracleRateDecimals = oracleRateDecimals_;
+        if (currencyId_ > type(uint16).max) {
+            revert NotionalFinanceValueProvider__constructor_invalidCurrencyId(
+                currencyId_
+            );
+        }
+
+        lastImpliedRateDecimals = lastImpliedRateDecimals_;
         notionalView = notionalViewContract_;
         currencyId = currencyId_;
         maturityDate = maturity_;
@@ -55,19 +67,19 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     function getValue() external view override(Oracle) returns (int256) {
         // No values for matured pools
         if (block.timestamp >= maturityDate) {
-            revert NotionalFinanceValueProvider__value_maturityLessThanBlocktime(
+            revert NotionalFinanceValueProvider__getValue_maturityLessThanBlocktime(
                 maturityDate
             );
         }
 
         // The returned annual rate is in 1e9 precision so we need to convert it to 1e18 precision.
         MarketParameters memory marketParams = INotionalView(notionalView)
-            .getMarket(currencyId, maturityDate, settlementDate);
+            .getMarket(uint16(currencyId), maturityDate, settlementDate);
 
         // Convert rate per annum to 18 digits precision.
         uint256 ratePerAnnum = uconvert(
             marketParams.oracleRate,
-            oracleRateDecimals,
+            lastImpliedRateDecimals,
             18
         );
 

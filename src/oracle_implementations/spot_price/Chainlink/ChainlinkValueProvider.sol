@@ -5,7 +5,7 @@ import {Oracle} from "../../../oracle/Oracle.sol";
 import {Convert} from "../../discount_rate/utils/Convert.sol";
 import {IChainlinkAggregatorV3Interface} from "./ChainlinkAggregatorV3Interface.sol";
 
-contract ChainLinkValueProvider is Oracle, Convert {
+contract ChainlinkValueProvider is Oracle, Convert {
     uint8 public immutable underlierDecimals;
     address public chainlinkAggregatorAddress;
 

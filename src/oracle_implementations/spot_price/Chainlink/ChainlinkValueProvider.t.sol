@@ -8,14 +8,14 @@ import {Hevm} from "../../../test/utils/Hevm.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 
 import {IChainlinkAggregatorV3Interface} from "./ChainlinkAggregatorV3Interface.sol";
-import {ChainLinkValueProvider} from "./ChainLinkValueProvider.sol";
+import {ChainlinkValueProvider} from "./ChainlinkValueProvider.sol";
 
-contract ChainLinkValueProviderTest is DSTest {
+contract ChainlinkValueProviderTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
 
     MockProvider internal mockChainlinkAggregator;
 
-    ChainLinkValueProvider internal chainlinkVP;
+    ChainlinkValueProvider internal chainlinkVP;
 
     uint256 private _timeUpdateWindow = 100; // seconds
 
@@ -60,7 +60,7 @@ contract ChainLinkValueProviderTest is DSTest {
             false
         );
 
-        chainlinkVP = new ChainLinkValueProvider(
+        chainlinkVP = new ChainlinkValueProvider(
             // Oracle arguments
             // Time update window
             _timeUpdateWindow,
@@ -86,7 +86,7 @@ contract ChainLinkValueProviderTest is DSTest {
             false
         );
 
-        ChainLinkValueProvider vp = new ChainLinkValueProvider(
+        ChainlinkValueProvider vp = new ChainlinkValueProvider(
             // Oracle arguments
             // Time update window
             _timeUpdateWindow,
