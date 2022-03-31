@@ -24,6 +24,3 @@ make test
 ## Deploying contracts
 
 This is done typically in a different repo that imports this repo.
-
-However, you one wants to they can run `make deploy`.
-
