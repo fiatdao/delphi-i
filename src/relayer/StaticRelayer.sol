@@ -28,6 +28,11 @@ contract StaticRelayer is IRelayer {
     // Flag used to ensure that the value is pushed to Collybus only once
     bool private _updatedCollybus;
 
+    /// @param collybusAddress_ Address of the collybus
+    /// @param type_ Relayer type, DiscountRate or SpotPrice
+    /// @param encodedTokenId_ Encoded token Id that will be used to push the value to Collybus
+    /// uint256 for discount rate, address for spot price
+    /// @param value_ The value that will be pushed to Collybus 
     constructor(
         address collybusAddress_,
         IRelayer.RelayerType type_,
