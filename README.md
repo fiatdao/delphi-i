@@ -1,4 +1,4 @@
-# <h1 align="center"> Delphi 🏛️ </h1>
+# <h1 align="center"> Delphi 🔮 </h1>
 
 **Repository containing the core smart contracts of Delphi**
 
