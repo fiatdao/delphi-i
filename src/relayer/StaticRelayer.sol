@@ -32,7 +32,7 @@ contract StaticRelayer is IRelayer {
     /// @param type_ Relayer type, DiscountRate or SpotPrice
     /// @param encodedTokenId_ Encoded token Id that will be used to push the value to Collybus
     /// uint256 for discount rate, address for spot price
-    /// @param value_ The value that will be pushed to Collybus 
+    /// @param value_ The value that will be pushed to Collybus
     constructor(
         address collybusAddress_,
         IRelayer.RelayerType type_,
