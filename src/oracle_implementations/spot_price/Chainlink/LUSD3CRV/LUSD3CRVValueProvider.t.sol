@@ -14,12 +14,18 @@ import {ICurvePool} from "./LUSD3CRVValueProvider.sol";
 contract LUSD3CRVValueProviderTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
 
-    MockProvider internal curvePoolMock;
+    MockProvider internal curve3PoolMock;
+    MockProvider internal curveLUSD3PoolMock;
+
     MockProvider internal mockChainlinkUSDC;
     MockProvider internal mockChainlinkDAI;
     MockProvider internal mockChainlinkUSDT;
+    MockProvider internal mockChainlinkLUSD;
 
-    int256 private _lpTokenVirtualPrice = 1012507863670880436;
+    int256 private _curve3poolVirtualPrice = 1020628557740573240;
+    int256 private _lusd3PoolVirtualPrice = 1012508837937838125;
+
+    int256 private _lusdPrice = 100102662;
     int256 private _usdcPrice = 100000298;
     int256 private _daiPrice = 100100000;
     int256 private _usdtPrice = 100030972;
@@ -62,21 +68,40 @@ contract LUSD3CRVValueProviderTest is DSTest {
     }
 
     function setUp() public {
-        curvePoolMock = new MockProvider();
-        curvePoolMock.givenQueryReturnResponse(
+        curve3PoolMock = new MockProvider();
+        curve3PoolMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ICurvePool.get_virtual_price.selector),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(_lpTokenVirtualPrice)
+                data: abi.encode(_curve3poolVirtualPrice)
             }),
             false
         );
 
-        curvePoolMock.givenQueryReturnResponse(
+        curve3PoolMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ICurvePool.decimals.selector),
             MockProvider.ReturnData({success: true, data: abi.encode(18)}),
             false
         );
+
+        curveLUSD3PoolMock = new MockProvider();
+        curveLUSD3PoolMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ICurvePool.get_virtual_price.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(_lusd3PoolVirtualPrice)
+            }),
+            false
+        );
+
+        curveLUSD3PoolMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ICurvePool.decimals.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
+            false
+        );
+
+        mockChainlinkLUSD = new MockProvider();
+        initChainlinkMockProvider(mockChainlinkLUSD, _lusdPrice, 8);
 
         mockChainlinkUSDC = new MockProvider();
         initChainlinkMockProvider(mockChainlinkUSDC, _usdcPrice, 8);
@@ -92,7 +117,9 @@ contract LUSD3CRVValueProviderTest is DSTest {
             // Time update window
             _timeUpdateWindow,
             // Chainlink arguments
-            address(curvePoolMock),
+            address(curve3PoolMock),
+            address(curveLUSD3PoolMock),
+            address(mockChainlinkLUSD),
             address(mockChainlinkUSDC),
             address(mockChainlinkDAI),
             address(mockChainlinkUSDT)
@@ -107,8 +134,8 @@ contract LUSD3CRVValueProviderTest is DSTest {
         // Expected value is the value sent by the mock provider in 10**18 precision
         // The expect value was computed with this formula:
         // solhint-disable-next-line
-        // https://www.wolframalpha.com/input?i2d=true&i=+Divide%5B1012507863670880436%2CPower%5B10%2C18%5D%5D+*+Divide%5Bminimum%5C%2840%29100030972%5C%2844%29100100000%5C%2844%29100000298%5C%2841%29%2CPower%5B10%2C8%5D%5D
-        int256 expectedValue = 1012510880944314175;
+        // https://www.wolframalpha.com/input?i2d=true&i=%5C%2840%29Divide%5B1012508837937838125%2CPower%5B10%2C18%5D%5D%5C%2841%29+*+minimum%5C%2840%29Divide%5B100102662%2CPower%5B10%2C8%5D%5D%5C%2844%29%5C%2840%29+Divide%5B1020628557740573240%2CPower%5B10%2C18%5D%5D+*+Divide%5Bminimum%5C%2840%29100030972%5C%2844%29100100000%5C%2844%29100000298%5C%2841%29%2CPower%5B10%2C8%5D%5D%5C%2841%29%5C%2841%29
+        int256 expectedValue = 1013548299761041868;
         // Computed value based on the parameters that are sent via the mock provider
         int256 value = chainlinkVP.getValue();
 
