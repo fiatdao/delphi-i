@@ -9,7 +9,7 @@ import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 
 import {IChainlinkAggregatorV3Interface} from "../ChainlinkAggregatorV3Interface.sol";
 import {LUSD3CRVValueProvider} from "./LUSD3CRVValueProvider.sol";
-import {ICurvePool} from "./LUSD3CRVValueProvider.sol";
+import {ICurvePool} from "./ICurvePool.sol";
 
 contract LUSD3CRVValueProviderTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);

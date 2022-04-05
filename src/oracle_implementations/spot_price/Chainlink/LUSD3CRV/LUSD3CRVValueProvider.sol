@@ -1,22 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
-
 import {Oracle} from "../../../../oracle/Oracle.sol";
 import {Convert} from "../../../discount_rate/utils/Convert.sol";
 import {IChainlinkAggregatorV3Interface} from "../ChainlinkAggregatorV3Interface.sol";
+import {ICurvePool} from "./ICurvePool.sol";
 import "prb-math/contracts/PRBMathSD59x18.sol";
-
-interface ICurvePool {
-    function get_virtual_price() external view returns (uint256);
-
-    function decimals() external view returns (uint256);
-}
 
 /// @notice Oracle implementation for Curve Pool token via Chainlink Oracles
 /// as described in this guide: https://news.curve.fi/chainlink-oracles-and-curve-pools/
 contract LUSD3CRVValueProvider is Oracle, Convert {
-    uint256 public immutable decimals3Pool;
-    uint256 public immutable decimalsLUSD3Pool;
+    /// @notice Emitted when a pool with unsupported decimals is used
+    error LUSD3CRVValueProvider__constructor_InvalidPoolDecimals(address pool);
+
     uint256 public immutable decimalsUSDC;
     uint256 public immutable decimalsDAI;
     uint256 public immutable decimalsUSDT;
@@ -44,13 +39,19 @@ contract LUSD3CRVValueProvider is Oracle, Convert {
         address chainlinkDAI_,
         address chainlinkUSDT_
     ) Oracle(timeUpdateWindow_) {
+        if (ICurvePool(curve3Pool_).decimals() != 18)
+            revert LUSD3CRVValueProvider__constructor_InvalidPoolDecimals(
+                curve3Pool_
+            );
         // Init the 3curve Pool
         curve3Pool = curve3Pool_;
-        decimals3Pool = ICurvePool(curve3Pool_).decimals();
 
+        if (ICurvePool(curveLUSD3Pool_).decimals() != 18)
+            revert LUSD3CRVValueProvider__constructor_InvalidPoolDecimals(
+                curveLUSD3Pool_
+            );
         // Init the LUSD3curve Pool
         curveLUSD3Pool = curveLUSD3Pool_;
-        decimalsLUSD3Pool = ICurvePool(curveLUSD3Pool_).decimals();
 
         // Init USDC chainlink properties
         chainlinkUSDC = chainlinkUSDC_;
@@ -72,26 +73,28 @@ contract LUSD3CRVValueProvider is Oracle, Convert {
             .decimals();
     }
 
-    /// @notice Retrieves the price from the chainlink aggregator
-    /// @return result The result as an signed 59.18-decimal fixed-point number
-    /// @dev The price is calculated following the steps described in this document
+    /// @notice The price is calculated following the steps described in this document
     /// https://news.curve.fi/chainlink-oracles-and-curve-pools/
+    /// @return result The result as an signed 59.18-decimal fixed-point number
     function getValue() external view override(Oracle) returns (int256) {
         // Get the USDC price and convert it to 59.18-decimal fixed-point format
         (, int256 usdcPrice, , , ) = IChainlinkAggregatorV3Interface(
             chainlinkUSDC
         ).latestRoundData();
 
-        // Compute the min price as we fetch data
-        int256 min3pTokenPrice59x18 = convert(usdcPrice, decimalsUSDC, 18);
+        // Minimum token prices needed in the formula
+        int256 minTokenPrice59x18;
+
+        // Init min price with the first token price
+        minTokenPrice59x18 = convert(usdcPrice, decimalsUSDC, 18);
 
         // Get the DAI price and convert it to 59.18-decimal fixed-point format
         (, int256 daiPrice, , , ) = IChainlinkAggregatorV3Interface(
             chainlinkDAI
         ).latestRoundData();
         // Update the min price as we fetch data
-        min3pTokenPrice59x18 = min(
-            min3pTokenPrice59x18,
+        minTokenPrice59x18 = min(
+            minTokenPrice59x18,
             convert(daiPrice, decimalsDAI, 18)
         );
 
@@ -100,20 +103,15 @@ contract LUSD3CRVValueProvider is Oracle, Convert {
             chainlinkUSDT
         ).latestRoundData();
         // Update the min price as we fetch data
-        min3pTokenPrice59x18 = min(
-            min3pTokenPrice59x18,
+        minTokenPrice59x18 = min(
+            minTokenPrice59x18,
             convert(usdtPrice, decimalsUSDT, 18)
         );
 
-        // Fetch the virtual price for the 3pool
-        int256 vCurve3Price59x18 = convert(
+        // Calculate the price the lpToken
+        int256 curve3lpTokenPrice59x18 = PRBMathSD59x18.mul(
             int256(ICurvePool(curve3Pool).get_virtual_price()),
-            decimals3Pool,
-            18
-        );
-        int256 curve3Price59x18 = PRBMathSD59x18.mul(
-            vCurve3Price59x18,
-            min3pTokenPrice59x18
+            minTokenPrice59x18
         );
 
         // Get the LUSD price and convert it to 59.18-decimal fixed-point format
@@ -122,16 +120,11 @@ contract LUSD3CRVValueProvider is Oracle, Convert {
         ).latestRoundData();
         int256 lusd59x18 = convert(lusdPrice, decimalsLUSD, 18);
 
-        int256 vLUSD3Price59x18 = convert(
-            int256(ICurvePool(curveLUSD3Pool).get_virtual_price()),
-            decimalsLUSD3Pool,
-            18
-        );
-
+        // Compute the final price for the curveLUSD3Pool
         return
             PRBMathSD59x18.mul(
-                vLUSD3Price59x18,
-                min(curve3Price59x18, lusd59x18)
+                int256(ICurvePool(curveLUSD3Pool).get_virtual_price()),
+                min(curve3lpTokenPrice59x18, lusd59x18)
             );
     }
 
