@@ -4,14 +4,23 @@ pragma solidity ^0.8.0;
 import {Oracle} from "../../../../oracle/Oracle.sol";
 import {Convert} from "../../../discount_rate/utils/Convert.sol";
 import {IChainlinkAggregatorV3Interface} from "../ChainlinkAggregatorV3Interface.sol";
+import "prb-math/contracts/PRBMathSD59x18.sol";
 
+interface ICurvePool {
+    function get_virtual_price() external view returns (uint256);
+
+    function decimals() external view returns (uint256);
+}
+
+/// @notice Oracle implementation for Curve Pool token via Chainlink Oracles
+/// as described in this guide: https://news.curve.fi/chainlink-oracles-and-curve-pools/
 contract LUSD3CRVValueProvider is Oracle, Convert {
-    uint256 public immutable decimalsLUSD;
+    uint256 public immutable decimalsPoolToken;
     uint256 public immutable decimalsUSDC;
     uint256 public immutable decimalsDAI;
     uint256 public immutable decimalsUSDT;
 
-    address public immutable chainlinkLUSD;
+    address public immutable curvePool;
     address public immutable chainlinkUSDC;
     address public immutable chainlinkDAI;
     address public immutable chainlinkUSDT;
@@ -22,15 +31,15 @@ contract LUSD3CRVValueProvider is Oracle, Convert {
         // Oracle parameters
         uint256 timeUpdateWindow_,
         // Chainlink specific parameter
-        address chainlinkLUSD_,
+        address curvePool_,
         address chainlinkUSDC_,
         address chainlinkDAI_,
         address chainlinkUSDT_
     ) Oracle(timeUpdateWindow_) {
-        // Init LUSD chainlink properties
-        chainlinkLUSD = chainlinkLUSD_;
-        decimalsLUSD = IChainlinkAggregatorV3Interface(chainlinkLUSD_)
-            .decimals();
+        // Init the curve Pool
+        curvePool = curvePool_;
+
+        decimalsPoolToken = ICurvePool(curvePool_).decimals();
 
         // Init USDC chainlink properties
         chainlinkUSDC = chainlinkUSDC_;
@@ -50,37 +59,46 @@ contract LUSD3CRVValueProvider is Oracle, Convert {
     /// @notice Retrieves the price from the chainlink aggregator
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function getValue() external view override(Oracle) returns (int256) {
-        // Get the LUSD price and convert it to 59.18-decimal fixed-point format
-        (, int256 lusdPrice, , , ) = IChainlinkAggregatorV3Interface(
-            chainlinkLUSD
-        ).latestRoundData();
-        int256 lusd59x18 = convert(lusdPrice, decimalsLUSD, 18);
-
         // Get the USDC price and convert it to 59.18-decimal fixed-point format
         (, int256 usdcPrice, , , ) = IChainlinkAggregatorV3Interface(
             chainlinkUSDC
         ).latestRoundData();
-        int256 usdc59x18 = convert(usdcPrice, decimalsUSDC, 18);
+
+        // Compute the min price as we fetch data
+        int256 minPrice59x18 = convert(usdcPrice, decimalsUSDC, 18);
 
         // Get the DAI price and convert it to 59.18-decimal fixed-point format
         (, int256 daiPrice, , , ) = IChainlinkAggregatorV3Interface(
             chainlinkDAI
         ).latestRoundData();
-        int256 dai59x18 = convert(daiPrice, decimalsDAI, 18);
+        minPrice59x18 = min(minPrice59x18, convert(daiPrice, decimalsDAI, 18));
 
         // Get the LUSD price and convert it to 59.18-decimal fixed-point format
         (, int256 usdtPrice, , , ) = IChainlinkAggregatorV3Interface(
             chainlinkUSDT
         ).latestRoundData();
+        minPrice59x18 = min(
+            minPrice59x18,
+            convert(usdtPrice, decimalsUSDT, 18)
+        );
 
-        int256 usdt59x18 = convert(usdtPrice, decimalsUSDT, 18);
+        // Fetch the virtual price for the LP token
+        int256 virtualPrice58x18 = convert(
+            int256(ICurvePool(curvePool).get_virtual_price()),
+            decimalsPoolToken,
+            18
+        );
 
-        // The weights are: 50% LUSD, 16.(6)% USDC, 16.(6)% DAI, 16.(6)% USDT
-        return (lusd59x18 * 3 + usdc59x18 + dai59x18 + usdt59x18) / 6;
+        return PRBMathSD59x18.mul(virtualPrice58x18, minPrice59x18);
     }
 
-    /// @notice returns the description of the chainlink aggregator the proxy points to.
+    /// @notice Returns the description of the value provider.
     function description() external pure returns (string memory) {
         return "LUSD3CRV";
+    }
+
+    /// @notice Helper math min function
+    function min(int256 a, int256 b) internal pure returns (int256) {
+        return a < b ? a : b;
     }
 }

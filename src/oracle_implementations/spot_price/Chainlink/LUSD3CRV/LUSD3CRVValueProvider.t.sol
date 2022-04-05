@@ -9,19 +9,20 @@ import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 
 import {IChainlinkAggregatorV3Interface} from "../ChainlinkAggregatorV3Interface.sol";
 import {LUSD3CRVValueProvider} from "./LUSD3CRVValueProvider.sol";
+import {ICurvePool} from "./LUSD3CRVValueProvider.sol";
 
 contract LUSD3CRVValueProviderTest is DSTest {
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
 
-    MockProvider internal mockChainlinkLUSD;
+    MockProvider internal curvePoolMock;
     MockProvider internal mockChainlinkUSDC;
     MockProvider internal mockChainlinkDAI;
     MockProvider internal mockChainlinkUSDT;
 
-    int256 private _lusdPrice = 200000000;
-    int256 private _usdcPrice = 1000000000000000000;
-    int256 private _daiPrice = 1100000000000000000;
-    int256 private _usdtPrice = 900000000000000000;
+    int256 private _lpTokenVirtualPrice = 1012507863670880436;
+    int256 private _usdcPrice = 100000298;
+    int256 private _daiPrice = 100100000;
+    int256 private _usdtPrice = 100030972;
 
     LUSD3CRVValueProvider internal chainlinkVP;
 
@@ -61,24 +62,37 @@ contract LUSD3CRVValueProviderTest is DSTest {
     }
 
     function setUp() public {
-        mockChainlinkLUSD = new MockProvider();
-        initChainlinkMockProvider(mockChainlinkLUSD, _lusdPrice, 8);
+        curvePoolMock = new MockProvider();
+        curvePoolMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ICurvePool.get_virtual_price.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(_lpTokenVirtualPrice)
+            }),
+            false
+        );
+
+        curvePoolMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ICurvePool.decimals.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
+            false
+        );
 
         mockChainlinkUSDC = new MockProvider();
-        initChainlinkMockProvider(mockChainlinkUSDC, _usdcPrice, 18);
+        initChainlinkMockProvider(mockChainlinkUSDC, _usdcPrice, 8);
 
         mockChainlinkDAI = new MockProvider();
-        initChainlinkMockProvider(mockChainlinkDAI, _daiPrice, 18);
+        initChainlinkMockProvider(mockChainlinkDAI, _daiPrice, 8);
 
         mockChainlinkUSDT = new MockProvider();
-        initChainlinkMockProvider(mockChainlinkUSDT, _usdtPrice, 18);
+        initChainlinkMockProvider(mockChainlinkUSDT, _usdtPrice, 8);
 
         chainlinkVP = new LUSD3CRVValueProvider(
             // Oracle arguments
             // Time update window
             _timeUpdateWindow,
             // Chainlink arguments
-            address(mockChainlinkLUSD),
+            address(curvePoolMock),
             address(mockChainlinkUSDC),
             address(mockChainlinkDAI),
             address(mockChainlinkUSDT)
@@ -91,7 +105,10 @@ contract LUSD3CRVValueProviderTest is DSTest {
 
     function test_getValue() public {
         // Expected value is the value sent by the mock provider in 10**18 precision
-        int256 expectedValue = 1500000000000000000;
+        // The expect value was computed with this formula:
+        // solhint-disable-next-line
+        // https://www.wolframalpha.com/input?i2d=true&i=+Divide%5B1012507863670880436%2CPower%5B10%2C18%5D%5D+*+Divide%5Bminimum%5C%2840%29100030972%5C%2844%29100100000%5C%2844%29100000298%5C%2841%29%2CPower%5B10%2C8%5D%5D
+        int256 expectedValue = 1012510880944314175;
         // Computed value based on the parameters that are sent via the mock provider
         int256 value = chainlinkVP.getValue();
 
