@@ -37,7 +37,7 @@ contract LUSD3CRVValueProvider is Oracle, Convert {
     constructor(
         // Oracle parameters
         uint256 timeUpdateWindow_,
-        // Chainlink specific parameter
+        // Chainlink specific parameters
         address curve3Pool_,
         address curveLUSD3Pool_,
         address chainlinkLUSD_,
@@ -45,17 +45,19 @@ contract LUSD3CRVValueProvider is Oracle, Convert {
         address chainlinkDAI_,
         address chainlinkUSDT_
     ) Oracle(timeUpdateWindow_) {
-        if (ICurvePool(curve3Pool_).decimals() != 18)
+        if (ICurvePool(curve3Pool_).decimals() != 18) {
             revert LUSD3CRVValueProvider__constructor_InvalidPoolDecimals(
                 curve3Pool_
             );
+        }
         // Init the 3curve Pool
         curve3Pool = curve3Pool_;
 
-        if (ICurvePool(curveLUSD3Pool_).decimals() != 18)
+        if (ICurvePool(curveLUSD3Pool_).decimals() != 18) {
             revert LUSD3CRVValueProvider__constructor_InvalidPoolDecimals(
                 curveLUSD3Pool_
             );
+        }
         // Init the LUSD3curve Pool
         curveLUSD3Pool = curveLUSD3Pool_;
 
