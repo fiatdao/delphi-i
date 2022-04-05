@@ -150,4 +150,50 @@ contract LUSD3CRVValueProviderTest is DSTest {
                 keccak256(abi.encodePacked(expectedDescription))
         );
     }
+
+    function testFail_deploy_shouldFailWithInvalidLUSDPoolDecimals() public
+    {
+        curveLUSD3PoolMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ICurvePool.decimals.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(1)}),
+            false
+        );
+
+        // Create should fail
+        new LUSD3CRVValueProvider(
+            // Oracle arguments
+            // Time update window
+            _timeUpdateWindow,
+            // Chainlink arguments
+            address(curve3PoolMock),
+            address(curveLUSD3PoolMock),
+            address(mockChainlinkLUSD),
+            address(mockChainlinkUSDC),
+            address(mockChainlinkDAI),
+            address(mockChainlinkUSDT)
+        );
+    }
+
+    function testFail_deploy_shouldFailWithInvalidCurve3PoolDecimals() public
+    {
+        curve3PoolMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ICurvePool.decimals.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(1)}),
+            false
+        );
+
+        // Create should fail
+        new LUSD3CRVValueProvider(
+            // Oracle arguments
+            // Time update window
+            _timeUpdateWindow,
+            // Chainlink arguments
+            address(curve3PoolMock),
+            address(curveLUSD3PoolMock),
+            address(mockChainlinkLUSD),
+            address(mockChainlinkUSDC),
+            address(mockChainlinkDAI),
+            address(mockChainlinkUSDT)
+        );
+    }
 }
