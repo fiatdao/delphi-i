@@ -151,8 +151,7 @@ contract LUSD3CRVValueProviderTest is DSTest {
         );
     }
 
-    function testFail_deploy_shouldFailWithInvalidLUSDPoolDecimals() public
-    {
+    function testFail_deploy_shouldFailWithInvalidLUSDPoolDecimals() public {
         curveLUSD3PoolMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ICurvePool.decimals.selector),
             MockProvider.ReturnData({success: true, data: abi.encode(1)}),
@@ -174,8 +173,7 @@ contract LUSD3CRVValueProviderTest is DSTest {
         );
     }
 
-    function testFail_deploy_shouldFailWithInvalidCurve3PoolDecimals() public
-    {
+    function testFail_deploy_shouldFailWithInvalidCurve3PoolDecimals() public {
         curve3PoolMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ICurvePool.decimals.selector),
             MockProvider.ReturnData({success: true, data: abi.encode(1)}),
