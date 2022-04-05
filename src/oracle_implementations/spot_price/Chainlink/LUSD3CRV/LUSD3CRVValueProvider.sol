@@ -26,8 +26,14 @@ contract LUSD3CRVValueProvider is Oracle, Convert {
     address public immutable chainlinkDAI;
     address public immutable chainlinkUSDT;
 
-    /// @notice Constructs the Value provider contracts with the needed Chainlink.
+    /// @notice Constructs the Value provider contracts with the needed Chainlink data feeds
     /// @param timeUpdateWindow_ Minimum time between updates of the value
+    /// @param curve3Pool_ Address of the  DAI/USDC/USDT curve pool
+    /// @param curveLUSD3Pool_ Address of the lusd curve pool
+    /// @param chainlinkLUSD_ Address of the LUSD chainlink data feed
+    /// @param chainlinkUSDC_ Address of the USDC chainlink data feed
+    /// @param chainlinkDAI_ Address of the DAI chainlink data feed
+    /// @param chainlinkUSDT_ Address of the USDT chainlink data feed
     constructor(
         // Oracle parameters
         uint256 timeUpdateWindow_,
