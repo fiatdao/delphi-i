@@ -73,30 +73,6 @@ contract ChainlinkValueProviderTest is DSTest {
         assertTrue(address(chainlinkVP) != address(0));
     }
 
-    function testFail_deploy_shouldFailWithUnsupportedDecimals() public {
-        MockProvider unsupportedDecimalsMP = new MockProvider();
-        unsupportedDecimalsMP.givenQueryReturnResponse(
-            abi.encodeWithSelector(
-                IChainlinkAggregatorV3Interface.decimals.selector
-            ),
-            MockProvider.ReturnData({
-                success: true,
-                data: abi.encode(uint8(19))
-            }),
-            false
-        );
-
-        ChainlinkValueProvider vp = new ChainlinkValueProvider(
-            // Oracle arguments
-            // Time update window
-            _timeUpdateWindow,
-            // Chainlink arguments
-            address(unsupportedDecimalsMP)
-        );
-
-        assertTrue(address(vp) == address(0));
-    }
-
     function test_getValue() public {
         // Expected value is the value sent by the mock provider in 10**18 precision
         int256 expectedValue = 100016965 * 1e10;
