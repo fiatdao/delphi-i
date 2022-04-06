@@ -12,7 +12,7 @@ import {LUSD3CRVValueProvider} from "./LUSD3CRVValueProvider.sol";
 import {ICurvePool} from "./ICurvePool.sol";
 
 contract LUSD3CRVValueProviderTest is DSTest {
-    CheatCodes cheatCodes = CheatCodes(HEVM_ADDRESS);
+    CheatCodes internal cheatCodes = CheatCodes(HEVM_ADDRESS);
 
     MockProvider internal curve3PoolMock;
     MockProvider internal curveLUSD3PoolMock;
