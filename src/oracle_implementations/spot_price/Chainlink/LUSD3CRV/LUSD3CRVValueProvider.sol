@@ -6,7 +6,7 @@ import {IChainlinkAggregatorV3Interface} from "../ChainlinkAggregatorV3Interface
 import {ICurvePool} from "./ICurvePool.sol";
 import "prb-math/contracts/PRBMathSD59x18.sol";
 
-/// @notice Oracle implementation for Curve Pool token via Chainlink Oracles
+/// @notice Oracle implementation for Curve LP tokens via Chainlink Oracles
 /// as described in this guide: https://news.curve.fi/chainlink-oracles-and-curve-pools/
 contract LUSD3CRVValueProvider is Oracle, Convert {
     /// @notice Emitted when a pool with unsupported decimals is used
@@ -28,8 +28,8 @@ contract LUSD3CRVValueProvider is Oracle, Convert {
 
     /// @notice Constructs the Value provider contracts with the needed Chainlink data feeds
     /// @param timeUpdateWindow_ Minimum time between updates of the value
-    /// @param curve3Pool_ Address of the  DAI/USDC/USDT curve pool
-    /// @param curveLUSD3Pool_ Address of the lusd curve pool
+    /// @param curve3Pool_ Address of the  Curve 3pool
+    /// @param curveLUSD3Pool_ Address of the Curve LUSD-3pool pool
     /// @param chainlinkLUSD_ Address of the LUSD chainlink data feed
     /// @param chainlinkUSDC_ Address of the USDC chainlink data feed
     /// @param chainlinkDAI_ Address of the DAI chainlink data feed
@@ -50,7 +50,7 @@ contract LUSD3CRVValueProvider is Oracle, Convert {
                 curve3Pool_
             );
         }
-        // Init the 3curve Pool
+        // Init the Curve 3pool
         curve3Pool = curve3Pool_;
 
         if (ICurvePool(curveLUSD3Pool_).decimals() != 18) {
@@ -58,7 +58,7 @@ contract LUSD3CRVValueProvider is Oracle, Convert {
                 curveLUSD3Pool_
             );
         }
-        // Init the LUSD3curve Pool
+        // Init the Curve LUSD-3pool
         curveLUSD3Pool = curveLUSD3Pool_;
 
         // Init USDC chainlink properties
@@ -116,7 +116,7 @@ contract LUSD3CRVValueProvider is Oracle, Convert {
             convert(usdtPrice, decimalsUSDT, 18)
         );
 
-        // Calculate the price the lpToken
+        // Calculate the price the Curve 3pool lpToken
         int256 curve3lpTokenPrice59x18 = PRBMathSD59x18.mul(
             int256(ICurvePool(curve3Pool).get_virtual_price()),
             minTokenPrice59x18
@@ -128,7 +128,7 @@ contract LUSD3CRVValueProvider is Oracle, Convert {
         ).latestRoundData();
         int256 lusd59x18 = convert(lusdPrice, decimalsLUSD, 18);
 
-        // Compute the final price for the curveLUSD3Pool
+        // Compute the final price for the Curve LUSD-3pool
         return
             PRBMathSD59x18.mul(
                 int256(ICurvePool(curveLUSD3Pool).get_virtual_price()),
