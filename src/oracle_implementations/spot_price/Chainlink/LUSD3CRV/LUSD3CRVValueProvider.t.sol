@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "ds-test/test.sol";
 
 import "../../../../test/utils/Caller.sol";
-import {Hevm} from "../../../../test/utils/Hevm.sol";
+import {CheatCodes} from "../../../../test/utils/CheatCodes.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 
 import {IChainlinkAggregatorV3Interface} from "../ChainlinkAggregatorV3Interface.sol";
@@ -12,7 +12,7 @@ import {LUSD3CRVValueProvider} from "./LUSD3CRVValueProvider.sol";
 import {ICurvePool} from "./ICurvePool.sol";
 
 contract LUSD3CRVValueProviderTest is DSTest {
-    Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
+    CheatCodes cheatCodes = CheatCodes(HEVM_ADDRESS);
 
     MockProvider internal curve3PoolMock;
     MockProvider internal curveLUSD3PoolMock;
@@ -151,14 +151,24 @@ contract LUSD3CRVValueProviderTest is DSTest {
         );
     }
 
-    function testFail_deploy_shouldFailWithInvalidLUSDPoolDecimals() public {
+    function test_deploy_shouldRevertWithInvalidLUSDPoolDecimals() public {
+        // Update the mock to return an unsupported decimal number
         curveLUSD3PoolMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ICurvePool.decimals.selector),
             MockProvider.ReturnData({success: true, data: abi.encode(1)}),
             false
         );
 
-        // Create should fail
+        // Set the expected error for the revert
+        cheatCodes.expectRevert(
+            abi.encodeWithSelector(
+                LUSD3CRVValueProvider
+                    .LUSD3CRVValueProvider__constructor_InvalidPoolDecimals
+                    .selector,
+                address(curveLUSD3PoolMock)
+            )
+        );
+
         new LUSD3CRVValueProvider(
             // Oracle arguments
             // Time update window
@@ -173,14 +183,24 @@ contract LUSD3CRVValueProviderTest is DSTest {
         );
     }
 
-    function testFail_deploy_shouldFailWithInvalidCurve3PoolDecimals() public {
+    function test_deploy_shouldRevertWithInvalidCurve3PoolDecimals() public {
+        // Update the mock to return an unsupported decimal number
         curve3PoolMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ICurvePool.decimals.selector),
             MockProvider.ReturnData({success: true, data: abi.encode(1)}),
             false
         );
 
-        // Create should fail
+        // Set the expected error for the revert
+        cheatCodes.expectRevert(
+            abi.encodeWithSelector(
+                LUSD3CRVValueProvider
+                    .LUSD3CRVValueProvider__constructor_InvalidPoolDecimals
+                    .selector,
+                address(curve3PoolMock)
+            )
+        );
+
         new LUSD3CRVValueProvider(
             // Oracle arguments
             // Time update window
