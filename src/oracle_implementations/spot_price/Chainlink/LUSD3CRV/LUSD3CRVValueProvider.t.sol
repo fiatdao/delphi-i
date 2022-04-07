@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "ds-test/test.sol";
-
 import "../../../../test/utils/Caller.sol";
 import {CheatCodes} from "../../../../test/utils/CheatCodes.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
@@ -15,7 +15,8 @@ contract LUSD3CRVValueProviderTest is DSTest {
     CheatCodes internal cheatCodes = CheatCodes(HEVM_ADDRESS);
 
     MockProvider internal curve3PoolMock;
-    MockProvider internal curveLUSD3PoolMock;
+    MockProvider internal curve3PoolTokenMock;
+    MockProvider internal curveLUSD3CRVPoolMock;
 
     MockProvider internal mockChainlinkUSDC;
     MockProvider internal mockChainlinkDAI;
@@ -30,9 +31,7 @@ contract LUSD3CRVValueProviderTest is DSTest {
     int256 private _daiPrice = 100100000;
     int256 private _usdtPrice = 100030972;
 
-    LUSD3CRVValueProvider internal chainlinkVP;
-
-    uint256 private _timeUpdateWindow = 100; // seconds
+    LUSD3CRVValueProvider internal lusd3ValueProvider;
 
     function initChainlinkMockProvider(
         MockProvider chainlinkMock_,
@@ -77,15 +76,21 @@ contract LUSD3CRVValueProviderTest is DSTest {
             }),
             false
         );
-
         curve3PoolMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(ICurvePool.decimals.selector),
+            abi.encodeWithSelector(ERC20.decimals.selector),
             MockProvider.ReturnData({success: true, data: abi.encode(18)}),
             false
         );
 
-        curveLUSD3PoolMock = new MockProvider();
-        curveLUSD3PoolMock.givenQueryReturnResponse(
+        curve3PoolTokenMock = new MockProvider();
+        curve3PoolTokenMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ERC20.decimals.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
+            false
+        );
+
+        curveLUSD3CRVPoolMock = new MockProvider();
+        curveLUSD3CRVPoolMock.givenQueryReturnResponse(
             abi.encodeWithSelector(ICurvePool.get_virtual_price.selector),
             MockProvider.ReturnData({
                 success: true,
@@ -93,9 +98,8 @@ contract LUSD3CRVValueProviderTest is DSTest {
             }),
             false
         );
-
-        curveLUSD3PoolMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(ICurvePool.decimals.selector),
+        curveLUSD3CRVPoolMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ERC20.decimals.selector),
             MockProvider.ReturnData({success: true, data: abi.encode(18)}),
             false
         );
@@ -112,13 +116,14 @@ contract LUSD3CRVValueProviderTest is DSTest {
         mockChainlinkUSDT = new MockProvider();
         initChainlinkMockProvider(mockChainlinkUSDT, _usdtPrice, 8);
 
-        chainlinkVP = new LUSD3CRVValueProvider(
+        lusd3ValueProvider = new LUSD3CRVValueProvider(
             // Oracle arguments
             // Time update window
-            _timeUpdateWindow,
+            100,
             // Chainlink arguments
             address(curve3PoolMock),
-            address(curveLUSD3PoolMock),
+            address(curve3PoolTokenMock),
+            address(curveLUSD3CRVPoolMock),
             address(mockChainlinkLUSD),
             address(mockChainlinkUSDC),
             address(mockChainlinkDAI),
@@ -127,7 +132,62 @@ contract LUSD3CRVValueProviderTest is DSTest {
     }
 
     function test_deploy() public {
-        assertTrue(address(chainlinkVP) != address(0));
+        assertTrue(address(lusd3ValueProvider) != address(0));
+    }
+
+    function test_token_decimals() public {
+        assertTrue(
+            lusd3ValueProvider.decimalsLUSD() == 8,
+            "Invalid LUSD Decimals"
+        );
+        assertTrue(
+            lusd3ValueProvider.decimalsUSDC() == 8,
+            "Invalid USDC Decimals"
+        );
+        assertTrue(
+            lusd3ValueProvider.decimalsDAI() == 8,
+            "Invalid DAI Decimals"
+        );
+        assertTrue(
+            lusd3ValueProvider.decimalsUSDT() == 8,
+            "Invalid USDT Decimals"
+        );
+    }
+
+    function test_curve_pools() public {
+        assertEq(
+            lusd3ValueProvider.curve3Pool(),
+            address(curve3PoolMock),
+            "Invalid Curve3Pool"
+        );
+        assertEq(
+            lusd3ValueProvider.curveLUSD3Pool(),
+            address(curveLUSD3CRVPoolMock),
+            "Invalid LUSD3CRV Curve Pool"
+        );
+    }
+
+    function test_chainlink_feeds() public {
+        assertEq(
+            lusd3ValueProvider.chainlinkLUSD(),
+            address(mockChainlinkLUSD),
+            "Invalid LUSD Chainlink Feed"
+        );
+        assertEq(
+            lusd3ValueProvider.chainlinkUSDC(),
+            address(mockChainlinkUSDC),
+            "Invalid USDC Chainlink Feed"
+        );
+        assertEq(
+            lusd3ValueProvider.chainlinkDAI(),
+            address(mockChainlinkDAI),
+            "Invalid DAI Chainlink Feed"
+        );
+        assertEq(
+            lusd3ValueProvider.chainlinkUSDT(),
+            address(mockChainlinkUSDT),
+            "Invalid USDT Chainlink Feed"
+        );
     }
 
     function test_getValue() public {
@@ -137,56 +197,24 @@ contract LUSD3CRVValueProviderTest is DSTest {
         // https://www.wolframalpha.com/input?i2d=true&i=%5C%2840%29Divide%5B1012508837937838125%2CPower%5B10%2C18%5D%5D%5C%2841%29+*+minimum%5C%2840%29Divide%5B100102662%2CPower%5B10%2C8%5D%5D%5C%2844%29%5C%2840%29+Divide%5B1020628557740573240%2CPower%5B10%2C18%5D%5D+*+Divide%5Bminimum%5C%2840%29100030972%5C%2844%29100100000%5C%2844%29100000298%5C%2841%29%2CPower%5B10%2C8%5D%5D%5C%2841%29%5C%2841%29
         int256 expectedValue = 1013548299761041868;
         // Computed value based on the parameters that are sent via the mock provider
-        int256 value = chainlinkVP.getValue();
+        int256 value = lusd3ValueProvider.getValue();
 
         assertTrue(value == expectedValue);
     }
 
     function test_description() public {
         string memory expectedDescription = "LUSD3CRV";
-        string memory desc = chainlinkVP.description();
+        string memory desc = lusd3ValueProvider.description();
         assertTrue(
             keccak256(abi.encodePacked(desc)) ==
                 keccak256(abi.encodePacked(expectedDescription))
         );
     }
 
-    function test_deploy_shouldRevertWithInvalidLUSDPoolDecimals() public {
+    function test_deploy_shouldRevertWithInvalidCurve3TokenDecimals() public {
         // Update the mock to return an unsupported decimal number
-        curveLUSD3PoolMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(ICurvePool.decimals.selector),
-            MockProvider.ReturnData({success: true, data: abi.encode(1)}),
-            false
-        );
-
-        // Set the expected error for the revert
-        cheatCodes.expectRevert(
-            abi.encodeWithSelector(
-                LUSD3CRVValueProvider
-                    .LUSD3CRVValueProvider__constructor_InvalidPoolDecimals
-                    .selector,
-                address(curveLUSD3PoolMock)
-            )
-        );
-
-        new LUSD3CRVValueProvider(
-            // Oracle arguments
-            // Time update window
-            _timeUpdateWindow,
-            // Chainlink arguments
-            address(curve3PoolMock),
-            address(curveLUSD3PoolMock),
-            address(mockChainlinkLUSD),
-            address(mockChainlinkUSDC),
-            address(mockChainlinkDAI),
-            address(mockChainlinkUSDT)
-        );
-    }
-
-    function test_deploy_shouldRevertWithInvalidCurve3PoolDecimals() public {
-        // Update the mock to return an unsupported decimal number
-        curve3PoolMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(ICurvePool.decimals.selector),
+        curve3PoolTokenMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ERC20.decimals.selector),
             MockProvider.ReturnData({success: true, data: abi.encode(1)}),
             false
         );
@@ -204,10 +232,44 @@ contract LUSD3CRVValueProviderTest is DSTest {
         new LUSD3CRVValueProvider(
             // Oracle arguments
             // Time update window
-            _timeUpdateWindow,
+            100,
             // Chainlink arguments
             address(curve3PoolMock),
-            address(curveLUSD3PoolMock),
+            address(curve3PoolTokenMock),
+            address(curveLUSD3CRVPoolMock),
+            address(mockChainlinkLUSD),
+            address(mockChainlinkUSDC),
+            address(mockChainlinkDAI),
+            address(mockChainlinkUSDT)
+        );
+    }
+
+    function test_deploy_shouldRevertWithInvalidLUSDPoolDecimals() public {
+        // Update the mock to return an unsupported decimal number
+        curveLUSD3CRVPoolMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ERC20.decimals.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(1)}),
+            false
+        );
+
+        // Set the expected error for the revert
+        cheatCodes.expectRevert(
+            abi.encodeWithSelector(
+                LUSD3CRVValueProvider
+                    .LUSD3CRVValueProvider__constructor_InvalidPoolDecimals
+                    .selector,
+                address(curveLUSD3CRVPoolMock)
+            )
+        );
+
+        new LUSD3CRVValueProvider(
+            // Oracle arguments
+            // Time update window
+            100,
+            // Chainlink arguments
+            address(curve3PoolMock),
+            address(curve3PoolTokenMock),
+            address(curveLUSD3CRVPoolMock),
             address(mockChainlinkLUSD),
             address(mockChainlinkUSDC),
             address(mockChainlinkDAI),

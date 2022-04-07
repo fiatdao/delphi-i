@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Oracle} from "../../../../oracle/Oracle.sol";
 import {Convert} from "../../../discount_rate/utils/Convert.sol";
 import {IChainlinkAggregatorV3Interface} from "../ChainlinkAggregatorV3Interface.sol";
@@ -39,21 +40,22 @@ contract LUSD3CRVValueProvider is Oracle, Convert {
         uint256 timeUpdateWindow_,
         // Chainlink specific parameters
         address curve3Pool_,
+        address curve3PoolLpToken_,
         address curveLUSD3Pool_,
         address chainlinkLUSD_,
         address chainlinkUSDC_,
         address chainlinkDAI_,
         address chainlinkUSDT_
     ) Oracle(timeUpdateWindow_) {
-        if (ICurvePool(curve3Pool_).decimals() != 18) {
+        // Init the Curve 3pool
+        if (ERC20(curve3PoolLpToken_).decimals() != 18) {
             revert LUSD3CRVValueProvider__constructor_InvalidPoolDecimals(
                 curve3Pool_
             );
         }
-        // Init the Curve 3pool
         curve3Pool = curve3Pool_;
 
-        if (ICurvePool(curveLUSD3Pool_).decimals() != 18) {
+        if (ERC20(curveLUSD3Pool_).decimals() != 18) {
             revert LUSD3CRVValueProvider__constructor_InvalidPoolDecimals(
                 curveLUSD3Pool_
             );

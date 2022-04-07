@@ -14,7 +14,7 @@ contract LUSD3CRVFactory {
     /// push data to Collybus
     /// @param timeUpdateWindow_ Minimum time between updates of the value
     /// @param curve3Pool_ Address of the  Curve 3pool
-    /// @param curveLUSD3Pool_ Address of the Curve LUSD-3pool pool
+    /// @param curve3PoolLpToken_ Address of the lp token for the Curve 3pool
     /// @param chainlinkLUSD_ Address of the LUSD chainlink data feed
     /// @param chainlinkUSDC_ Address of the USDC chainlink data feed
     /// @param chainlinkDAI_ Address of the DAI chainlink data feed
@@ -28,16 +28,18 @@ contract LUSD3CRVFactory {
         uint256 timeUpdateWindow_,
         // LUSD3CRVValueProvider specific parameters
         address curve3Pool_,
-        address curveLUSD3Pool_,
+        address curve3PoolLpToken_,
         address chainlinkLUSD_,
         address chainlinkUSDC_,
         address chainlinkDAI_,
         address chainlinkUSDT_
     ) public returns (address) {
+        // The tokenAddress is the address of the LUSD3CRV Curve Pool so we can pass it to the Oracle
         LUSD3CRVValueProvider lusd3crvValueProvider = new LUSD3CRVValueProvider(
             timeUpdateWindow_,
             curve3Pool_,
-            curveLUSD3Pool_,
+            curve3PoolLpToken_,
+            tokenAddress_,
             chainlinkLUSD_,
             chainlinkUSDC_,
             chainlinkDAI_,

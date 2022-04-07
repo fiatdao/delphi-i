@@ -17,7 +17,6 @@ import {IChainlinkAggregatorV3Interface} from "../oracle_implementations/spot_pr
 contract LUSD3CRVFactoryTest is DSTest {
     address private _collybusAddress = address(0xC011b005);
     uint256 private _oracleUpdateWindow = 1 * 3600;
-    address private _tokenAddress = address(0x105311);
     uint256 private _minimumPercentageDeltaValue = 25;
 
     address private _lusd3crvRelayerAddress;
@@ -37,21 +36,23 @@ contract LUSD3CRVFactoryTest is DSTest {
             false
         );
 
-        MockProvider curvePoolMock = new MockProvider();
-        curvePoolMock.givenQueryReturnResponse(
-            abi.encodeWithSelector(ICurvePool.decimals.selector),
+        MockProvider curveTokenMock = new MockProvider();
+        curveTokenMock.givenQueryReturnResponse(
+            abi.encodeWithSelector(ERC20.decimals.selector),
             MockProvider.ReturnData({success: true, data: abi.encode(18)}),
             false
         );
 
+        // We can use a random curve 3pool address
+        address curve3PoolAddress = address(0xC1133);
         // Create the Relayer
         _lusd3crvRelayerAddress = _factory.create(
             _collybusAddress,
-            _tokenAddress,
+            address(curveTokenMock),
             _minimumPercentageDeltaValue,
             _oracleUpdateWindow,
-            address(curvePoolMock),
-            address(curvePoolMock),
+            curve3PoolAddress,
+            address(curveTokenMock),
             address(chainlinkMock),
             address(chainlinkMock),
             address(chainlinkMock),
@@ -90,9 +91,8 @@ contract LUSD3CRVFactoryTest is DSTest {
             "LUSD3CRV Relayer incorrect RelayerType"
         );
 
-        assertEq(
-            Relayer(_lusd3crvRelayerAddress).encodedTokenId(),
-            bytes32(uint256(uint160(_tokenAddress))),
+        assertTrue(
+            Relayer(_lusd3crvRelayerAddress).encodedTokenId() != bytes32(0),
             "LUSD3CRV Relayer incorrect tokenId"
         );
 
