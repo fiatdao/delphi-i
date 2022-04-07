@@ -48,12 +48,12 @@ contract LUSD3CRVValueProvider is Oracle, Convert {
         address chainlinkDAI_,
         address chainlinkUSDT_
     ) Oracle(timeUpdateWindow_) {
-        // Init the Curve 3pool
         if (ERC20(curve3PoolLpToken_).decimals() != 18) {
             revert LUSD3CRVValueProvider__constructor_InvalidPoolDecimals(
                 curve3Pool_
             );
         }
+        // Init the Curve 3pool
         curve3Pool = curve3Pool_;
 
         if (ERC20(curveLUSD3Pool_).decimals() != 18) {
