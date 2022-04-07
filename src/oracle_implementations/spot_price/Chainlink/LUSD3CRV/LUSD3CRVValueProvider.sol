@@ -30,6 +30,7 @@ contract LUSD3CRVValueProvider is Oracle, Convert {
     /// @notice Constructs the Value provider contracts with the needed Chainlink data feeds
     /// @param timeUpdateWindow_ Minimum time between updates of the value
     /// @param curve3Pool_ Address of the  Curve 3pool
+    /// @param curve3PoolLpToken_ Address of the lp token for the Curve 3pool
     /// @param curveLUSD3Pool_ Address of the Curve LUSD-3pool pool
     /// @param chainlinkLUSD_ Address of the LUSD chainlink data feed
     /// @param chainlinkUSDC_ Address of the USDC chainlink data feed
