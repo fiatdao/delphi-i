@@ -281,7 +281,7 @@ contract RelayerTest is DSTest {
         relayer.executeWithRevert();
     }
 
-    function test_execute_returnsTrue_whenTheOracleIsUpdated() public {
+    function test_execute_returnsTrue_whenCollybusIsUpdated() public {
         bool executed;
 
         executed = relayer.execute();
@@ -289,37 +289,33 @@ contract RelayerTest is DSTest {
         assertTrue(executed, "The relayer should return true");
     }
 
-    function test_execute_returnsFalse_whenTheOracleIsNotUpdated() public {
+    function test_execute_returnsFalse_whenCollybusIsNotUpdated() public {
         bool executed;
-
-        oracle.givenQueryReturnResponse(
-            abi.encodePacked(IOracle.update.selector),
-            MockProvider.ReturnData({success: true, data: abi.encode(false)}),
-            false
-        );
 
         executed = relayer.execute();
 
+        // The first execute should return true
+        assertTrue(executed, "The relayer should return true");
+
+        executed = relayer.execute();
+
+        // The second execute should return false because the Collybus will not be updated
         assertTrue(executed == false, "The relayer should return false");
     }
 
-    function test_executeWithRevert_shouldBeSuccessful_whenTheOracleIsUpdated()
+    function test_executeWithRevert_shouldBeSuccessful_whenCollybusIsUpdated()
         public
     {
         // Call should not revert
         relayer.executeWithRevert();
     }
 
-    function testFail_executeWithRevert_shouldNotBeSuccessful_whenTheOracleIsNotUpdated()
+    function testFail_executeWithRevert_shouldNotBeSuccessful_whenCollybusIsNotUpdated()
         public
     {
-        oracle.givenQueryReturnResponse(
-            abi.encodePacked(IOracle.update.selector),
-            MockProvider.ReturnData({success: true, data: abi.encode(false)}),
-            false
-        );
+        relayer.execute();
 
-        // Call should not revert
+        // Call should revert
         relayer.executeWithRevert();
     }
 }
