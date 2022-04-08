@@ -71,6 +71,7 @@ contract Relayer is Guarded, IRelayer {
 
     /// @notice Updates the oracle and pushes the updated data to Collybus if the
     /// delta change in value is bigger than the minimum threshold value.
+    /// @return Whether the Collybus was updated or not
     function execute() public override(IRelayer) returns (bool) {
         // We always update the oracles before retrieving the rates
         bool oracleUpdated = IOracle(oracle).update();
@@ -86,7 +87,8 @@ contract Relayer is Guarded, IRelayer {
                 minimumPercentageDeltaValue
             )
         ) {
-            return oracleUpdated;
+            // Collybus was not updated so we return false
+            return false;
         }
 
         _lastUpdateValue = oracleValue;
@@ -105,7 +107,8 @@ contract Relayer is Guarded, IRelayer {
 
         emit UpdatedCollybus(encodedTokenId, uint256(oracleValue), relayerType);
 
-        return oracleUpdated;
+        // Collybus was updated
+        return true;
     }
 
     /// @notice The function will call `execute()` and will revert if the oracle was not updated
