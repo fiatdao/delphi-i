@@ -23,7 +23,7 @@ abstract contract Oracle is Pausable, IOracle {
     uint256 public lastTimestamp;
 
     // The next value that will replace the current value once the timeUpdateWindow has passed
-    int256 public nextValue;
+    int256 public override(IOracle) nextValue;
 
     // Current value that will be returned by the Oracle
     int256 private _currentValue;

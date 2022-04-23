@@ -57,6 +57,16 @@ contract RelayerTest is DSTest {
             }),
             false
         );
+
+        // We can use the same value as the nextValue
+        oracle.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.nextValue.selector),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(_oracleValue, true)
+            }),
+            false
+        );
         oracle.givenSelectorReturnResponse(
             Guarded.canCall.selector,
             MockProvider.ReturnData({success: true, data: abi.encode(true)}),

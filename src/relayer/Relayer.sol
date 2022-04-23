@@ -70,8 +70,9 @@ contract Relayer is Guarded, IRelayer {
     }
 
     /// @notice Updates the oracle and pushes the updated data to Collybus if the
-    /// delta change in value is bigger than the minimum threshold value.
-    /// @return Whether the Collybus was updated or not
+    /// delta change in value is bigger than the minimum threshold value
+    /// @return Whether the Collybus was or is about to be updated
+    /// @dev Return value is mainly meant to be used by Keepers in order to optimize costs
     function execute() public override(IRelayer) returns (bool) {
         // We always update the oracles before retrieving the rates
         bool oracleUpdated = IOracle(oracle).update();
@@ -87,8 +88,15 @@ contract Relayer is Guarded, IRelayer {
                 minimumPercentageDeltaValue
             )
         ) {
-            // Collybus was not updated so we return false
-            return false;
+            // Even if the currentValue does not trigger a collybus update we peek and check
+            // whether the nextValue will trigger an update and return true if that is the case
+            return
+                isValid &&
+                checkDeviation(
+                    _lastUpdateValue,
+                    IOracle(oracle).nextValue(),
+                    minimumPercentageDeltaValue
+                );
         }
 
         _lastUpdateValue = oracleValue;
