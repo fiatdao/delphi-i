@@ -10,6 +10,8 @@ import {ICollybus} from "./ICollybus.sol";
 import {Relayer} from "./Relayer.sol";
 import {IRelayer} from "./IRelayer.sol";
 import {IOracle} from "../oracle/IOracle.sol";
+import {ChainlinkValueProvider} from "../oracle_implementations/spot_price/Chainlink/ChainlinkValueProvider.sol";
+import {IChainlinkAggregatorV3Interface} from "../oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
 
 contract TestCollybus is ICollybus {
     mapping(bytes32 => uint256) public valueForToken;
@@ -327,5 +329,103 @@ contract RelayerTest is DSTest {
 
         // Call should revert
         relayer.executeWithRevert();
+    }
+
+    function setChainlinkMockReturnedValue(
+        MockProvider mockChainlinkAggregator,
+        int256 value
+    ) internal {
+        mockChainlinkAggregator.givenQueryReturnResponse(
+            abi.encodeWithSelector(
+                IChainlinkAggregatorV3Interface.latestRoundData.selector
+            ),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(
+                    uint80(0), // roundId
+                    value, // answer
+                    uint256(0), // startedAt
+                    uint256(0), // updatedAt
+                    uint80(0) // answeredInRound
+                )
+            }),
+            false
+        );
+    }
+
+    function test_executeWithRevert_canBeUpdatedByKeepers() public {
+        uint256 timeUpdateWindow = 100;
+        MockProvider mockChainlinkAggregator = new MockProvider();
+        mockChainlinkAggregator.givenQueryReturnResponse(
+            abi.encodeWithSelector(
+                IChainlinkAggregatorV3Interface.decimals.selector
+            ),
+            MockProvider.ReturnData({success: true, data: abi.encode(18)}),
+            false
+        );
+
+        ChainlinkValueProvider chainlinkVP = new ChainlinkValueProvider(
+            timeUpdateWindow,
+            address(mockChainlinkAggregator)
+        );
+
+        Relayer testRelayer = new Relayer(
+            address(collybus),
+            relayerType,
+            address(chainlinkVP),
+            _mockTokenId,
+            _mockMinThreshold
+        );
+
+        chainlinkVP.allowCaller(chainlinkVP.ANY_SIG(), address(testRelayer));
+
+        int256[6] memory oracleMockProviderValues = [
+            int256(1e18),
+            int256(2e18),
+            int256(3e18),
+            int256(4e18),
+            int256(5e18),
+            int256(6e18)
+        ];
+        for (
+            uint256 index = 0;
+            index < oracleMockProviderValues.length;
+            ++index
+        ) {
+            // Increase time to next window
+            hevm.warp(timeUpdateWindow * (index + 1) + 1);
+
+            // Update the Chainlink mock return value
+            setChainlinkMockReturnedValue(
+                mockChainlinkAggregator,
+                oracleMockProviderValues[index]
+            );
+
+            testRelayer.executeWithRevert();
+
+            // The nextValue of the oracle should be the last returned value (at index)
+            assertTrue(
+                chainlinkVP.nextValue() == oracleMockProviderValues[index],
+                "Invalid Oracle nextValue"
+            );
+
+            assertTrue(
+                collybus.valueForToken(_mockTokenId) ==
+                    uint256(
+                        oracleMockProviderValues[(index == 0) ? 0 : index - 1]
+                    ),
+                "Invalid spot price"
+            );
+        }
+
+        assertTrue(
+            collybus.valueForToken(_mockTokenId) ==
+                uint256(
+                    oracleMockProviderValues[
+                        oracleMockProviderValues.length - 2
+                    ]
+                ),
+            "Invalid discount rate relayer rate value"
+        );
     }
 }
