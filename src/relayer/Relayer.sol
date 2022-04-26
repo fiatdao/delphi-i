@@ -70,7 +70,7 @@ contract Relayer is Guarded, IRelayer {
     }
 
     /// @notice Updates the oracle and pushes the updated data to Collybus if the
-    /// delta change in value is bigger than the minimum threshold value
+    /// delta change in value is larger than the minimum threshold value
     /// @return Whether the Collybus was or is about to be updated
     /// @dev Return value is mainly meant to be used by Keepers in order to optimize costs
     function execute() public override(IRelayer) returns (bool) {
@@ -78,43 +78,45 @@ contract Relayer is Guarded, IRelayer {
         bool oracleUpdated = IOracle(oracle).update();
         (int256 oracleValue, ) = IOracle(oracle).value();
 
-        // If the oracle was not updated we can exit early because no value has been changed
+        // If the oracle was not updated we exit early because no value was updated
         if (!oracleUpdated) return false;
 
-        // We check if the new oracle value is above the minimumPercentageDeltaValue deviation
-        bool currentValueDeviation = checkDeviation(
+        // We calculate whether the returned value is over the minimumPercentageDeltaValue
+        // If the deviation is large enough we push the value to Collybus and return true
+        bool currentValueThresholdPassed = checkDeviation(
             _lastUpdateValue,
             oracleValue,
             minimumPercentageDeltaValue
         );
-
-        // If the deviation is big enough we push the value to Collybus and return true
-        if (currentValueDeviation) {
+        if (currentValueThresholdPassed) {
             updateCollybus(oracleValue);
             return true;
         }
 
-        // We check to see if Collybus will be updated in the next update window because
-        // in that case we want for this transaction to be executed by keepers.
-        bool nextValueDeviation = checkDeviation(
+        // If the oracle received a new value (nextValue != oracleValue), but wasn't updated yet,
+        // we return true to indicate that the Collybus is about to be updated
+        bool nextValueThresholdPassed = checkDeviation(
             _lastUpdateValue,
             IOracle(oracle).nextValue(),
             minimumPercentageDeltaValue
         );
 
-        return nextValueDeviation;
+        return nextValueThresholdPassed;
     }
 
-    /// @notice The function will call `execute()` and will revert based on the returned value
-    /// For extra information on the revert conditions check the execute() function
+    /// @notice The function will call execute() and will revert if false
     /// @dev This method is needed for services that run on each block and only call the method if it doesn't fail
+    /// For extra information on the revert conditions check the execute() function
     function executeWithRevert() public override(IRelayer) {
         if (!execute()) {
             revert Relayer__executeWithRevert_noUpdate(relayerType);
         }
     }
 
+    /// @notice Updates Collybus with the new value
+    /// @param oracleValue_ the new value pushed into Collybus
     function updateCollybus(int256 oracleValue_) internal {
+        // Save the new value to be able to check if the next value is over the threshold
         _lastUpdateValue = oracleValue_;
 
         if (relayerType == RelayerType.DiscountRate) {
@@ -136,7 +138,7 @@ contract Relayer is Guarded, IRelayer {
         );
     }
 
-    /// @notice Returns true if the percentage difference between the two values is bigger than the `percentage`
+    /// @notice Returns true if the percentage difference between the two values is larger than the percentage
     /// @param baseValue_ The value that the percentage is based on
     /// @param newValue_ The new value
     /// @param percentage_ The percentage threshold value (100% = 100_00, 50% = 50_00, etc)

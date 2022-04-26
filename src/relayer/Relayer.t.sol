@@ -306,14 +306,12 @@ contract RelayerTest is DSTest {
     function test_execute_returnsFalse_whenCollybusIsNotUpdated() public {
         bool executed;
 
-        executed = relayer.execute();
-
         // The first execute should return true
-        assertTrue(executed, "The relayer execute() should return true");
-
         executed = relayer.execute();
+        assertTrue(executed, "The relayer's execute() should return true");
 
         // The second execute should return false because the Collybus will not be updated
+        executed = relayer.execute();
         assertTrue(
             executed == false,
             "The relayer execute() should return false"
@@ -321,13 +319,14 @@ contract RelayerTest is DSTest {
     }
 
     function test_execute_returnsFalse_whenOracleIsNotUpdated() public {
-        // Set update to return as failed
+        // Set `update` to return `false`
         oracle.givenQueryReturnResponse(
             abi.encodePacked(IOracle.update.selector),
             MockProvider.ReturnData({success: true, data: abi.encode(false)}),
             true
         );
 
+        // When the oracle's `update` returns `false`, the relayer's `execute` should return `false`
         bool executeReturnedValue = relayer.execute();
         assertTrue(
             executeReturnedValue == false,
@@ -335,7 +334,7 @@ contract RelayerTest is DSTest {
         );
     }
 
-    function test_executeWithRevert_shouldBeSuccessful_whenCollybusIsUpdated()
+    function test_executeWithRevert_shouldBeSuccessful_onFirstExecution()
         public
     {
         // Call should not revert
@@ -375,8 +374,8 @@ contract RelayerTest is DSTest {
 
     function test_executeWithRevert_canBeUpdatedByKeepers() public {
         // For this test we will simulate an external actor that must be able to successfully update
-        // the Relayer via multiple executeWithRevert() calls. We will do this by providing multiple
-        // mocked chainlink values and making sure that each value is properly validated and used.
+        // the Relayer via multiple `executeWithRevert()` calls. We will do this by providing multiple
+        // mocked Chainlink values and making sure that each value is properly validated and used.
         int256 firstValue = 1e18;
         int256 secondValue = 2e18;
         uint256 timeUpdateWindow = 100;
@@ -391,7 +390,7 @@ contract RelayerTest is DSTest {
             false
         );
 
-        // Deploy the chainlink Oracle with the mocked chainlink datafeed contract
+        // Deploy the Chainlink Oracle with the mocked Chainlink datafeed contract
         ChainlinkValueProvider chainlinkVP = new ChainlinkValueProvider(
             timeUpdateWindow,
             address(mockChainlinkAggregator)
@@ -409,19 +408,19 @@ contract RelayerTest is DSTest {
         // Whitelist the relayer in the oracle so it can trigger Oracle.update()
         chainlinkVP.allowCaller(chainlinkVP.ANY_SIG(), address(testRelayer));
 
-        // Simulate a small time offset as the Oracle.lastTimestamp will start at 0 and we won't be able to update values
+        // Simulate a small time offset as the Oracle.lastTimestamp will start at 0 and we should not be able to update values
         uint256 timeStart = timeUpdateWindow + 1;
 
         // Set the Chainlink mock to return the first value
         setChainlinkMockReturnedValue(mockChainlinkAggregator, firstValue);
 
-        // Forward time to the start
+        // Forward time to the start of this test scenario
         hevm.warp(timeStart);
 
-        // Run the first execute with revert, Oracle.currentValue and Oracle.nextValue will be equal to firstValue
+        // Run the first `executeWithRevert()`, `Oracle.currentValue` and `Oracle.nextValue` will be equal to `firstValue`
         testRelayer.executeWithRevert();
 
-        // Set the next value for the chainlink mock datafeed
+        // Set the next value for the Chainlink mock datafeed
         setChainlinkMockReturnedValue(mockChainlinkAggregator, secondValue);
 
         // Forward time to the next window
@@ -431,14 +430,14 @@ contract RelayerTest is DSTest {
         testRelayer.executeWithRevert();
 
         // Verify that the oracle was properly updated
-        // The nextValue should now be equal to `secondValue` because of the update
+        // The `nextValue` should now be equal to `secondValue` because of the update
         assertTrue(
             chainlinkVP.nextValue() == secondValue,
             "Invalid Oracle nextValue"
         );
 
-        // The current oracle value should still be the first value because fon the previous executeWithRevert()
-        // currentValue and nextValue where initialized to `firstValue`
+        // The current oracle value should still be the first value because of the previous executeWithRevert()
+        // `currentValue` and `nextValue` where initialized to `firstValue`
         (int256 value, bool isValid) = chainlinkVP.value();
         assertTrue(isValid && value == firstValue, "Invalid Oracle value");
 
