@@ -76,55 +76,64 @@ contract Relayer is Guarded, IRelayer {
     function execute() public override(IRelayer) returns (bool) {
         // We always update the oracles before retrieving the rates
         bool oracleUpdated = IOracle(oracle).update();
-        (int256 oracleValue, bool isValid) = IOracle(oracle).value();
+        (int256 oracleValue, ) = IOracle(oracle).value();
 
-        // If the oracle was not updated, the value is invalid or the delta condition is not met, we can exit early
-        if (
-            !oracleUpdated ||
-            !isValid ||
-            !checkDeviation(
-                _lastUpdateValue,
-                oracleValue,
-                minimumPercentageDeltaValue
-            )
-        ) {
-            // Even if the currentValue does not trigger a collybus update we peek and check
-            // whether the nextValue will trigger an update and return true if that is the case
-            return
-                isValid &&
-                checkDeviation(
-                    _lastUpdateValue,
-                    IOracle(oracle).nextValue(),
-                    minimumPercentageDeltaValue
-                );
+        // If the oracle was not updated we can exit early because no value has been changed
+        if (!oracleUpdated) return false;
+
+        // We check if the new oracle value is above the minimumPercentageDeltaValue deviation
+        bool currentValueDeviation = checkDeviation(
+            _lastUpdateValue,
+            oracleValue,
+            minimumPercentageDeltaValue
+        );
+
+        // If the deviation is big enough we push the value to Collybus and return true
+        if (currentValueDeviation) {
+            updateCollybus(oracleValue);
+            return true;
         }
 
-        _lastUpdateValue = oracleValue;
+        // We check to see if Collybus will be updated in the next update window because
+        // in that case we want for this transaction to be executed by keepers.
+        bool nextValueDeviation = checkDeviation(
+            _lastUpdateValue,
+            IOracle(oracle).nextValue(),
+            minimumPercentageDeltaValue
+        );
 
-        if (relayerType == RelayerType.DiscountRate) {
-            ICollybus(collybus).updateDiscountRate(
-                uint256(encodedTokenId),
-                uint256(oracleValue)
-            );
-        } else if (relayerType == RelayerType.SpotPrice) {
-            ICollybus(collybus).updateSpot(
-                address(uint160(uint256(encodedTokenId))),
-                uint256(oracleValue)
-            );
-        }
-
-        emit UpdatedCollybus(encodedTokenId, uint256(oracleValue), relayerType);
-
-        // Collybus was updated
-        return true;
+        return nextValueDeviation;
     }
 
-    /// @notice The function will call `execute()` and will revert if the oracle was not updated
+    /// @notice The function will call `execute()` and will revert based on the returned value
+    /// For extra information on the revert conditions check the execute() function
     /// @dev This method is needed for services that run on each block and only call the method if it doesn't fail
     function executeWithRevert() public override(IRelayer) {
         if (!execute()) {
             revert Relayer__executeWithRevert_noUpdate(relayerType);
         }
+    }
+
+    function updateCollybus(int256 oracleValue_) internal {
+        _lastUpdateValue = oracleValue_;
+
+        if (relayerType == RelayerType.DiscountRate) {
+            ICollybus(collybus).updateDiscountRate(
+                uint256(encodedTokenId),
+                uint256(oracleValue_)
+            );
+        } else if (relayerType == RelayerType.SpotPrice) {
+            ICollybus(collybus).updateSpot(
+                address(uint160(uint256(encodedTokenId))),
+                uint256(oracleValue_)
+            );
+        }
+
+        emit UpdatedCollybus(
+            encodedTokenId,
+            uint256(oracleValue_),
+            relayerType
+        );
     }
 
     /// @notice Returns true if the percentage difference between the two values is bigger than the `percentage`

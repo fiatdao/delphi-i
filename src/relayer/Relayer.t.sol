@@ -12,6 +12,7 @@ import {IRelayer} from "./IRelayer.sol";
 import {IOracle} from "../oracle/IOracle.sol";
 import {ChainlinkValueProvider} from "../oracle_implementations/spot_price/Chainlink/ChainlinkValueProvider.sol";
 import {IChainlinkAggregatorV3Interface} from "../oracle_implementations/spot_price/Chainlink/ChainlinkAggregatorV3Interface.sol";
+import {CheatCodes} from "../test/utils/CheatCodes.sol";
 
 contract TestCollybus is ICollybus {
     mapping(bytes32 => uint256) public valueForToken;
@@ -32,6 +33,7 @@ contract TestCollybus is ICollybus {
 }
 
 contract RelayerTest is DSTest {
+    CheatCodes internal cheatCodes = CheatCodes(HEVM_ADDRESS);
     Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
     Relayer internal relayer;
     TestCollybus internal collybus;
@@ -307,12 +309,30 @@ contract RelayerTest is DSTest {
         executed = relayer.execute();
 
         // The first execute should return true
-        assertTrue(executed, "The relayer should return true");
+        assertTrue(executed, "The relayer execute() should return true");
 
         executed = relayer.execute();
 
         // The second execute should return false because the Collybus will not be updated
-        assertTrue(executed == false, "The relayer should return false");
+        assertTrue(
+            executed == false,
+            "The relayer execute() should return false"
+        );
+    }
+
+    function test_execute_returnsFalse_whenOracleIsNotUpdated() public {
+        // Set update to return as failed
+        oracle.givenQueryReturnResponse(
+            abi.encodePacked(IOracle.update.selector),
+            MockProvider.ReturnData({success: true, data: abi.encode(false)}),
+            true
+        );
+
+        bool executeReturnedValue = relayer.execute();
+        assertTrue(
+            executeReturnedValue == false,
+            "The relayer execute() should return false"
+        );
     }
 
     function test_executeWithRevert_shouldBeSuccessful_whenCollybusIsUpdated()
@@ -357,8 +377,11 @@ contract RelayerTest is DSTest {
         // For this test we will simulate an external actor that must be able to successfully update
         // the Relayer via multiple executeWithRevert() calls. We will do this by providing multiple
         // mocked chainlink values and making sure that each value is properly validated and used.
-
+        int256 firstValue = 1e18;
+        int256 secondValue = 2e18;
         uint256 timeUpdateWindow = 100;
+
+        // Test setup, create the mockChainlinkAggregator that will provide data for the Oracle
         MockProvider mockChainlinkAggregator = new MockProvider();
         mockChainlinkAggregator.givenQueryReturnResponse(
             abi.encodeWithSelector(
@@ -368,11 +391,13 @@ contract RelayerTest is DSTest {
             false
         );
 
+        // Deploy the chainlink Oracle with the mocked chainlink datafeed contract
         ChainlinkValueProvider chainlinkVP = new ChainlinkValueProvider(
             timeUpdateWindow,
             address(mockChainlinkAggregator)
         );
 
+        // Deploy the Relayer
         Relayer testRelayer = new Relayer(
             address(collybus),
             relayerType,
@@ -381,57 +406,50 @@ contract RelayerTest is DSTest {
             _mockMinThreshold
         );
 
+        // Whitelist the relayer in the oracle so it can trigger Oracle.update()
         chainlinkVP.allowCaller(chainlinkVP.ANY_SIG(), address(testRelayer));
 
-        int256[10] memory chainlinkFeedMockValues = [
-            int256(1e18),
-            int256(2e18),
-            int256(2e18),
-            int256(3e18),
-            int256(4e18),
-            int256(4e18),
-            int256(5e18),
-            int256(5e18),
-            int256(5e18),
-            int256(6e18)
-        ];
+        // Simulate a small time offset as the Oracle.lastTimestamp will start at 0 and we won't be able to update values
+        uint256 timeStart = timeUpdateWindow + 1;
 
-        uint256 timeIncrement = timeUpdateWindow / 4;
-        uint256 elapsedTime = 0;
-        for (uint256 index = 0; index < chainlinkFeedMockValues.length; ) {
-            // Simulate a small time offset as the Oracle.lastTimestamp will start at 0 and we won't be able to update values
-            // Increase time to next window
-            hevm.warp(5000 + elapsedTime);
+        // Set the Chainlink mock to return the first value
+        setChainlinkMockReturnedValue(mockChainlinkAggregator, firstValue);
 
-            // Update the Chainlink mock return value
-            setChainlinkMockReturnedValue(
-                mockChainlinkAggregator,
-                chainlinkFeedMockValues[index]
-            );
+        // Forward time to the start
+        hevm.warp(timeStart);
 
-            // We wrap this call in a try because reverting occasionally is expected.
-            // This function will not revert when we pass into a new Oracle.timeUpdateWindow
-            // solhint-disable-next-line
-            try testRelayer.executeWithRevert() {} catch {}
+        // Run the first execute with revert, Oracle.currentValue and Oracle.nextValue will be equal to firstValue
+        testRelayer.executeWithRevert();
 
-            // The nextValue of the oracle should be the latest value
-            assertTrue(
-                chainlinkVP.nextValue() == chainlinkFeedMockValues[index],
-                "Invalid Oracle nextValue"
-            );
+        // Set the next value for the chainlink mock datafeed
+        setChainlinkMockReturnedValue(mockChainlinkAggregator, secondValue);
 
-            // The value contained in Collybus should be previous value
-            assertTrue(
-                collybus.valueForToken(_mockTokenId) ==
-                    uint256(
-                        chainlinkFeedMockValues[(index == 0) ? 0 : index - 1]
-                    ),
-                "Invalid spot price"
-            );
+        // Forward time to the next window
+        hevm.warp(timeStart + timeUpdateWindow);
 
-            // Increase the elapsed time and compute the new mock value index
-            elapsedTime += timeIncrement;
-            index = elapsedTime / timeUpdateWindow;
-        }
+        // Call should not revert
+        testRelayer.executeWithRevert();
+
+        // Verify that the oracle was properly updated
+        // The nextValue should now be equal to `secondValue` because of the update
+        assertTrue(
+            chainlinkVP.nextValue() == secondValue,
+            "Invalid Oracle nextValue"
+        );
+
+        // The current oracle value should still be the first value because fon the previous executeWithRevert()
+        // currentValue and nextValue where initialized to `firstValue`
+        (int256 value, bool isValid) = chainlinkVP.value();
+        assertTrue(isValid && value == firstValue, "Invalid Oracle value");
+
+        // Forward time to the next window
+        hevm.warp(timeStart + timeUpdateWindow * 2);
+
+        // Call should not revert
+        testRelayer.executeWithRevert();
+
+        // Make sure the oracle value was updated and is now equal to `secondValue`
+        (value, isValid) = chainlinkVP.value();
+        assertTrue(isValid && value == secondValue, "Invalid Oracle value");
     }
 }
