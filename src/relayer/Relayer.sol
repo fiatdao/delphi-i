@@ -70,56 +70,75 @@ contract Relayer is Guarded, IRelayer {
     }
 
     /// @notice Updates the oracle and pushes the updated data to Collybus if the
-    /// delta change in value is bigger than the minimum threshold value.
-    /// @return Whether the Collybus was updated or not
+    /// delta change in value is larger than the minimum threshold value
+    /// @return Whether the Collybus was or is about to be updated
+    /// @dev Return value is mainly meant to be used by Keepers in order to optimize costs
     function execute() public override(IRelayer) returns (bool) {
         // We always update the oracles before retrieving the rates
         bool oracleUpdated = IOracle(oracle).update();
-        (int256 oracleValue, bool isValid) = IOracle(oracle).value();
+        (int256 oracleValue, ) = IOracle(oracle).value();
 
-        // If the oracle was not updated, the value is invalid or the delta condition is not met, we can exit early
-        if (
-            !oracleUpdated ||
-            !isValid ||
-            !checkDeviation(
-                _lastUpdateValue,
-                oracleValue,
-                minimumPercentageDeltaValue
-            )
-        ) {
-            // Collybus was not updated so we return false
-            return false;
+        // If the oracle was not updated we exit early because no value was updated
+        if (!oracleUpdated) return false;
+
+        // We calculate whether the returned value is over the minimumPercentageDeltaValue
+        // If the deviation is large enough we push the value to Collybus and return true
+        bool currentValueThresholdPassed = checkDeviation(
+            _lastUpdateValue,
+            oracleValue,
+            minimumPercentageDeltaValue
+        );
+        if (currentValueThresholdPassed) {
+            updateCollybus(oracleValue);
+            return true;
         }
 
-        _lastUpdateValue = oracleValue;
+        // If the oracle received a new value (nextValue != oracleValue), but wasn't updated yet,
+        // we return true to indicate that the Collybus is about to be updated
+        bool nextValueThresholdPassed = checkDeviation(
+            _lastUpdateValue,
+            IOracle(oracle).nextValue(),
+            minimumPercentageDeltaValue
+        );
 
-        if (relayerType == RelayerType.DiscountRate) {
-            ICollybus(collybus).updateDiscountRate(
-                uint256(encodedTokenId),
-                uint256(oracleValue)
-            );
-        } else if (relayerType == RelayerType.SpotPrice) {
-            ICollybus(collybus).updateSpot(
-                address(uint160(uint256(encodedTokenId))),
-                uint256(oracleValue)
-            );
-        }
-
-        emit UpdatedCollybus(encodedTokenId, uint256(oracleValue), relayerType);
-
-        // Collybus was updated
-        return true;
+        return nextValueThresholdPassed;
     }
 
-    /// @notice The function will call `execute()` and will revert if the oracle was not updated
+    /// @notice The function will call execute() and will revert if false
     /// @dev This method is needed for services that run on each block and only call the method if it doesn't fail
+    /// For extra information on the revert conditions check the execute() function
     function executeWithRevert() public override(IRelayer) {
         if (!execute()) {
             revert Relayer__executeWithRevert_noUpdate(relayerType);
         }
     }
 
-    /// @notice Returns true if the percentage difference between the two values is bigger than the `percentage`
+    /// @notice Updates Collybus with the new value
+    /// @param oracleValue_ the new value pushed into Collybus
+    function updateCollybus(int256 oracleValue_) internal {
+        // Save the new value to be able to check if the next value is over the threshold
+        _lastUpdateValue = oracleValue_;
+
+        if (relayerType == RelayerType.DiscountRate) {
+            ICollybus(collybus).updateDiscountRate(
+                uint256(encodedTokenId),
+                uint256(oracleValue_)
+            );
+        } else if (relayerType == RelayerType.SpotPrice) {
+            ICollybus(collybus).updateSpot(
+                address(uint160(uint256(encodedTokenId))),
+                uint256(oracleValue_)
+            );
+        }
+
+        emit UpdatedCollybus(
+            encodedTokenId,
+            uint256(oracleValue_),
+            relayerType
+        );
+    }
+
+    /// @notice Returns true if the percentage difference between the two values is larger than the percentage
     /// @param baseValue_ The value that the percentage is based on
     /// @param newValue_ The new value
     /// @param percentage_ The percentage threshold value (100% = 100_00, 50% = 50_00, etc)

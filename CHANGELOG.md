@@ -20,5 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Redesigned some events in `AggregatorOracle` to also emit the oracle's address. Issue [#79](https://github.com/fiatdao/delphi/issues/79)
 - Upgrade Solidity version from 0.8.7 to 0.8.12. Issue [#73](https://github.com/fiatdao/delphi/issues/73)
 - Changed execution flow for `executeWithRevert` to allow for oracle updates even if no update to Collybus was performed. Issue [#83](https://github.com/fiatdao/delphi/issues/83)
+- Updated `Relayer.execute()` to return whether a keeper should execute or not the current transaction instead of if Collybus was updated. Fix for issue [#125](https://github.com/fiatdao/delphi/issues/125)
 
 ### Removed
