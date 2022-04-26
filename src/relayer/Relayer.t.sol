@@ -453,4 +453,3 @@ contract RelayerTest is DSTest {
         assertTrue(value == secondValue, "Incorrect Oracle value");
     }
 }
-
