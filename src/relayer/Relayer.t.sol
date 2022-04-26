@@ -34,7 +34,6 @@ contract TestCollybus is ICollybus {
 
 contract RelayerTest is DSTest {
     CheatCodes internal cheatCodes = CheatCodes(HEVM_ADDRESS);
-    Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
     Relayer internal relayer;
     TestCollybus internal collybus;
     IRelayer.RelayerType internal relayerType =
@@ -416,7 +415,7 @@ contract RelayerTest is DSTest {
         setChainlinkMockReturnedValue(mockChainlinkAggregator, firstValue);
 
         // Forward time to the start
-        hevm.warp(timeStart);
+        cheatCodes.warp(timeStart);
 
         // Run the first execute with revert, Oracle.currentValue and Oracle.nextValue will be equal to firstValue
         testRelayer.executeWithRevert();
@@ -425,7 +424,7 @@ contract RelayerTest is DSTest {
         setChainlinkMockReturnedValue(mockChainlinkAggregator, secondValue);
 
         // Forward time to the next window
-        hevm.warp(timeStart + timeUpdateWindow);
+        cheatCodes.warp(timeStart + timeUpdateWindow);
 
         // Call should not revert
         testRelayer.executeWithRevert();
@@ -440,16 +439,19 @@ contract RelayerTest is DSTest {
         // The current oracle value should still be the first value because fon the previous executeWithRevert()
         // currentValue and nextValue where initialized to `firstValue`
         (int256 value, bool isValid) = chainlinkVP.value();
-        assertTrue(isValid && value == firstValue, "Invalid Oracle value");
+        assertTrue(isValid, "Invalid Oracle value");
+        assertTrue(value == firstValue, "Incorrect Oracle value");
 
         // Forward time to the next window
-        hevm.warp(timeStart + timeUpdateWindow * 2);
+        cheatCodes.warp(timeStart + timeUpdateWindow * 2);
 
         // Call should not revert
         testRelayer.executeWithRevert();
 
         // Make sure the oracle value was updated and is now equal to `secondValue`
         (value, isValid) = chainlinkVP.value();
-        assertTrue(isValid && value == secondValue, "Invalid Oracle value");
+        assertTrue(isValid, "Invalid Oracle value");
+        assertTrue(value == secondValue, "Incorrect Oracle value");
     }
 }
+
