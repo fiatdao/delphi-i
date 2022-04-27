@@ -17,6 +17,13 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
         uint256 currencyId
     );
 
+    // @notice Emitted when the parameters do not map to an active / initialized Notional Market
+    error NotionalFinanceValueProvider__getValue_invalidMarketParameters(
+        uint256 currencyId,
+        uint256 maturityDate,
+        uint256 settlementDate
+    );
+
     // Seconds in a 360 days year as used by Notional in 18 digits precision
     int256 internal constant SECONDS_PER_YEAR = 31104000 * 1e18;
 
@@ -75,6 +82,15 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
         // The returned annual rate is in 1e9 precision so we need to convert it to 1e18 precision.
         MarketParameters memory marketParams = INotionalView(notionalView)
             .getMarket(uint16(currencyId), maturityDate, settlementDate);
+
+        // If the market is not valid or initialized all parameters besides the maturity and storage will be 0 and we revert in that case
+        if (marketParams.oracleRate <= 0) {
+            revert NotionalFinanceValueProvider__getValue_invalidMarketParameters(
+                currencyId,
+                maturityDate,
+                settlementDate
+            );
+        }
 
         // Convert rate per annum to 18 digits precision.
         uint256 ratePerAnnum = uconvert(

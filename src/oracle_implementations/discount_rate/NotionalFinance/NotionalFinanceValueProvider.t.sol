@@ -4,14 +4,14 @@ pragma solidity ^0.8.0;
 import "ds-test/test.sol";
 import "../../../test/utils/Caller.sol";
 import {Hevm} from "../../../test/utils/Hevm.sol";
+import {CheatCodes} from "../../../test/utils/CheatCodes.sol";
 import {MockProvider} from "@cleanunicorn/mockprovider/src/MockProvider.sol";
 import {INotionalView} from "./INotionalView.sol";
 import {MarketParameters} from "./INotionalView.sol";
-
 import {NotionalFinanceValueProvider} from "./NotionalFinanceValueProvider.sol";
 
 contract NotionalFinanceValueProviderTest is DSTest {
-    Hevm internal hevm = Hevm(DSTest.HEVM_ADDRESS);
+    CheatCodes internal cheatCodes = CheatCodes(HEVM_ADDRESS);
 
     MockProvider internal mockNotionalView;
 
@@ -102,7 +102,50 @@ contract NotionalFinanceValueProviderTest is DSTest {
     }
 
     function testFail_getValue_revertsOnOrAfterMaturityDate() public {
-        hevm.warp(notionalVP.maturityDate());
+        cheatCodes.warp(notionalVP.maturityDate());
+        notionalVP.getValue();
+    }
+
+    function test_getValue_failsWithInvalidMarketParameters() public {
+        // Update the mock to return an un-initialized market
+        mockNotionalView.givenQueryReturnResponse(
+            abi.encodeWithSelector(
+                INotionalView.getMarket.selector,
+                _currencyId,
+                uint256(1671840000),
+                uint256(1648512000)
+            ),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(
+                    MarketParameters({
+                        storageSlot: bytes32(
+                            0xc0ddee3e85a71c2541e1bd9f87cf75833c3860ea32afc5fab9589fd51748147b
+                        ),
+                        maturity: uint256(1671840000),
+                        totalfCash: int256(0),
+                        totalAssetCash: int256(0),
+                        totalLiquidity: int256(0),
+                        lastImpliedRate: uint256(0),
+                        oracleRate: uint256(0),
+                        previousTradeTime: uint256(0)
+                    })
+                )
+            }),
+            false
+        );
+
+        // Call should revert because of the invalid market
+        cheatCodes.expectRevert(
+            abi.encodeWithSelector(
+                NotionalFinanceValueProvider
+                    .NotionalFinanceValueProvider__getValue_invalidMarketParameters
+                    .selector,
+                _currencyId,
+                uint256(1671840000),
+                uint256(1648512000)
+            )
+        );
         notionalVP.getValue();
     }
 }
