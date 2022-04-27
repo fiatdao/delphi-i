@@ -21,5 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Upgrade Solidity version from 0.8.7 to 0.8.12. Issue [#73](https://github.com/fiatdao/delphi/issues/73)
 - Changed execution flow for `executeWithRevert` to allow for oracle updates even if no update to Collybus was performed. Issue [#83](https://github.com/fiatdao/delphi/issues/83)
 - Updated `Relayer.execute()` to return whether a keeper should execute or not the current transaction instead of if Collybus was updated. Fix for issue [#125](https://github.com/fiatdao/delphi/issues/125)
+- Added Market sanity checks for the NotionalFinanceValueProvider Oracle. Fix for issue [#127](https://github.com/fiatdao/delphi/issues/127)
 
 ### Removed
