@@ -51,4 +51,9 @@ interface INotionalView {
         uint256 maturity_,
         uint256 settlementDate_
     ) external view returns (MarketParameters memory);
+
+    function getActiveMarkets(uint16 currencyId)
+        external
+        view
+        returns (MarketParameters[] memory);
 }

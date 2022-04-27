@@ -17,11 +17,15 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
         uint256 currencyId
     );
 
+    // @notice Emitted when no active market is found for a currencyId
+    error NotionalFinanceValueProvider__getValue_noActiveMarketFound(
+        uint256 currencyId
+    );
+
     // @notice Emitted when the parameters do not map to an active / initialized Notional Market
     error NotionalFinanceValueProvider__getValue_invalidMarketParameters(
         uint256 currencyId,
-        uint256 maturityDate,
-        uint256 settlementDate
+        uint256 maturityDate
     );
 
     // Seconds in a 360 days year as used by Notional in 18 digits precision
@@ -30,7 +34,6 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     address public immutable notionalView;
     uint256 public immutable currencyId;
     uint256 public immutable maturityDate;
-    uint256 public immutable settlementDate;
 
     uint256 private immutable lastImpliedRateDecimals;
 
@@ -41,7 +44,6 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     /// @param currencyId_ Currency ID(eth = 1, dai = 2, usdc = 3, wbtc = 4)
     /// @param lastImpliedRateDecimals_ Precision of the Notional Market rate.
     /// @param maturity_ Maturity date.
-    /// @param settlementDate_ Settlement date.
     /// @dev reverts if the CurrencyId is bigger than uint16 max value
     constructor(
         // Oracle parameters
@@ -50,8 +52,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
         address notionalViewContract_,
         uint256 currencyId_,
         uint256 lastImpliedRateDecimals_,
-        uint256 maturity_,
-        uint256 settlementDate_
+        uint256 maturity_
     ) Oracle(timeUpdateWindow_) {
         if (currencyId_ > type(uint16).max) {
             revert NotionalFinanceValueProvider__constructor_invalidCurrencyId(
@@ -63,7 +64,6 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
         notionalView = notionalViewContract_;
         currencyId = currencyId_;
         maturityDate = maturity_;
-        settlementDate = settlementDate_;
     }
 
     /// @notice Calculates the annual rate used by the FIAT DAO contracts
@@ -79,22 +79,37 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
             );
         }
 
-        // The returned annual rate is in 1e9 precision so we need to convert it to 1e18 precision.
-        MarketParameters memory marketParams = INotionalView(notionalView)
-            .getMarket(uint16(currencyId), maturityDate, settlementDate);
+        // Get all active markets for the set currencyId
+        MarketParameters[] memory activeMarkets = INotionalView(notionalView)
+            .getActiveMarkets(uint16(currencyId));
 
-        // If the market is not valid or initialized all parameters besides the maturity and storage will be 0 and we revert in that case
-        if (marketParams.oracleRate <= 0) {
+        // If no active markets are found for the currencyId we need to revert
+        if (activeMarkets.length == 0) {
+            revert NotionalFinanceValueProvider__getValue_noActiveMarketFound(
+                currencyId
+            );
+        }
+
+        uint256 oracleRate = 0;
+        // We need to iterate though all the active markets and match via the maturityDate
+        for (uint256 idx = 0; idx < activeMarkets.length; ++idx) {
+            if (activeMarkets[idx].maturity == maturityDate) {
+                oracleRate = activeMarkets[idx].oracleRate;
+                break;
+            }
+        }
+
+        // If the oracleRate is not set it means there are no markets for our currencyId and maturityData
+        if (oracleRate <= 0) {
             revert NotionalFinanceValueProvider__getValue_invalidMarketParameters(
                 currencyId,
-                maturityDate,
-                settlementDate
+                maturityDate
             );
         }
 
         // Convert rate per annum to 18 digits precision.
         uint256 ratePerAnnum = uconvert(
-            marketParams.oracleRate,
+            oracleRate,
             lastImpliedRateDecimals,
             18
         );
