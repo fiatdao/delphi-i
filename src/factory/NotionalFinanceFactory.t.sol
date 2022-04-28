@@ -20,7 +20,6 @@ contract NotionalFinanceFactoryTest is DSTest {
     uint256 private _currencyId = 2;
     uint256 private _lastImpliedRateDecimals = 9;
     uint256 private _maturityDate = 1671840000;
-    uint256 private _settlementDate = 1648512000;
 
     NotionalFinanceFactory private _factory;
 
@@ -42,8 +41,7 @@ contract NotionalFinanceFactoryTest is DSTest {
             _notionalView,
             _currencyId,
             _lastImpliedRateDecimals,
-            _maturityDate,
-            _settlementDate
+            _maturityDate
         );
 
         assertTrue(
@@ -62,8 +60,7 @@ contract NotionalFinanceFactoryTest is DSTest {
             _notionalView,
             _currencyId,
             _lastImpliedRateDecimals,
-            _maturityDate,
-            _settlementDate
+            _maturityDate
         );
 
         Relayer notionalRelayer = Relayer(notionalRelayerAddress);
@@ -84,8 +81,7 @@ contract NotionalFinanceFactoryTest is DSTest {
             _notionalView,
             _currencyId,
             _lastImpliedRateDecimals,
-            _maturityDate,
-            _settlementDate
+            _maturityDate
         );
 
         assertEq(
@@ -123,8 +119,7 @@ contract NotionalFinanceFactoryTest is DSTest {
             _notionalView,
             _currencyId,
             _lastImpliedRateDecimals,
-            _maturityDate,
-            _settlementDate
+            _maturityDate
         );
 
         address oracleAddress = Relayer(notionalRelayerAddress).oracle();
@@ -152,12 +147,6 @@ contract NotionalFinanceFactoryTest is DSTest {
             _maturityDate,
             "Notional Value Provider incorrect maturityDate"
         );
-
-        assertEq(
-            NotionalFinanceValueProvider(oracleAddress).settlementDate(),
-            _settlementDate,
-            "Notional Value Provider incorrect settlementDate"
-        );
     }
 
     function test_create_factoryPassesRelayerPermissions() public {
@@ -170,8 +159,7 @@ contract NotionalFinanceFactoryTest is DSTest {
             _notionalView,
             _currencyId,
             _lastImpliedRateDecimals,
-            _maturityDate,
-            _settlementDate
+            _maturityDate
         );
 
         Relayer notionalRelayer = Relayer(notionalRelayerAddress);
@@ -205,8 +193,7 @@ contract NotionalFinanceFactoryTest is DSTest {
             _notionalView,
             _currencyId,
             _lastImpliedRateDecimals,
-            _maturityDate,
-            _settlementDate
+            _maturityDate
         );
 
         NotionalFinanceValueProvider oracle = NotionalFinanceValueProvider(
@@ -242,8 +229,7 @@ contract NotionalFinanceFactoryTest is DSTest {
             _notionalView,
             invalidCurrencyId,
             _lastImpliedRateDecimals,
-            _maturityDate,
-            _settlementDate
+            _maturityDate
         );
     }
 }

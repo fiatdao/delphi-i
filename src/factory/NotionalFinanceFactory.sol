@@ -20,7 +20,6 @@ contract NotionalFinanceFactory {
     /// @param currencyId_ Currency ID(eth = 1, dai = 2, usdc = 3, wbtc = 4)
     /// @param lastImpliedRateDecimals_ Precision of the Notional Market rate.
     /// @param maturity_ Maturity date.
-    /// @param settlementDate_ Settlement date.
     /// @return The address of the Relayer
     function create(
         // Relayer parameters
@@ -33,8 +32,7 @@ contract NotionalFinanceFactory {
         address notionalViewContract_,
         uint256 currencyId_,
         uint256 lastImpliedRateDecimals_,
-        uint256 maturity_,
-        uint256 settlementDate_
+        uint256 maturity_
     ) external returns (address) {
         // Create the oracle that will fetch data from the NotionalFinance contract
         NotionalFinanceValueProvider notionalFinanceValueProvider = new NotionalFinanceValueProvider(
@@ -42,8 +40,7 @@ contract NotionalFinanceFactory {
                 notionalViewContract_,
                 currencyId_,
                 lastImpliedRateDecimals_,
-                maturity_,
-                settlementDate_
+                maturity_
             );
 
         // Create the relayer that manages the oracle and pushes data to Collybus

@@ -2,22 +2,23 @@
 pragma solidity ^0.8.0;
 
 import {Convert} from "../utils/Convert.sol";
-import {INotionalView, MarketParameters} from "./INotionalView.sol";
 import {Oracle} from "../../../oracle/Oracle.sol";
 import "prb-math/contracts/PRBMathSD59x18.sol";
+import {INotionalView} from "./INotionalView.sol";
+import {MarketParameters} from "./INotionalView.sol";
 
 contract NotionalFinanceValueProvider is Oracle, Convert {
-    // @notice Emitted when trying to add pull a value for an expired pool
+    /// @notice Emitted when trying to add pull a value for an expired pool
     error NotionalFinanceValueProvider__getValue_maturityLessThanBlocktime(
         uint256 maturity
     );
 
-    // @notice Emitted when an invalid currencyId is used to deploy the contract
+    /// @notice Emitted when an invalid currencyId is used to deploy the contract
     error NotionalFinanceValueProvider__constructor_invalidCurrencyId(
         uint256 currencyId
     );
 
-    // @notice Emitted when the parameters do not map to an active / initialized Notional Market
+    /// @notice Emitted when the parameters do not map to an active / initialized Notional Market
     error NotionalFinanceValueProvider__getValue_invalidMarketParameters(
         uint256 currencyId,
         uint256 maturityDate,
@@ -27,12 +28,15 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     // Seconds in a 360 days year as used by Notional in 18 digits precision
     int256 internal constant SECONDS_PER_YEAR = 31104000 * 1e18;
 
+    // Quarter computed as it's defined in the Notional protocol
+    // 3 months , 5 weeks per month, 6 days per week computed in seconds
+    // Reference: https://github.com/notional-finance/contracts-v2/blob/master/contracts/global/Constants.sol#L56
+    uint256 internal constant QUARTER = 3 * 5 * 6 * 86400;
+
     address public immutable notionalView;
     uint256 public immutable currencyId;
     uint256 public immutable maturityDate;
-    uint256 public immutable settlementDate;
-
-    uint256 private immutable lastImpliedRateDecimals;
+    uint256 public immutable lastImpliedRateDecimals;
 
     /// @notice Constructs the Value provider contracts with the needed Notional contract data in order to
     /// calculate the annual rate.
@@ -40,8 +44,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     /// @param notionalViewContract_ The address of the deployed notional view contract.
     /// @param currencyId_ Currency ID(eth = 1, dai = 2, usdc = 3, wbtc = 4)
     /// @param lastImpliedRateDecimals_ Precision of the Notional Market rate.
-    /// @param maturity_ Maturity date.
-    /// @param settlementDate_ Settlement date.
+    /// @param maturityDate_ Maturity date.
     /// @dev reverts if the CurrencyId is bigger than uint16 max value
     constructor(
         // Oracle parameters
@@ -50,8 +53,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
         address notionalViewContract_,
         uint256 currencyId_,
         uint256 lastImpliedRateDecimals_,
-        uint256 maturity_,
-        uint256 settlementDate_
+        uint256 maturityDate_
     ) Oracle(timeUpdateWindow_) {
         if (currencyId_ > type(uint16).max) {
             revert NotionalFinanceValueProvider__constructor_invalidCurrencyId(
@@ -62,8 +64,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
         lastImpliedRateDecimals = lastImpliedRateDecimals_;
         notionalView = notionalViewContract_;
         currencyId = currencyId_;
-        maturityDate = maturity_;
-        settlementDate = settlementDate_;
+        maturityDate = maturityDate_;
     }
 
     /// @notice Calculates the annual rate used by the FIAT DAO contracts
@@ -79,22 +80,12 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
             );
         }
 
-        // The returned annual rate is in 1e9 precision so we need to convert it to 1e18 precision.
-        MarketParameters memory marketParams = INotionalView(notionalView)
-            .getMarket(uint16(currencyId), maturityDate, settlementDate);
-
-        // If the market is not valid or initialized all parameters besides the maturity and storage will be 0 and we revert in that case
-        if (marketParams.oracleRate <= 0) {
-            revert NotionalFinanceValueProvider__getValue_invalidMarketParameters(
-                currencyId,
-                maturityDate,
-                settlementDate
-            );
-        }
+        // Retrieve the oracle rate from Notional
+        uint256 oracleRate = getOracleRate();
 
         // Convert rate per annum to 18 digits precision.
         uint256 ratePerAnnum = uconvert(
-            marketParams.oracleRate,
+            oracleRate,
             lastImpliedRateDecimals,
             18
         );
@@ -111,5 +102,33 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
 
         // The result is a 59.18 fixed-point number.
         return discreteRateD59x18;
+    }
+
+    /// @notice Retrieve the oracle rate from the NotionalFinance Market
+    function getOracleRate() internal view returns (uint256) {
+        uint256 settlementDate = getSettlementDate();
+        // Attempt to retrieve the oracle rate directly by using the maturity and settlement date
+        MarketParameters memory marketParams = INotionalView(notionalView)
+            .getMarket(uint16(currencyId), maturityDate, settlementDate);
+
+        // If we find an active market we can return the oracle rate otherwise we revert
+        if (marketParams.oracleRate <= 0) {
+            revert NotionalFinanceValueProvider__getValue_invalidMarketParameters(
+                currencyId,
+                maturityDate,
+                settlementDate
+            );
+        }
+
+        return marketParams.oracleRate;
+    }
+
+    /// @notice Computes the settlement date as is done in the NotionalFinance contracts
+    /// Reference 1:
+    /// https://github.com/notional-finance/contracts-v2/blob/d89be9474e181b322480830501728ea625e853d0/contracts/internal/markets/DateTime.sol#L14
+    /// Reference 2:
+    /// https://github.com/notional-finance/contracts-v2/blob/d89be9474e181b322480830501728ea625e853d0/contracts/internal/markets/Market.sol#L536
+    function getSettlementDate() public view returns (uint256) {
+        return block.timestamp - (block.timestamp % QUARTER) + QUARTER;
     }
 }
