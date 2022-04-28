@@ -27,8 +27,6 @@ contract NotionalFinanceValueProviderTest is DSTest {
         // block: 13979660
         mockNotionalView = new MockProvider();
 
-
-
         notionalVP = new NotionalFinanceValueProvider(
             // Oracle arguments
             // Time update window
@@ -71,18 +69,20 @@ contract NotionalFinanceValueProviderTest is DSTest {
             ),
             MockProvider.ReturnData({
                 success: true,
-                data: abi.encode(MarketParameters({
-                    storageSlot: bytes32(
-                        0xc0ddee3e85a71c2541e1bd9f87cf75833c3860ea32afc5fab9589fd51748147b
-                    ),
-                    maturity: _maturityDate,
-                    totalfCash: int256(7134342186012091),
-                    totalAssetCash: int256(222912257923357058),
-                    totalLiquidity: int256(221856382336730813),
-                    lastImpliedRate: uint256(88688026),
-                    oracleRate: uint256(88688026),
-                    previousTradeTime: uint256(1641600791)
-                }))
+                data: abi.encode(
+                    MarketParameters({
+                        storageSlot: bytes32(
+                            0xc0ddee3e85a71c2541e1bd9f87cf75833c3860ea32afc5fab9589fd51748147b
+                        ),
+                        maturity: _maturityDate,
+                        totalfCash: int256(7134342186012091),
+                        totalAssetCash: int256(222912257923357058),
+                        totalLiquidity: int256(221856382336730813),
+                        lastImpliedRate: uint256(88688026),
+                        oracleRate: uint256(88688026),
+                        previousTradeTime: uint256(1641600791)
+                    })
+                )
             }),
             false
         );
@@ -103,29 +103,31 @@ contract NotionalFinanceValueProviderTest is DSTest {
     function test_getValue_failsWithInvalidMarketParameters() public {
         // Update the mock to return an un-initialized market
         mockNotionalView.givenQueryReturnResponse(
-        abi.encodeWithSelector(
-            INotionalView.getMarket.selector,
-            _currencyId,
-            _maturityDate,
-            notionalVP.getSettlementDate()
-        ),
-        MockProvider.ReturnData({
-            success: true,
-            data: abi.encode(MarketParameters({
-                storageSlot: bytes32(
-                    0xc0ddee3e85a71c2541e1bd9f87cf75833c3860ea32afc5fab9589fd51748147b
-                ),
-                maturity: _maturityDate,
-                totalfCash: int256(0),
-                totalAssetCash: int256(0),
-                totalLiquidity: int256(0),
-                lastImpliedRate: uint256(0),
-                oracleRate: uint256(0),
-                previousTradeTime: uint256(0)
-            }))
-        }),
-        false
-    );
+            abi.encodeWithSelector(
+                INotionalView.getMarket.selector,
+                _currencyId,
+                _maturityDate,
+                notionalVP.getSettlementDate()
+            ),
+            MockProvider.ReturnData({
+                success: true,
+                data: abi.encode(
+                    MarketParameters({
+                        storageSlot: bytes32(
+                            0xc0ddee3e85a71c2541e1bd9f87cf75833c3860ea32afc5fab9589fd51748147b
+                        ),
+                        maturity: _maturityDate,
+                        totalfCash: int256(0),
+                        totalAssetCash: int256(0),
+                        totalLiquidity: int256(0),
+                        lastImpliedRate: uint256(0),
+                        oracleRate: uint256(0),
+                        previousTradeTime: uint256(0)
+                    })
+                )
+            }),
+            false
+        );
 
         // Call should revert because of the invalid market
         cheatCodes.expectRevert(

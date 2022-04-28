@@ -107,9 +107,9 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     }
 
     /// @notice Retrieve the oracle rate from the NotionalFinance Market
-    function getOracleRate() view internal returns(uint256){
+    function getOracleRate() internal view returns (uint256) {
         uint256 settlementDate = getSettlementDate();
-        // Attempt to retrieve the oracle rate directly by using the maturity and settlement date        
+        // Attempt to retrieve the oracle rate directly by using the maturity and settlement date
         MarketParameters memory marketParams = INotionalView(notionalView)
             .getMarket(uint16(currencyId), maturityDate, settlementDate);
 
@@ -119,7 +119,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
                 currencyId,
                 maturityDate,
                 settlementDate
-            );    
+            );
         }
 
         return marketParams.oracleRate;
@@ -127,8 +127,9 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
 
     /// @notice Computes the settlement date as is done in the NotionalFinance contracts
     /// Reference 1: https://github.com/notional-finance/contracts-v2/blob/master/contracts/internal/markets/DateTime.sol#L14
-    /// Reference 2: https://github.com/notional-finance/contracts-v2/blob/d89be9474e181b322480830501728ea625e853d0/contracts/internal/markets/Market.sol#L536
-    function getSettlementDate() view public returns (uint256){
+    /// Reference 2:
+    /// https://github.com/notional-finance/contracts-v2/blob/d89be9474e181b322480830501728ea625e853d0/contracts/internal/markets/Market.sol#L536
+    function getSettlementDate() public view returns (uint256) {
         return block.timestamp - (block.timestamp % QUARTER) + QUARTER;
     }
 }
