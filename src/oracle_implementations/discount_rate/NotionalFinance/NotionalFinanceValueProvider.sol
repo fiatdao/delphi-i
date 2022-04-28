@@ -113,7 +113,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
         MarketParameters memory marketParams = INotionalView(notionalView)
             .getMarket(uint16(currencyId), maturityDate, settlementDate);
 
-        // If we find an active market we can return the oracle rate
+        // If we find an active market we can return the oracle rate otherwise we revert
         if (marketParams.oracleRate <= 0) {
             revert NotionalFinanceValueProvider__getValue_invalidMarketParameters(
                 currencyId,
