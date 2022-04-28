@@ -58,7 +58,7 @@ contract NotionalFinanceValueProviderTest is DSTest {
         assertEq(notionalVP.maturityDate(), _maturityDate);
     }
 
-    function test_getValue123() public {
+    function test_getValue() public {
         mockNotionalView.givenQueryReturnResponse(
             // Used Parameters are: currency ID, maturity date and settlement date.
             abi.encodeWithSelector(

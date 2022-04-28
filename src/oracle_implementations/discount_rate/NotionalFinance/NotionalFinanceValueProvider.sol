@@ -35,10 +35,8 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
 
     address public immutable notionalView;
     uint256 public immutable currencyId;
-
-    uint256 public maturityDate;
-
-    uint256 private immutable lastImpliedRateDecimals;
+    uint256 public immutable maturityDate;
+    uint256 public immutable lastImpliedRateDecimals;
 
     /// @notice Constructs the Value provider contracts with the needed Notional contract data in order to
     /// calculate the annual rate.
@@ -126,7 +124,8 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     }
 
     /// @notice Computes the settlement date as is done in the NotionalFinance contracts
-    /// Reference 1: https://github.com/notional-finance/contracts-v2/blob/master/contracts/internal/markets/DateTime.sol#L14
+    /// Reference 1:
+    /// https://github.com/notional-finance/contracts-v2/blob/d89be9474e181b322480830501728ea625e853d0/contracts/internal/markets/DateTime.sol#L14
     /// Reference 2:
     /// https://github.com/notional-finance/contracts-v2/blob/d89be9474e181b322480830501728ea625e853d0/contracts/internal/markets/Market.sol#L536
     function getSettlementDate() public view returns (uint256) {
