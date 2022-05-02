@@ -21,7 +21,7 @@ contract Relayer is Guarded, IRelayer {
 
     event SetParam(bytes32 param, uint256 value);
     event UpdateOracle(address oracle, int256 value, bool valid);
-    event UpdatedCollybus(bytes32 tokenId, uint256 rate, RelayerType);
+    event UpdatedCollybus(bytes32 encodedTokenId, uint256 rate, RelayerType);
 
     /// ======== Storage ======== ///
 

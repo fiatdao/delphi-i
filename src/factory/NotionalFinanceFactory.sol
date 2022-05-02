@@ -12,7 +12,7 @@ contract NotionalFinanceFactory {
     );
 
     /// @param collybus_ Address of the collybus
-    /// @param tokenId_ Token Id that will be used to push values to Collybus
+    /// @param rateId_ Rate Id that will be used to push values to Collybus
     /// @param minimumPercentageDeltaValue_ Minimum delta value used to determine when to
     /// push data to Collybus
     /// @param timeUpdateWindow_ Minimum time between updates of the value
@@ -24,7 +24,7 @@ contract NotionalFinanceFactory {
     function create(
         // Relayer parameters
         address collybus_,
-        uint256 tokenId_,
+        uint256 rateId_,
         uint256 minimumPercentageDeltaValue_,
         // Oracle parameters
         uint256 timeUpdateWindow_,
@@ -48,7 +48,7 @@ contract NotionalFinanceFactory {
             collybus_,
             IRelayer.RelayerType.DiscountRate,
             address(notionalFinanceValueProvider),
-            bytes32(tokenId_),
+            bytes32(rateId_),
             minimumPercentageDeltaValue_
         );
 
