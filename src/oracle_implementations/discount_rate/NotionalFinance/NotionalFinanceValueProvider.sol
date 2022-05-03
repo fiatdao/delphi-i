@@ -84,11 +84,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
         uint256 oracleRate = getOracleRate();
 
         // Convert rate per annum to 18 digits precision.
-        uint256 ratePerAnnum = uconvert(
-            oracleRate,
-            oracleRateDecimals,
-            18
-        );
+        uint256 ratePerAnnum = uconvert(oracleRate, oracleRateDecimals, 18);
 
         // Convert per annum to per second rate
         int256 ratePerSecondD59x18 = PRBMathSD59x18.div(
