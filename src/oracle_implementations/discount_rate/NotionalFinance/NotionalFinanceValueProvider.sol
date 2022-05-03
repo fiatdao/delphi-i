@@ -41,9 +41,9 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     /// @notice Constructs the Value provider contracts with the needed Notional contract data in order to
     /// calculate the annual rate.
     /// @param timeUpdateWindow_ Minimum time between updates of the value
-    /// @param notional_ The address of the deployed notional contract.
+    /// @param notional_ The address of the deployed notional contract
     /// @param currencyId_ Currency ID(eth = 1, dai = 2, usdc = 3, wbtc = 4)
-    /// @param oracleRateDecimals_ Precision of the Notional oracle rate.
+    /// @param oracleRateDecimals_ Precision of the Notional oracle rate
     /// @param maturityDate_ Maturity date.
     /// @dev reverts if the CurrencyId is bigger than uint16 max value
     constructor(
