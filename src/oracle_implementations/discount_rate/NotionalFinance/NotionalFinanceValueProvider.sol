@@ -39,7 +39,7 @@ contract NotionalFinanceValueProvider is Oracle, Convert {
     uint256 public immutable oracleRateDecimals;
 
     /// @notice Constructs the Value provider contracts with the needed Notional contract data in order to
-    /// calculate the annual rate.
+    /// calculate the per-second rate.
     /// @param timeUpdateWindow_ Minimum time between updates of the value
     /// @param notional_ The address of the deployed notional contract
     /// @param currencyId_ Currency ID(eth = 1, dai = 2, usdc = 3, wbtc = 4)
