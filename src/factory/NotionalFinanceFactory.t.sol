@@ -16,9 +16,9 @@ contract NotionalFinanceFactoryTest is DSTest {
     uint256 private _tokenId = 1;
     uint256 private _minimumPercentageDeltaValue = 25;
 
-    address private _notionalView;
+    address private _notional;
     uint256 private _currencyId = 2;
-    uint256 private _lastImpliedRateDecimals = 9;
+    uint256 private _oracleRateDecimals = 9;
     uint256 private _maturityDate = 1671840000;
 
     NotionalFinanceFactory private _factory;
@@ -38,9 +38,9 @@ contract NotionalFinanceFactoryTest is DSTest {
             _tokenId,
             _minimumPercentageDeltaValue,
             _oracleUpdateWindow,
-            _notionalView,
+            _notional,
             _currencyId,
-            _lastImpliedRateDecimals,
+            _oracleRateDecimals,
             _maturityDate
         );
 
@@ -57,9 +57,9 @@ contract NotionalFinanceFactoryTest is DSTest {
             _tokenId,
             _minimumPercentageDeltaValue,
             _oracleUpdateWindow,
-            _notionalView,
+            _notional,
             _currencyId,
-            _lastImpliedRateDecimals,
+            _oracleRateDecimals,
             _maturityDate
         );
 
@@ -78,9 +78,9 @@ contract NotionalFinanceFactoryTest is DSTest {
             _tokenId,
             _minimumPercentageDeltaValue,
             _oracleUpdateWindow,
-            _notionalView,
+            _notional,
             _currencyId,
-            _lastImpliedRateDecimals,
+            _oracleRateDecimals,
             _maturityDate
         );
 
@@ -116,9 +116,9 @@ contract NotionalFinanceFactoryTest is DSTest {
             _tokenId,
             _minimumPercentageDeltaValue,
             _oracleUpdateWindow,
-            _notionalView,
+            _notional,
             _currencyId,
-            _lastImpliedRateDecimals,
+            _oracleRateDecimals,
             _maturityDate
         );
 
@@ -131,8 +131,8 @@ contract NotionalFinanceFactoryTest is DSTest {
         );
 
         assertEq(
-            NotionalFinanceValueProvider(oracleAddress).notionalView(),
-            _notionalView,
+            NotionalFinanceValueProvider(oracleAddress).notional(),
+            _notional,
             "Notional Value Provider incorrect notionalView"
         );
 
@@ -156,9 +156,9 @@ contract NotionalFinanceFactoryTest is DSTest {
             _tokenId,
             _minimumPercentageDeltaValue,
             _oracleUpdateWindow,
-            _notionalView,
+            _notional,
             _currencyId,
-            _lastImpliedRateDecimals,
+            _oracleRateDecimals,
             _maturityDate
         );
 
@@ -190,9 +190,9 @@ contract NotionalFinanceFactoryTest is DSTest {
             _tokenId,
             _minimumPercentageDeltaValue,
             _oracleUpdateWindow,
-            _notionalView,
+            _notional,
             _currencyId,
-            _lastImpliedRateDecimals,
+            _oracleRateDecimals,
             _maturityDate
         );
 
@@ -226,9 +226,9 @@ contract NotionalFinanceFactoryTest is DSTest {
             _tokenId,
             _minimumPercentageDeltaValue,
             _oracleUpdateWindow,
-            _notionalView,
+            _notional,
             invalidCurrencyId,
-            _lastImpliedRateDecimals,
+            _oracleRateDecimals,
             _maturityDate
         );
     }

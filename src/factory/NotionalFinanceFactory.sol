@@ -16,9 +16,9 @@ contract NotionalFinanceFactory {
     /// @param minimumPercentageDeltaValue_ Minimum delta value used to determine when to
     /// push data to Collybus
     /// @param timeUpdateWindow_ Minimum time between updates of the value
-    /// @param notionalViewContract_ The address of the deployed notional view contract.
+    /// @param notional_ The address of the deployed notional contract
     /// @param currencyId_ Currency ID(eth = 1, dai = 2, usdc = 3, wbtc = 4)
-    /// @param lastImpliedRateDecimals_ Precision of the Notional Market rate.
+    /// @param oracleRateDecimals_ Precision of the Notional oracle rate
     /// @param maturity_ Maturity date.
     /// @return The address of the Relayer
     function create(
@@ -29,17 +29,17 @@ contract NotionalFinanceFactory {
         // Oracle parameters
         uint256 timeUpdateWindow_,
         // Notional specific parameters, see NotionalFinanceValueProvider for more info
-        address notionalViewContract_,
+        address notional_,
         uint256 currencyId_,
-        uint256 lastImpliedRateDecimals_,
+        uint256 oracleRateDecimals_,
         uint256 maturity_
     ) external returns (address) {
         // Create the oracle that will fetch data from the NotionalFinance contract
         NotionalFinanceValueProvider notionalFinanceValueProvider = new NotionalFinanceValueProvider(
                 timeUpdateWindow_,
-                notionalViewContract_,
+                notional_,
                 currencyId_,
-                lastImpliedRateDecimals_,
+                oracleRateDecimals_,
                 maturity_
             );
 

@@ -13,7 +13,7 @@ import {NotionalFinanceValueProvider} from "./NotionalFinanceValueProvider.sol";
 contract NotionalFinanceValueProviderTest is DSTest {
     CheatCodes internal cheatCodes = CheatCodes(HEVM_ADDRESS);
 
-    MockProvider internal mockNotionalView;
+    MockProvider internal mockNotional;
 
     NotionalFinanceValueProvider internal notionalVP;
 
@@ -25,14 +25,14 @@ contract NotionalFinanceValueProviderTest is DSTest {
         // Values taken from interrogating the active markets via the Notional View Contract deployed at
         // 0x1344A36A1B56144C3Bc62E7757377D288fDE0369
         // block: 13979660
-        mockNotionalView = new MockProvider();
+        mockNotional = new MockProvider();
 
         notionalVP = new NotionalFinanceValueProvider(
             // Oracle arguments
             // Time update window
             _timeUpdateWindow,
             // Notional Finance arguments
-            address(mockNotionalView),
+            address(mockNotional),
             _currencyId,
             9,
             _maturityDate
@@ -43,9 +43,9 @@ contract NotionalFinanceValueProviderTest is DSTest {
         assertTrue(address(notionalVP) != address(0));
     }
 
-    function test_check_notionalView() public {
+    function test_check_notional() public {
         // Check the address of the notional view contract
-        assertEq(notionalVP.notionalView(), address(mockNotionalView));
+        assertEq(notionalVP.notional(), address(mockNotional));
     }
 
     function test_check_currencyId() public {
@@ -59,7 +59,7 @@ contract NotionalFinanceValueProviderTest is DSTest {
     }
 
     function test_getValue() public {
-        mockNotionalView.givenQueryReturnResponse(
+        mockNotional.givenQueryReturnResponse(
             // Used Parameters are: currency ID, maturity date and settlement date.
             abi.encodeWithSelector(
                 INotionalView.getMarket.selector,
@@ -102,7 +102,7 @@ contract NotionalFinanceValueProviderTest is DSTest {
 
     function test_getValue_failsWithInvalidMarketParameters() public {
         // Update the mock to return an un-initialized market
-        mockNotionalView.givenQueryReturnResponse(
+        mockNotional.givenQueryReturnResponse(
             abi.encodeWithSelector(
                 INotionalView.getMarket.selector,
                 _currencyId,
