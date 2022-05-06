@@ -20,7 +20,7 @@ contract YieldValueProvider is Oracle, Convert {
     uint256 public immutable maturity;
     int256 public immutable timeScale;
 
-    /// @notice Constructs the Value provider contracts with the needed Element data in order to
+    /// @notice Constructs the Value provider contracts with the needed data in order to
     /// calculate the annual rate.
     /// @param timeUpdateWindow_ Minimum time between updates of the value
     /// @param poolAddress_ Address of the pool

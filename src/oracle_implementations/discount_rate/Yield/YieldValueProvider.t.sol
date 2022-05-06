@@ -16,7 +16,7 @@ contract YieldValueProviderTest is DSTest, Convert {
 
     YieldValueProvider internal yieldVP;
 
-    // Values take from contract
+    // Values taken from contract
     // https://etherscan.io/token/0x3771c99c087a81df4633b50d8b149afaa83e3c9e
     // at block 13911954
     uint256 private _maturity = 1648177200;
