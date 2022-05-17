@@ -21,11 +21,11 @@ contract YieldValueProvider is Oracle, Convert {
     int256 public immutable timeScale;
 
     /// @notice Constructs the Value provider contracts with the needed data in order to
-    /// calculate the annual rate.
+    /// calculate the discount rate.
     /// @param timeUpdateWindow_ Minimum time between updates of the value
     /// @param poolAddress_ Address of the pool
     /// @param maturity_ Expiration of the pool
-    /// @param timeScale_ Time scale used on this pool (i.e. 1/(timeStretch*secondsPerYear)) in 59x18 fixed point
+    /// @param timeScale_ Time scale used on this pool (i.e. 1/(ts*secondsPerYear)) in 59x18 fixed point
     constructor(
         // Oracle parameters
         uint256 timeUpdateWindow_,
