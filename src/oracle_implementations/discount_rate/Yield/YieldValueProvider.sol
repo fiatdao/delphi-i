@@ -11,6 +11,10 @@ contract YieldValueProvider is Oracle, Convert {
     error YieldProtocolValueProvider__getValue_maturityLessThanBlocktime(
         uint256 maturity
     );
+    // @notice Emitted when trying to update cumulativeBalance before enough time elapsed
+    error YieldProtocolValueProvider__getValue_timeElapsedLessThanPeriod(
+        uint256 timeElapsed
+    );
 
     // The cumulative Balance Ratio in 18 digit precision
     uint256 public cumulativeBalanceRatioLast;
@@ -19,6 +23,7 @@ contract YieldValueProvider is Oracle, Convert {
     address public immutable poolAddress;
     uint256 public immutable maturity;
     int256 public immutable timeScale;
+    uint256 public immutable period;
 
     /// @notice Constructs the Value provider contracts with the needed data in order to
     /// calculate the annual rate.
@@ -37,6 +42,7 @@ contract YieldValueProvider is Oracle, Convert {
         poolAddress = poolAddress_;
         maturity = maturity_;
         timeScale = timeScale_;
+        period = timeUpdateWindow_;
 
         // Load the initial values from the pool
         (, , blockTimestampLast) = IYieldPool(poolAddress_).getCache();
@@ -65,6 +71,13 @@ contract YieldValueProvider is Oracle, Convert {
 
         // Compute the elapsed time
         uint32 timeElapsed = blockTimestamp - blockTimestampLast;
+
+        // ensure that at least one full period has passed since the last update
+        if (timeElapsed >= period) {
+            revert YieldProtocolValueProvider__getValue_timeElapsedLessThanPeriod(
+                timeElapsed
+            );
+        }
 
         // Get the current cumulative balance ratio and scale it to 18 digit precision
         uint256 cumulativeBalanceRatio = uconvert(
