@@ -7,14 +7,17 @@ import {Oracle} from "../../../oracle/Oracle.sol";
 import "prb-math/contracts/PRBMathSD59x18.sol";
 
 contract YieldValueProvider is Oracle, Convert {
-    // @notice Emitted when trying to add pull a value for an expired pool
+    /// @notice Emitted when getValue is not called by the Oracle
+    error YieldProtocolValueProvider__getValue_onlyOracleCanCall();
+
+    /// @notice Emitted when trying to add pull a value for an expired pool
     error YieldProtocolValueProvider__getValue_maturityLessThanBlocktime(
         uint256 maturity
     );
 
     // The cumulative Balance Ratio in 18 digit precision
     uint256 public cumulativeBalanceRatioLast;
-    uint32 public blockTimestampLast;
+    uint32 public balanceTimestampLast;
 
     address public immutable poolAddress;
     uint256 public immutable maturity;
@@ -26,25 +29,25 @@ contract YieldValueProvider is Oracle, Convert {
     /// @param poolAddress_ Address of the pool
     /// @param maturity_ Expiration of the pool
     /// @param timeScale_ Time scale used on this pool (i.e. 1/(timeStretch*secondsPerYear)) in 59x18 fixed point
+    /// @param cumulativeBalanceTimestamp_ The time at which the provided balance ratio was computed
+    /// @param cumulativeBalancesRatio_ The current balance ratio that will be used as a starting value
     constructor(
         // Oracle parameters
         uint256 timeUpdateWindow_,
         // Yield specific parameters
         address poolAddress_,
         uint256 maturity_,
-        int256 timeScale_
+        int256 timeScale_,
+        uint256 cumulativeBalanceTimestamp_,
+        uint256 cumulativeBalancesRatio_
     ) Oracle(timeUpdateWindow_) {
         poolAddress = poolAddress_;
         maturity = maturity_;
         timeScale = timeScale_;
 
-        // Load the initial values from the pool
-        (, , blockTimestampLast) = IYieldPool(poolAddress_).getCache();
-        cumulativeBalanceRatioLast = uconvert(
-            IYieldPool(poolAddress_).cumulativeBalancesRatio(),
-            27,
-            18
-        );
+        // Initialize the pool variables
+        balanceTimestampLast = uint32(cumulativeBalanceTimestamp_);
+        cumulativeBalanceRatioLast = uconvert(cumulativeBalancesRatio_, 27, 18);
     }
 
     /// @notice Calculates the implied interest rate based on reserves in the pool
@@ -53,6 +56,11 @@ contract YieldValueProvider is Oracle, Convert {
     /// @dev Reverts if the block time exceeds or is equal to pool maturity.
     /// @return result The result as an signed 59.18-decimal fixed-point number.
     function getValue() external override(Oracle) returns (int256) {
+        // check address(this)
+        if (msg.sender != address(this)) {
+            revert YieldProtocolValueProvider__getValue_onlyOracleCanCall();
+        }
+
         // No values for matured pools
         if (block.timestamp >= maturity) {
             revert YieldProtocolValueProvider__getValue_maturityLessThanBlocktime(
@@ -64,7 +72,7 @@ contract YieldValueProvider is Oracle, Convert {
         (, , uint32 blockTimestamp) = IYieldPool(poolAddress).getCache();
 
         // Compute the elapsed time
-        uint32 timeElapsed = blockTimestamp - blockTimestampLast;
+        uint32 timeElapsed = blockTimestamp - balanceTimestampLast;
 
         // Get the current cumulative balance ratio and scale it to 18 digit precision
         uint256 cumulativeBalanceRatio = uconvert(
@@ -81,7 +89,7 @@ contract YieldValueProvider is Oracle, Convert {
         );
 
         // Save the last used values
-        blockTimestampLast = blockTimestamp;
+        balanceTimestampLast = blockTimestamp;
         cumulativeBalanceRatioLast = cumulativeBalanceRatio;
 
         // Compute the per-second rate in signed 59.18 format

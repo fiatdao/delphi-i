@@ -16,6 +16,8 @@ contract YieldFactory {
     /// @param poolAddress_ Address of the pool
     /// @param maturity_ Expiration of the pool
     /// @param timeScale_ Time scale used on this pool (i.e. 1/(timeStretch*secondsPerYear)) in 59x18 fixed point
+    /// @param cumulativeBalanceTimestamp_ The time at which the provided balance ratio was computed
+    /// @param cumulativeBalancesRatio_ The current balance ratio that will be used as a starting value
     /// @return The address of the Relayer
     function create(
         // Relayer parameters
@@ -27,13 +29,17 @@ contract YieldFactory {
         // Yield specific parameters, see YieldValueProvider for more info
         address poolAddress_,
         uint256 maturity_,
-        int256 timeScale_
+        int256 timeScale_,
+        uint256 cumulativeBalanceTimestamp_,
+        uint256 cumulativeBalancesRatio_
     ) public returns (address) {
         YieldValueProvider yieldValueProvider = new YieldValueProvider(
             timeUpdateWindow_,
             poolAddress_,
             maturity_,
-            timeScale_
+            timeScale_,
+            cumulativeBalanceTimestamp_,
+            cumulativeBalancesRatio_
         );
 
         // Create the relayer that manages the oracle and pushes data to Collybus
