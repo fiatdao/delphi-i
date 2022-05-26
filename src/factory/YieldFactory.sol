@@ -17,7 +17,9 @@ contract YieldFactory {
     /// @param maturity_ Expiration of the pool
     /// @param timeScale_ Time scale used on this pool (i.e. 1/(timeStretch*secondsPerYear)) in 59x18 fixed point
     /// @param cumulativeBalanceTimestamp_ The time at which the provided balance ratio was computed
-    /// @param cumulativeBalancesRatio_ The current balance ratio that will be used as a starting value
+    /// @param cumulativeBalancesRatio_ The cumulative balance ratio at cumulativeBalanceTimestamp_
+    /// @dev The cumulative balance ratio from the yield pool by calling cumulativeBalancesRatio() and
+    /// the timestamp is retrieved by calling the getCache() function
     /// @return The address of the Relayer
     function create(
         // Relayer parameters
