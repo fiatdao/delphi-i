@@ -23,5 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `Relayer.execute()` to return whether a keeper should execute or not the current transaction instead of if Collybus was updated. Fix for issue [#125](https://github.com/fiatdao/delphi/issues/125)
 - Added Market sanity checks for the NotionalFinanceValueProvider Oracle. Fix for issue [#127](https://github.com/fiatdao/delphi/issues/127)
 - Computed settlementDate internally instead of having it as a required parameter when deploying the NotionalFinanceValueProvider Oracle.
+- YieldValueProvider `getValue()` can be called only by the oracle contract.
 
 ### Removed

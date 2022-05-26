@@ -8,10 +8,11 @@ import {YieldFactory} from "./YieldFactory.sol";
 import {IYieldPool} from "../oracle_implementations/discount_rate/Yield/IYieldPool.sol";
 import {YieldValueProvider} from "../oracle_implementations/discount_rate/Yield/YieldValueProvider.sol";
 
+import {Convert} from "../oracle_implementations/discount_rate/utils/Convert.sol";
 import {Relayer} from "../relayer/Relayer.sol";
 import {IRelayer} from "../relayer/IRelayer.sol";
 
-contract YieldFactoryTest is DSTest {
+contract YieldFactoryTest is DSTest, Convert {
     address private _collybusAddress = address(0xC011b005);
     uint256 private _oracleUpdateWindow = 1 * 3600;
     uint256 private _tokenId = 1;
@@ -19,6 +20,8 @@ contract YieldFactoryTest is DSTest {
 
     uint256 private _maturity = 1648177200;
     int256 private _timeScale = 3168808781; // computed from 58454204609 which is in 64.64 format
+    uint256 private _startBlockTimestamp = 1;
+    uint256 private _startCumulativeBalanceRatio = 1;
 
     YieldFactory private _factory;
 
@@ -53,7 +56,9 @@ contract YieldFactoryTest is DSTest {
             _oracleUpdateWindow,
             address(yieldPool),
             _maturity,
-            _timeScale
+            _timeScale,
+            _startBlockTimestamp,
+            _startCumulativeBalanceRatio
         );
 
         assertTrue(
@@ -85,7 +90,9 @@ contract YieldFactoryTest is DSTest {
             _oracleUpdateWindow,
             address(yieldPool),
             _maturity,
-            _timeScale
+            _timeScale,
+            _startBlockTimestamp,
+            _startCumulativeBalanceRatio
         );
 
         assertTrue(
@@ -117,7 +124,9 @@ contract YieldFactoryTest is DSTest {
             _oracleUpdateWindow,
             address(yieldPool),
             _maturity,
-            _timeScale
+            _timeScale,
+            _startBlockTimestamp,
+            _startCumulativeBalanceRatio
         );
 
         address yieldOracleAddress = Relayer(yieldRelayerAddress).oracle();
@@ -146,6 +155,18 @@ contract YieldFactoryTest is DSTest {
             _timeScale,
             "Yield Value Provider incorrect timeScale"
         );
+
+        assertEq(
+            YieldValueProvider(yieldOracleAddress).cumulativeBalanceRatioLast(),
+            uconvert(_startCumulativeBalanceRatio, 27, 18),
+            "Yield Value Provider incorrect cumulativeBalanceRatioLast"
+        );
+
+        assertEq(
+            YieldValueProvider(yieldOracleAddress).balanceTimestampLast(),
+            _startBlockTimestamp,
+            "Yield Value Provider incorrect balanceTimestampLast"
+        );
     }
 
     function test_create_validateRelayerProperties() public {
@@ -171,7 +192,9 @@ contract YieldFactoryTest is DSTest {
             _oracleUpdateWindow,
             address(yieldPool),
             _maturity,
-            _timeScale
+            _timeScale,
+            _startBlockTimestamp,
+            _startCumulativeBalanceRatio
         );
 
         // Test that properties are correctly set
@@ -223,7 +246,9 @@ contract YieldFactoryTest is DSTest {
             _oracleUpdateWindow,
             address(yieldPool),
             _maturity,
-            _timeScale
+            _timeScale,
+            _startBlockTimestamp,
+            _startCumulativeBalanceRatio
         );
 
         YieldValueProvider yieldValueProvider = YieldValueProvider(
